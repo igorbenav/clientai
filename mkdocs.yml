@@ -1,0 +1,83 @@
+site_name: ClientAI
+site_description: A unified client for seamless interaction with multiple AI providers.
+site_author: Igor Benav
+site_url: https://github.com/igorbenav/clientai
+
+theme:
+  name: material
+  font:
+    text: Ubuntu
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tabs
+    - navigation.indexes
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true
+
+nav:
+  - ClientAI: index.md
+  - Installing: installing.md
+  - Quick-Start: quick-start.md
+  - Usage:
+    - Overview: usage/overview.md
+  - Advanced:
+    - Overview: advanced/overview.md
+  - API Reference: 
+    - Overview: api/overview.md
+    - ClientAI: api/clientai.md
+    - AIProvider: api/ai_provider.md
+    - Specific Providers:
+      - Ollama: api/ollama_provider.md
+      - OpenAI: api/openai_provider.md
+      - Replicate: api/replicate_provider.md
+  - Community:
+    - Overview: community/overview.md
+    - Contributing: community/CONTRIBUTING.md
+    - Code of Conduct: community/CODE_OF_CONDUCT.md
+    - License: community/LICENSE.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - pymdownx.details:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+repo_name: igorbenav/clientai
+repo_url: https://github.com/igorbenav/clientai
+edit_uri: edit/main/docs/
