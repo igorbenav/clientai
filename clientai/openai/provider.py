@@ -26,7 +26,9 @@ class Provider(AIProvider):
                 "The openai package is not installed. "
                 "Please install it with 'pip install clientai[openai]'."
             )
-        self.client: OpenAIClientProtocol = Client(api_key=api_key)
+        self.client: OpenAIClientProtocol = cast(
+            OpenAIClientProtocol, Client(api_key=api_key)
+        )
 
     def _stream_response(
         self,

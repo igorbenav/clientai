@@ -27,8 +27,8 @@ class Provider(AIProvider):
                 "The ollama package is not installed. "
                 "Please install it with 'pip install clientai[ollama]'."
             )
-        self.client: OllamaClientProtocol = (
-            Client(host=host) if host else ollama
+        self.client: OllamaClientProtocol = cast(
+            OllamaClientProtocol, Client(host=host) if host else ollama
         )
 
     def _stream_generate_response(
