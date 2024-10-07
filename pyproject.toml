@@ -15,6 +15,9 @@ ollama = {version = "^0.3.3", optional = true}
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.8"
 pytest = "^8.3.3"
+openai = "^1.50.2"
+replicate = "^0.34.1"
+ollama = "^0.3.3"
 
 [build-system]
 requires = ["poetry-core"]
