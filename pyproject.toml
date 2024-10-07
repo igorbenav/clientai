@@ -6,7 +6,7 @@ authors = ["Igor Benav <igor.magalhaes.r@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 pydantic = "^2.9.2"
 openai = {version = "^1.50.2", optional = true}
 replicate = {version = "^0.34.1", optional = true}

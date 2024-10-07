@@ -16,7 +16,7 @@ if OPENAI_INSTALLED:
 
     Client = openai.OpenAI
 else:
-    Client = None
+    Client = None  # type: ignore
 
 
 class Provider(AIProvider):

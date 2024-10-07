@@ -17,7 +17,7 @@ if OLLAMA_INSTALLED:
 
     Client = ollama.Client
 else:
-    Client = None
+    Client = None  # type: ignore
 
 
 class Provider(AIProvider):
