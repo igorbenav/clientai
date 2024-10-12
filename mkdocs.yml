@@ -45,10 +45,10 @@ nav:
   - ClientAI: index.md
   - Installing: installing.md
   - Quick-Start: quick-start.md
-  - Usage:
-    - Overview: usage/overview.md
-  - Advanced:
-    - Overview: advanced/overview.md
+  # - Usage:
+  #   - Overview: usage/overview.md
+  # - Advanced:
+  #   - Overview: advanced/overview.md
   - API Reference: 
     - Overview: api/overview.md
     - ClientAI: api/clientai.md
@@ -62,7 +62,7 @@ nav:
     - Contributing: community/CONTRIBUTING.md
     - Code of Conduct: community/CODE_OF_CONDUCT.md
     - License: community/LICENSE.md
-  - Changelog: changelog.md
+  # - Changelog: changelog.md
 
 markdown_extensions:
   - admonition
