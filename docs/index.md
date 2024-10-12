@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://github.com/igorbenav/clientai">
-    <img src="assets/clientai.png?raw=true" alt="ClientAI logo" width="45%" height="auto">
+    <img src="assets/ClientAI.png?raw=true" alt="ClientAI logo" width="45%" height="auto">
   </a>
 </p>
 <p align="center" markdown=1>
