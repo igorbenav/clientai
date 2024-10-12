@@ -1,7 +1,7 @@
 # ClientAI
 
 <p align="center">
-  <img src="" alt="ClientAI logo" width="45%" height="auto">
+  <img src="assets/ClientAI.png" alt="ClientAI logo" width="45%" height="auto">
 </p>
 
 <p align="center">

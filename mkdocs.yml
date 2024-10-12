@@ -19,16 +19,16 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7 
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -81,3 +81,6 @@ markdown_extensions:
 repo_name: igorbenav/clientai
 repo_url: https://github.com/igorbenav/clientai
 edit_uri: edit/main/docs/
+
+extra_css:
+  - stylesheets/extra.css
