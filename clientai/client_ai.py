@@ -1,5 +1,5 @@
 from importlib import import_module
-from typing import Generic, List, cast
+from typing import Any, Generic, List, cast
 
 from ._constants import OLLAMA_INSTALLED, OPENAI_INSTALLED, REPLICATE_INSTALLED
 from ._typing import AIGenericResponse, Message, P, S, T
@@ -25,7 +25,7 @@ class ClientAI(Generic[P, T, S]):
     Args:
         provider_name: The name of the AI provider to use
                        ('openai', 'replicate', or 'ollama').
-        **kwargs: Provider-specific initialization parameters.
+        **kwargs (Any): Provider-specific initialization parameters.
 
     Raises:
         ValueError: If an unsupported provider name is given.
@@ -90,7 +90,7 @@ class ClientAI(Generic[P, T, S]):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> AIGenericResponse:
         """
         Generate text based on a given prompt
@@ -168,7 +168,7 @@ class ClientAI(Generic[P, T, S]):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> AIGenericResponse:
         """
         Engage in a chat conversation using

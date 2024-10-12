@@ -1,7 +1,9 @@
 # ClientAI
 
 <p align="center">
-  <img src="assets/ClientAI.png" alt="ClientAI logo" width="45%" height="auto">
+  <a href="https://igorbenav.github.io/clientai/">
+    <img src="assets/ClientAI.png" alt="ClientAI logo" width="45%" height="auto">
+  </a>
 </p>
 
 <p align="center">
@@ -24,7 +26,7 @@
 
 **ClientAI** is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
 
-**Documentation**: Soon
+**Documentation**: [igorbenav.github.io/clientai/](https://igorbenav.github.io/clientai/)
 
 ---
 

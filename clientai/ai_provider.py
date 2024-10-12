@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 
 from ._common_types import GenericResponse, Message
 
@@ -16,7 +16,7 @@ class AIProvider(ABC):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> GenericResponse:
         """
         Generate text based on a given prompt.
@@ -44,7 +44,7 @@ class AIProvider(ABC):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
-        **kwargs,
+        **kwargs: Any,
     ) -> GenericResponse:
         """
         Engage in a chat conversation.

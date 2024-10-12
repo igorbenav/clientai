@@ -43,7 +43,7 @@ response = client.generate_text(
 print(response)
 ```
 
-For more detailed usage instructions and examples, please refer to the [Usage Guide](../usage.md).
+For more detailed usage instructions and examples, please refer to the [Usage Guide](../usage.md) (🚧 Under Construction, come back soon 🚧).
 
 ## Extending ClientAI
 
