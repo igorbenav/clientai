@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import openai
 import pytest
 
-from clientai.openai._typing import OpenAIResponse, OpenAIStreamResponse
+from clientai.openai._typing import OpenAIResponse, OpenAIStreamResponse, OpenAIChoice, OpenAIStreamChoice, OpenAIStreamDelta, Message
 from clientai.openai.provider import Provider
 
 
@@ -28,14 +28,14 @@ def test_generate_text_full_response(mock_client, provider):
         created=1234567890,
         model="gpt-3.5-turbo",
         choices=[
-            {
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "This is a test response",
-                },
-                "finish_reason": "stop",
-            }
+            OpenAIChoice(
+                index=0,
+                message=Message(
+                    role="assistant",
+                    content="This is a test response",
+                ),
+                finish_reason="stop",
+            )
         ],
         usage={
             "prompt_tokens": 10,
@@ -64,14 +64,14 @@ def test_generate_text_content_only(mock_client, provider):
         created=1234567890,
         model="gpt-3.5-turbo",
         choices=[
-            {
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "This is a test response",
-                },
-                "finish_reason": "stop",
-            }
+            OpenAIChoice(
+                index=0,
+                message=Message(
+                    role="assistant",
+                    content="This is a test response",
+                ),
+                finish_reason="stop",
+            )
         ],
         usage={
             "prompt_tokens": 10,
@@ -101,11 +101,11 @@ def test_generate_text_stream(mock_client, provider):
             created=1234567890,
             model="gpt-3.5-turbo",
             choices=[
-                {
-                    "index": 0,
-                    "delta": {"content": chunk},
-                    "finish_reason": None,
-                }
+                OpenAIStreamChoice(
+                    index=0,
+                    delta=OpenAIStreamDelta(role=None, content=chunk, function_call=None),
+                    finish_reason=None,
+                )
             ],
         )
         for chunk in ["This ", "is ", "a ", "test"]
@@ -131,14 +131,14 @@ def test_chat_full_response(mock_client, provider):
         created=1234567890,
         model="gpt-3.5-turbo",
         choices=[
-            {
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "This is a test response",
-                },
-                "finish_reason": "stop",
-            }
+            OpenAIChoice(
+                index=0,
+                message=Message(
+                    role="assistant",
+                    content="This is a test response",
+                ),
+                finish_reason="stop",
+            )
         ],
         usage={
             "prompt_tokens": 10,
@@ -166,14 +166,14 @@ def test_chat_content_only(mock_client, provider):
         created=1234567890,
         model="gpt-3.5-turbo",
         choices=[
-            {
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "This is a test response",
-                },
-                "finish_reason": "stop",
-            }
+            OpenAIChoice(
+                index=0,
+                message=Message(
+                    role="assistant",
+                    content="This is a test response",
+                ),
+                finish_reason="stop",
+            )
         ],
         usage={
             "prompt_tokens": 10,
@@ -202,11 +202,11 @@ def test_chat_stream(mock_client, provider):
             created=1234567890,
             model="gpt-3.5-turbo",
             choices=[
-                {
-                    "index": 0,
-                    "delta": {"content": chunk},
-                    "finish_reason": None,
-                }
+                OpenAIStreamChoice(
+                    index=0,
+                    delta=OpenAIStreamDelta(role=None, content=chunk, function_call=None),
+                    finish_reason=None,
+                )
             ],
         )
         for chunk in ["This ", "is ", "a ", "test"]

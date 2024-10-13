@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
@@ -12,10 +13,17 @@ from typing import (
     Union,
 )
 
-from .._common_types import GenericResponse, Message
+from .._common_types import GenericResponse
 
 
-class OpenAIChoice(TypedDict):
+@dataclass
+class Message:
+    role: Literal["system", "user", "assistant", "function"]
+    content: str
+
+
+@dataclass
+class OpenAIChoice:
     index: int
     message: Message
     finish_reason: Optional[str]
@@ -27,7 +35,8 @@ class OpenAIUsage(TypedDict):
     total_tokens: int
 
 
-class OpenAIResponse(TypedDict):
+@dataclass
+class OpenAIResponse:
     id: str
     object: str
     created: int
@@ -36,19 +45,22 @@ class OpenAIResponse(TypedDict):
     usage: OpenAIUsage
 
 
-class OpenAIStreamDelta(TypedDict):
+@dataclass
+class OpenAIStreamDelta:
     role: Optional[Literal["system", "user", "assistant", "function"]]
     content: Optional[str]
     function_call: Optional[Dict[str, Any]]
 
 
-class OpenAIStreamChoice(TypedDict):
+@dataclass
+class OpenAIStreamChoice:
     index: int
     delta: OpenAIStreamDelta
     finish_reason: Optional[str]
 
 
-class OpenAIStreamResponse(TypedDict):
+@dataclass
+class OpenAIStreamResponse:
     id: str
     object: str
     created: int
@@ -75,7 +87,7 @@ class OpenAIChatCompletions(Protocol):
     def create(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
     ) -> Union[OpenAIResponse, OpenAIStreamResponse]:

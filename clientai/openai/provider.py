@@ -72,7 +72,7 @@ class Provider(AIProvider):
             if return_full_response:
                 yield chunk
             else:
-                content = chunk["choices"][0]["delta"].get("content")
+                content = chunk.choices[0].delta.content
                 if content:
                     yield content
 
@@ -150,7 +150,7 @@ class Provider(AIProvider):
             if return_full_response:
                 return response
             else:
-                return response["choices"][0]["message"]["content"]
+                return response.choices[0].message.content
 
     def chat(
         self,
@@ -229,4 +229,4 @@ class Provider(AIProvider):
             if return_full_response:
                 return response
             else:
-                return response["choices"][0]["message"]["content"]
+                return response.choices[0].message.content
