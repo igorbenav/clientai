@@ -3,7 +3,14 @@ from unittest.mock import Mock, patch
 import openai
 import pytest
 
-from clientai.openai._typing import OpenAIResponse, OpenAIStreamResponse, OpenAIChoice, OpenAIStreamChoice, OpenAIStreamDelta, Message
+from clientai.openai._typing import (
+    Message,
+    OpenAIChoice,
+    OpenAIResponse,
+    OpenAIStreamChoice,
+    OpenAIStreamDelta,
+    OpenAIStreamResponse,
+)
 from clientai.openai.provider import Provider
 
 
@@ -103,7 +110,9 @@ def test_generate_text_stream(mock_client, provider):
             choices=[
                 OpenAIStreamChoice(
                     index=0,
-                    delta=OpenAIStreamDelta(role=None, content=chunk, function_call=None),
+                    delta=OpenAIStreamDelta(
+                        role=None, content=chunk, function_call=None
+                    ),
                     finish_reason=None,
                 )
             ],
@@ -204,7 +213,9 @@ def test_chat_stream(mock_client, provider):
             choices=[
                 OpenAIStreamChoice(
                     index=0,
-                    delta=OpenAIStreamDelta(role=None, content=chunk, function_call=None),
+                    delta=OpenAIStreamDelta(
+                        role=None, content=chunk, function_call=None
+                    ),
                     finish_reason=None,
                 )
             ],
