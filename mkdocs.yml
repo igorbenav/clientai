@@ -45,10 +45,6 @@ nav:
   - ClientAI: index.md
   - Installing: installing.md
   - Quick-Start: quick-start.md
-  # - Usage:
-  #   - Overview: usage/overview.md
-  # - Advanced:
-  #   - Overview: advanced/overview.md
   - API Reference: 
     - Overview: api/overview.md
     - ClientAI: api/clientai.md
@@ -57,13 +53,23 @@ nav:
       - Ollama: api/ollama_provider.md
       - OpenAI: api/openai_provider.md
       - Replicate: api/replicate_provider.md
+  - Usage:
+    - usage/overview.md
+    - usage/initialization.md
+    - usage/text_generation.md
+    - usage/chat_functionality.md
+    - usage/multiple_providers.md
+    # - usage/error_handling.md
+  - Examples:
+    - Overview: examples/overview.md
+    - Examples:
+      - AI Dungeon Master: examples/ai_dungeon_master.md
   - Community:
     - Overview: community/overview.md
     - Contributing: community/CONTRIBUTING.md
     - Code of Conduct: community/CODE_OF_CONDUCT.md
     - License: community/LICENSE.md
   - Extending: extending.md
-  # - Changelog: changelog.md
 
 markdown_extensions:
   - admonition

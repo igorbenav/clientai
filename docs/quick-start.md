@@ -110,7 +110,7 @@ print(response)
 Now that you've seen the basics of ClientAI, you can:
 
 1. Explore more advanced features like streaming responses and handling full response objects.
-2. Check out the [Usage Guide](usage.md) for detailed information on all available methods and options.
+2. Check out the [Usage Guide](usage/overview.md) for detailed information on all available methods and options.
 3. See the [API Reference](api/overview.md) for a complete list of ClientAI's classes and methods.
 
 Remember to handle API keys securely and never expose them in your code or version control systems.
