@@ -1,9 +1,18 @@
 import time
 from collections.abc import Iterator
-from typing import Any, List, Union, cast
+from typing import Any, List, Optional, Union, cast
 
 from .._common_types import Message
 from ..ai_provider import AIProvider
+from ..exceptions import (
+    APIError,
+    AuthenticationError,
+    ClientAIError,
+    InvalidRequestError,
+    ModelError,
+    RateLimitError,
+    TimeoutError,
+)
 from . import REPLICATE_INSTALLED
 from ._typing import (
     ReplicateClientProtocol,
@@ -15,10 +24,12 @@ from ._typing import (
 
 if REPLICATE_INSTALLED:
     import replicate  # type: ignore
+    from replicate.exceptions import ReplicateError
 
     Client = replicate.Client
 else:
     Client = None  # type: ignore
+    ReplicateError = Exception  # type: ignore
 
 
 class Provider(AIProvider):
@@ -85,7 +96,7 @@ class Provider(AIProvider):
         Raises:
             TimeoutError: If the prediction doesn't complete within
                           the max_wait_time.
-            Exception: If the prediction fails.
+            APIError: If the prediction fails.
         """
         start_time = time.time()
         while time.time() - start_time < max_wait_time:
@@ -93,9 +104,14 @@ class Provider(AIProvider):
             if prediction.status == "succeeded":
                 return prediction
             elif prediction.status == "failed":
-                raise Exception(f"Prediction failed: {prediction.error}")
+                raise self._map_exception_to_clientai_error(
+                    Exception(f"Prediction failed: {prediction.error}")
+                )
             time.sleep(1)
-        raise TimeoutError("Prediction timed out")
+
+        raise self._map_exception_to_clientai_error(
+            Exception("Prediction timed out"), status_code=408
+        )
 
     def _stream_response(
         self,
@@ -120,6 +136,46 @@ class Provider(AIProvider):
                 yield metadata
             else:
                 yield self._process_output(event)
+
+    def _map_exception_to_clientai_error(
+        self, e: Exception, status_code: Optional[int] = None
+    ) -> ClientAIError:
+        """
+        Maps a Replicate exception to the appropriate ClientAI exception.
+
+        Args:
+            e (Exception): The exception caught during the API call.
+            status_code (int, optional): The HTTP status code, if available.
+
+        Returns:
+            ClientAIError: An instance of the appropriate ClientAI exception.
+        """
+        error_message = str(e)
+        status_code = status_code or getattr(e, "status_code", None)
+
+        if (
+            "authentication" in error_message.lower()
+            or "unauthorized" in error_message.lower()
+        ):
+            return AuthenticationError(
+                error_message, status_code, original_error=e
+            )
+        elif "rate limit" in error_message.lower():
+            return RateLimitError(error_message, status_code, original_error=e)
+        elif "not found" in error_message.lower():
+            return ModelError(error_message, status_code, original_error=e)
+        elif "invalid" in error_message.lower():
+            return InvalidRequestError(
+                error_message, status_code, original_error=e
+            )
+        elif "timeout" in error_message.lower() or status_code == 408:
+            return TimeoutError(error_message, status_code, original_error=e)
+        elif status_code == 400:
+            return InvalidRequestError(
+                error_message, status_code, original_error=e
+            )
+        else:
+            return APIError(error_message, status_code, original_error=e)
 
     def generate_text(
         self,
@@ -177,24 +233,28 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        prediction = self.client.predictions.create(
-            model=model, input={"prompt": prompt}, stream=stream, **kwargs
-        )
+        try:
+            prediction = self.client.predictions.create(
+                model=model, input={"prompt": prompt}, stream=stream, **kwargs
+            )
 
-        if stream:
-            return self._stream_response(prediction, return_full_response)
-        else:
-            completed_prediction = self._wait_for_prediction(prediction.id)
-            if return_full_response:
-                response = cast(
-                    ReplicateResponse, completed_prediction.__dict__.copy()
-                )
-                response["output"] = self._process_output(
-                    completed_prediction.output
-                )
-                return response
+            if stream:
+                return self._stream_response(prediction, return_full_response)
             else:
-                return self._process_output(completed_prediction.output)
+                completed_prediction = self._wait_for_prediction(prediction.id)
+                if return_full_response:
+                    response = cast(
+                        ReplicateResponse, completed_prediction.__dict__.copy()
+                    )
+                    response["output"] = self._process_output(
+                        completed_prediction.output
+                    )
+                    return response
+                else:
+                    return self._process_output(completed_prediction.output)
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)
 
     def chat(
         self,
@@ -257,24 +317,30 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
-        prompt += "\nassistant: "
+        try:
+            prompt = "\n".join(
+                [f"{m['role']}: {m['content']}" for m in messages]
+            )
+            prompt += "\nassistant: "
 
-        prediction = self.client.predictions.create(
-            model=model, input={"prompt": prompt}, stream=stream, **kwargs
-        )
+            prediction = self.client.predictions.create(
+                model=model, input={"prompt": prompt}, stream=stream, **kwargs
+            )
 
-        if stream:
-            return self._stream_response(prediction, return_full_response)
-        else:
-            completed_prediction = self._wait_for_prediction(prediction.id)
-            if return_full_response:
-                response = cast(
-                    ReplicateResponse, completed_prediction.__dict__.copy()
-                )
-                response["output"] = self._process_output(
-                    completed_prediction.output
-                )
-                return response
+            if stream:
+                return self._stream_response(prediction, return_full_response)
             else:
-                return self._process_output(completed_prediction.output)
+                completed_prediction = self._wait_for_prediction(prediction.id)
+                if return_full_response:
+                    response = cast(
+                        ReplicateResponse, completed_prediction.__dict__.copy()
+                    )
+                    response["output"] = self._process_output(
+                        completed_prediction.output
+                    )
+                    return response
+                else:
+                    return self._process_output(completed_prediction.output)
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)

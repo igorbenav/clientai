@@ -59,7 +59,7 @@ nav:
     - usage/text_generation.md
     - usage/chat_functionality.md
     - usage/multiple_providers.md
-    # - usage/error_handling.md
+    - usage/error_handling.md
   - Examples:
     - Overview: examples/overview.md
     - Examples:

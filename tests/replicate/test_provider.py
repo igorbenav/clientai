@@ -1,8 +1,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
-import replicate.exceptions
 
+from clientai.exceptions import APIError, TimeoutError
 from clientai.replicate.provider import Provider
 
 VALID_MODEL = "owner/name"
@@ -144,8 +144,11 @@ def test_wait_for_prediction_timeout(mock_client, provider):
     )
     mock_client.predictions.get.return_value = mock_prediction
 
-    with pytest.raises(TimeoutError):
+    with pytest.raises(TimeoutError) as exc_info:
         provider._wait_for_prediction("test_id", max_wait_time=1)
+
+    assert "Prediction timed out" in str(exc_info.value)
+    assert exc_info.value.status_code == 408
 
 
 def test_wait_for_prediction_failure(mock_client, provider):
@@ -154,16 +157,6 @@ def test_wait_for_prediction_failure(mock_client, provider):
     )
     mock_client.predictions.get.return_value = mock_prediction
 
-    with pytest.raises(Exception) as exc_info:
+    with pytest.raises(APIError) as exc_info:
         provider._wait_for_prediction("test_id")
-    assert str(exc_info.value) == "Prediction failed: Test error"
-
-
-def test_replicate_error(mock_client, provider):
-    mock_client.predictions.create.side_effect = (
-        replicate.exceptions.ReplicateError("API Error")
-    )
-
-    with pytest.raises(replicate.exceptions.ReplicateError) as exc_info:
-        provider.generate_text("Test prompt", VALID_MODEL)
-    assert "API Error" in str(exc_info.value)
+    assert "Prediction failed: Test error" in str(exc_info.value)

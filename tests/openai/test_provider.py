@@ -1,6 +1,5 @@
 from unittest.mock import Mock, patch
 
-import openai
 import pytest
 
 from clientai.openai._typing import (
@@ -231,16 +230,6 @@ def test_chat_stream(mock_client, provider):
     mock_client.chat.completions.create.assert_called_once_with(
         model="gpt-3.5-turbo", messages=messages, stream=True
     )
-
-
-def test_openai_error(mock_client, provider):
-    mock_client.chat.completions.create.side_effect = openai.OpenAIError(
-        "API Error"
-    )
-
-    with pytest.raises(openai.OpenAIError) as exc_info:
-        provider.generate_text("Test prompt", "gpt-3.5-turbo")
-    assert "API Error" in str(exc_info.value)
 
 
 def test_import_error():

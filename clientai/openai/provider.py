@@ -3,6 +3,15 @@ from typing import Any, List, Union, cast
 
 from .._common_types import Message
 from ..ai_provider import AIProvider
+from ..exceptions import (
+    APIError,
+    AuthenticationError,
+    ClientAIError,
+    InvalidRequestError,
+    ModelError,
+    RateLimitError,
+    TimeoutError,
+)
 from . import OPENAI_INSTALLED
 from ._typing import (
     OpenAIClientProtocol,
@@ -13,10 +22,12 @@ from ._typing import (
 
 if OPENAI_INSTALLED:
     import openai  # type: ignore
+    from openai import AuthenticationError as OpenAIAuthenticationError
 
     Client = openai.OpenAI
 else:
     Client = None  # type: ignore
+    OpenAIAuthenticationError = Exception  # type: ignore
 
 
 class Provider(AIProvider):
@@ -76,6 +87,59 @@ class Provider(AIProvider):
                 if content:
                     yield content
 
+    def _map_exception_to_clientai_error(self, e: Exception) -> ClientAIError:
+        """
+        Maps an OpenAI exception to the appropriate ClientAI exception.
+
+        Args:
+            e (Exception): The exception caught during the API call.
+
+        Raises:
+            ClientAIError: An instance of the appropriate ClientAI exception.
+        """
+        error_message = str(e)
+        status_code = None
+
+        if hasattr(e, "status_code"):
+            status_code = e.status_code
+        else:
+            try:
+                status_code = int(
+                    error_message.split("Error code: ")[1].split(" -")[0]
+                )
+            except (IndexError, ValueError):
+                pass
+
+        if (
+            isinstance(e, OpenAIAuthenticationError)
+            or "incorrect api key" in error_message.lower()
+        ):
+            return AuthenticationError(
+                error_message, status_code, original_error=e
+            )
+        elif (
+            isinstance(e, openai.OpenAIError)
+            or "error code:" in error_message.lower()
+        ):
+            if status_code == 429 or "rate limit" in error_message.lower():
+                return RateLimitError(
+                    error_message, status_code, original_error=e
+                )
+            elif status_code == 404 or "not found" in error_message.lower():
+                return ModelError(error_message, status_code, original_error=e)
+            elif status_code == 400 or "invalid" in error_message.lower():
+                return InvalidRequestError(
+                    error_message, status_code, original_error=e
+                )
+            elif status_code == 408 or "timeout" in error_message.lower():
+                return TimeoutError(
+                    error_message, status_code, original_error=e
+                )
+            elif status_code and status_code >= 500:
+                return APIError(error_message, status_code, original_error=e)
+
+        return ClientAIError(error_message, status_code, original_error=e)
+
     def generate_text(
         self,
         prompt: str,
@@ -100,6 +164,9 @@ class Provider(AIProvider):
             OpenAIGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
+        Raises:
+            ClientAIError: If an error occurs during the API call.
+
         Examples:
             Generate text (text only):
             ```python
@@ -117,7 +184,7 @@ class Provider(AIProvider):
                 model="gpt-3.5-turbo",
                 return_full_response=True
             )
-            print(response["choices"][0]["message"]["content"])
+            print(response.choices[0].message.content)
             ```
 
             Generate text (streaming):
@@ -130,27 +197,31 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            stream=stream,
-            **kwargs,
-        )
-
-        if stream:
-            return cast(
-                OpenAIGenericResponse,
-                self._stream_response(
-                    cast(Iterator[OpenAIStreamResponse], response),
-                    return_full_response,
-                ),
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                stream=stream,
+                **kwargs,
             )
-        else:
-            response = cast(OpenAIResponse, response)
-            if return_full_response:
-                return response
+
+            if stream:
+                return cast(
+                    OpenAIGenericResponse,
+                    self._stream_response(
+                        cast(Iterator[OpenAIStreamResponse], response),
+                        return_full_response,
+                    ),
+                )
             else:
-                return response.choices[0].message.content
+                response = cast(OpenAIResponse, response)
+                if return_full_response:
+                    return response
+                else:
+                    return response.choices[0].message.content
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)
 
     def chat(
         self,
@@ -177,6 +248,9 @@ class Provider(AIProvider):
             OpenAIGenericResponse: The chat response, full response object,
             or an iterator for streaming responses.
 
+        Raises:
+            ClientAIError: If an error occurs during the API call.
+
         Examples:
             Chat (message content only):
             ```python
@@ -199,7 +273,7 @@ class Provider(AIProvider):
                 model="gpt-3.5-turbo",
                 return_full_response=True
             )
-            print(response["choices"][0]["message"]["content"])
+            print(response.choices[0].message.content)
             ```
 
             Chat (streaming):
@@ -212,21 +286,25 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        response = self.client.chat.completions.create(
-            model=model, messages=messages, stream=stream, **kwargs
-        )
-
-        if stream:
-            return cast(
-                OpenAIGenericResponse,
-                self._stream_response(
-                    cast(Iterator[OpenAIStreamResponse], response),
-                    return_full_response,
-                ),
+        try:
+            response = self.client.chat.completions.create(
+                model=model, messages=messages, stream=stream, **kwargs
             )
-        else:
-            response = cast(OpenAIResponse, response)
-            if return_full_response:
-                return response
+
+            if stream:
+                return cast(
+                    OpenAIGenericResponse,
+                    self._stream_response(
+                        cast(Iterator[OpenAIStreamResponse], response),
+                        return_full_response,
+                    ),
+                )
             else:
-                return response.choices[0].message.content
+                response = cast(OpenAIResponse, response)
+                if return_full_response:
+                    return response
+                else:
+                    return response.choices[0].message.content
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)
