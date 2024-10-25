@@ -2,6 +2,15 @@ from collections.abc import Iterator
 from typing import Any, List, Optional, Union, cast
 
 from ..ai_provider import AIProvider
+from ..exceptions import (
+    APIError,
+    AuthenticationError,
+    ClientAIError,
+    InvalidRequestError,
+    ModelError,
+    RateLimitError,
+    TimeoutError,
+)
 from . import OLLAMA_INSTALLED
 from ._typing import (
     Message,
@@ -98,6 +107,35 @@ class Provider(AIProvider):
             else:
                 yield chunk["message"]["content"]
 
+    def _map_exception_to_clientai_error(self, e: Exception) -> ClientAIError:
+        """
+        Maps an Ollama exception to the appropriate ClientAI exception.
+
+        Args:
+            e (Exception): The exception caught during the API call.
+
+        Returns:
+            ClientAIError: An instance of the appropriate ClientAI exception.
+        """
+        message = str(e)
+
+        if isinstance(e, ollama.RequestError):
+            if "authentication" in message.lower():
+                return AuthenticationError(message, original_error=e)
+            elif "rate limit" in message.lower():
+                return RateLimitError(message, original_error=e)
+            elif "not found" in message.lower():
+                return ModelError(message, original_error=e)
+            else:
+                return InvalidRequestError(message, original_error=e)
+        elif isinstance(e, ollama.ResponseError):
+            if "timeout" in message.lower() or "timed out" in message.lower():
+                return TimeoutError(message, original_error=e)
+            else:
+                return APIError(message, original_error=e)
+        else:
+            return ClientAIError(message, original_error=e)
+
     def generate_text(
         self,
         prompt: str,
@@ -152,24 +190,28 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        response = self.client.generate(
-            model=model, prompt=prompt, stream=stream, **kwargs
-        )
-
-        if stream:
-            return cast(
-                OllamaGenericResponse,
-                self._stream_generate_response(
-                    cast(Iterator[OllamaStreamResponse], response),
-                    return_full_response,
-                ),
+        try:
+            response = self.client.generate(
+                model=model, prompt=prompt, stream=stream, **kwargs
             )
-        else:
-            response = cast(OllamaResponse, response)
-            if return_full_response:
-                return response
+
+            if stream:
+                return cast(
+                    OllamaGenericResponse,
+                    self._stream_generate_response(
+                        cast(Iterator[OllamaStreamResponse], response),
+                        return_full_response,
+                    ),
+                )
             else:
-                return response["response"]
+                response = cast(OllamaResponse, response)
+                if return_full_response:
+                    return response
+                else:
+                    return response["response"]
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)
 
     def chat(
         self,
@@ -231,21 +273,25 @@ class Provider(AIProvider):
                 print(chunk, end="", flush=True)
             ```
         """
-        response = self.client.chat(
-            model=model, messages=messages, stream=stream, **kwargs
-        )
-
-        if stream:
-            return cast(
-                OllamaGenericResponse,
-                self._stream_chat_response(
-                    cast(Iterator[OllamaChatResponse], response),
-                    return_full_response,
-                ),
+        try:
+            response = self.client.chat(
+                model=model, messages=messages, stream=stream, **kwargs
             )
-        else:
-            response = cast(OllamaChatResponse, response)
-            if return_full_response:
-                return response
+
+            if stream:
+                return cast(
+                    OllamaGenericResponse,
+                    self._stream_chat_response(
+                        cast(Iterator[OllamaChatResponse], response),
+                        return_full_response,
+                    ),
+                )
             else:
-                return response["message"]["content"]
+                response = cast(OllamaChatResponse, response)
+                if return_full_response:
+                    return response
+                else:
+                    return response["message"]["content"]
+
+        except Exception as e:
+            raise self._map_exception_to_clientai_error(e)
