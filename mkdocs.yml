@@ -45,14 +45,6 @@ nav:
   - ClientAI: index.md
   - Installing: installing.md
   - Quick-Start: quick-start.md
-  - API Reference: 
-    - Overview: api/overview.md
-    - ClientAI: api/clientai.md
-    - AIProvider: api/ai_provider.md
-    - Specific Providers:
-      - Ollama: api/ollama_provider.md
-      - OpenAI: api/openai_provider.md
-      - Replicate: api/replicate_provider.md
   - Usage:
     - usage/overview.md
     - usage/initialization.md
@@ -64,6 +56,21 @@ nav:
     - Overview: examples/overview.md
     - Examples:
       - AI Dungeon Master: examples/ai_dungeon_master.md
+  - Advanced:
+    - Overview: advanced/overview.md
+    - Specific Providers:
+      - Ollama: advanced/ollama_specific.md
+      - OpenAI: advanced/openai_specific.md
+      - Replicate: advanced/replicate_specific.md
+    - Error Handling: advanced/error_handling.md
+  - API Reference:
+    - Overview: api/overview.md
+    - ClientAI: api/clientai.md
+    - AIProvider: api/ai_provider.md
+    - Specific Providers:
+      - Ollama: api/ollama_provider.md
+      - OpenAI: api/openai_provider.md
+      - Replicate: api/replicate_provider.md
   - Community:
     - Overview: community/overview.md
     - Contributing: community/CONTRIBUTING.md
