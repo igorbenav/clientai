@@ -54,16 +54,12 @@ class TimeoutError(ClientAIError):
     """Raised when a request to the AI provider times out."""
 
 
-def map_status_code_to_exception(
-    status_code: int, message: str, original_error: Optional[Exception] = None
-) -> Type[ClientAIError]:
+def map_status_code_to_exception(status_code: int) -> Type[ClientAIError]:
     """
     Maps an HTTP status code to the appropriate ClientAI exception class.
 
     Args:
         status_code (int): The HTTP status code.
-        message (str): The error message.
-        original_error (Exception, optional): The original exception caught.
 
     Returns:
         Type[ClientAIError]: The appropriate ClientAI exception class.
@@ -99,6 +95,6 @@ def raise_clientai_error(
         ClientAIError: The appropriate ClientAI exception.
     """
     exception_class = map_status_code_to_exception(
-        status_code, message, original_error
+        status_code,
     )
     raise exception_class(message, status_code, original_error)

@@ -121,20 +121,26 @@ class Provider(AIProvider):
 
         if isinstance(e, ollama.RequestError):
             if "authentication" in message.lower():
-                return AuthenticationError(message, original_error=e)
+                return AuthenticationError(
+                    message, status_code=401, original_error=e
+                )
             elif "rate limit" in message.lower():
-                return RateLimitError(message, original_error=e)
+                return RateLimitError(
+                    message, status_code=429, original_error=e
+                )
             elif "not found" in message.lower():
-                return ModelError(message, original_error=e)
+                return ModelError(message, status_code=404, original_error=e)
             else:
-                return InvalidRequestError(message, original_error=e)
+                return InvalidRequestError(
+                    message, status_code=400, original_error=e
+                )
         elif isinstance(e, ollama.ResponseError):
             if "timeout" in message.lower() or "timed out" in message.lower():
-                return TimeoutError(message, original_error=e)
+                return TimeoutError(message, status_code=408, original_error=e)
             else:
-                return APIError(message, original_error=e)
+                return APIError(message, status_code=500, original_error=e)
         else:
-            return ClientAIError(message, original_error=e)
+            return ClientAIError(message, status_code=500, original_error=e)
 
     def generate_text(
         self,

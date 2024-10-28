@@ -45,7 +45,8 @@ def test_generate_text_authentication_error(mock_ollama, provider):
     with pytest.raises(AuthenticationError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "Authentication failed"
+    assert str(exc_info.value) == "[401] Authentication failed"
+    assert exc_info.value.status_code == 401
     assert exc_info.value.original_exception is error
 
 
@@ -56,7 +57,8 @@ def test_generate_text_rate_limit_error(mock_ollama, provider):
     with pytest.raises(RateLimitError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "Rate limit exceeded"
+    assert str(exc_info.value) == "[429] Rate limit exceeded"
+    assert exc_info.value.status_code == 429
     assert exc_info.value.original_exception is error
 
 
@@ -67,7 +69,8 @@ def test_generate_text_model_error(mock_ollama, provider):
     with pytest.raises(ModelError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "Model not found"
+    assert str(exc_info.value) == "[404] Model not found"
+    assert exc_info.value.status_code == 404
     assert exc_info.value.original_exception is error
 
 
@@ -78,7 +81,8 @@ def test_generate_text_invalid_request_error(mock_ollama, provider):
     with pytest.raises(InvalidRequestError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "Invalid request"
+    assert str(exc_info.value) == "[400] Invalid request"
+    assert exc_info.value.status_code == 400
     assert exc_info.value.original_exception is error
 
 
@@ -89,7 +93,8 @@ def test_generate_text_timeout_error(mock_ollama, provider):
     with pytest.raises(TimeoutError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "Request timed out"
+    assert str(exc_info.value) == "[408] Request timed out"
+    assert exc_info.value.status_code == 408
     assert exc_info.value.original_exception is error
 
 
@@ -100,7 +105,8 @@ def test_generate_text_api_error(mock_ollama, provider):
     with pytest.raises(APIError) as exc_info:
         provider.generate_text(prompt="Test prompt", model="test-model")
 
-    assert str(exc_info.value) == "API response error"
+    assert str(exc_info.value) == "[500] API response error"
+    assert exc_info.value.status_code == 500
     assert exc_info.value.original_exception is error
 
 
@@ -111,7 +117,8 @@ def test_chat_request_error(mock_ollama, provider, valid_chat_request):
     with pytest.raises(InvalidRequestError) as exc_info:
         provider.chat(**valid_chat_request)
 
-    assert str(exc_info.value) == "Invalid chat request"
+    assert str(exc_info.value) == "[400] Invalid chat request"
+    assert exc_info.value.status_code == 400
     assert exc_info.value.original_exception is error
 
 
@@ -122,5 +129,6 @@ def test_chat_response_error(mock_ollama, provider, valid_chat_request):
     with pytest.raises(APIError) as exc_info:
         provider.chat(**valid_chat_request)
 
-    assert str(exc_info.value) == "Chat API response error"
+    assert str(exc_info.value) == "[500] Chat API response error"
+    assert exc_info.value.status_code == 500
     assert exc_info.value.original_exception is error
