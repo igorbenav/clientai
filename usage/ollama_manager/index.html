@@ -895,6 +895,30 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-development-and-prototyping" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Development and Prototyping
+    </span>
+  </a>
+  
+</li>
+        
           <li class="md-nav__item">
   <a href="#2-multiple-model-testing" class="md-nav__link">
     <span class="md-ellipsis">
@@ -2038,6 +2062,30 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-development-and-prototyping" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Development and Prototyping
+    </span>
+  </a>
+  
+</li>
+        
           <li class="md-nav__item">
   <a href="#2-multiple-model-testing" class="md-nav__link">
     <span class="md-ellipsis">
@@ -2205,12 +2253,14 @@
 <h1 id="ollama-manager-guide">Ollama Manager Guide<a class="headerlink" href="#ollama-manager-guide" title="Permanent link">&para;</a></h1>
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
 <p>Ollama Manager provides a streamlined way to prototype and develop applications using Ollama's AI models. Instead of manually managing the Ollama server process, installing it as a service, or running it in a separate terminal, Ollama Manager handles the entire lifecycle programmatically.</p>
-<p><strong>Key Benefits for Prototyping:</strong>
-- Start/stop Ollama server automatically within your Python code
-- Configure resources dynamically based on your needs
-- Handle multiple server instances for testing
-- Automatic cleanup of resources
-- Platform-independent operation</p>
+<p><strong>Key Benefits for Prototyping:</strong></p>
+<ul>
+<li>Start/stop Ollama server automatically within your Python code</li>
+<li>Configure resources dynamically based on your needs</li>
+<li>Handle multiple server instances for testing</li>
+<li>Automatic cleanup of resources</li>
+<li>Platform-independent operation</li>
+</ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">clientai</span> <span class="kn">import</span> <span class="n">ClientAI</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">clientai.ollama</span> <span class="kn">import</span> <span class="n">OllamaManager</span>
@@ -2415,73 +2465,126 @@
 </span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>Each setting explained:</p>
-<p><strong>Server Settings:</strong>
-- <code>host</code>: IP address to bind the server to
-  - Default: "127.0.0.1" (localhost)
-  - Use "0.0.0.0" to allow external connections
-- <code>port</code>: Port number for the server
-  - Default: 11434
-  - Change if default port is in use
-- <code>timeout</code>: Maximum time to wait for server startup
-  - Unit: seconds
-  - Increase for slower systems
-- <code>check_interval</code>: Time between server health checks
-  - Unit: seconds
-  - Adjust based on system responsiveness</p>
-<p><strong>GPU Settings:</strong>
-- <code>gpu_layers</code>: Number of model layers to offload to GPU
-  - Higher = more GPU utilization
-  - Lower = more CPU utilization
-  - Model-dependent (typically 24-40)
-- <code>gpu_memory_fraction</code>: Portion of GPU memory to use
-  - Range: 0.0 to 1.0
-  - Higher values may improve performance
-  - Lower values leave room for other applications
-- <code>gpu_devices</code>: Specific GPU devices to use
-  - Single GPU: <code>gpu_devices=0</code>
-  - Multiple GPUs: <code>gpu_devices=[0, 1]</code>
-  - None: <code>gpu_devices=None</code></p>
-<p><strong>CPU Settings:</strong>
-- <code>cpu_threads</code>: Number of CPU threads to use
-  - Default: System dependent
-  - Recommended: Leave some threads for system
-  - Example: <code>os.cpu_count() - 2</code>
-- <code>memory_limit</code>: Maximum RAM allocation
-  - Must use <code>GiB</code> or <code>MiB</code> units
-  - Examples: "8GiB", "16384MiB"
-  - Should not exceed available system RAM</p>
-<p><strong>Compute Settings:</strong>
-- <code>compute_unit</code>: Preferred compute device
-  - "auto": Let Ollama decide (recommended)
-  - "cpu": Force CPU-only operation
-  - "gpu": Force GPU operation if available</p>
-<p><strong>Additional Settings:</strong>
-- <code>env_vars</code>: Additional environment variables
-  - Used for platform-specific settings
-  - Example: <code>{"CUDA_VISIBLE_DEVICES": "0,1"}</code>
-- <code>extra_args</code>: Additional CLI arguments
-  - Passed directly to Ollama server
-  - Example: <code>["--verbose", "--debug"]</code>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>## Common Use Cases
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>### 1. Development and Prototyping
+<p><strong>Server Settings:</strong></p>
+<ul>
+<li>
+<p><code>host</code>: IP address to bind the server to</p>
+<ul>
+<li>Default: "127.0.0.1" (localhost)</li>
+<li>Use "0.0.0.0" to allow external connections</li>
+</ul>
+</li>
+<li>
+<p><code>port</code>: Port number for the server</p>
+<ul>
+<li>Default: 11434</li>
+<li>Change if default port is in use</li>
+</ul>
+</li>
+<li>
+<p><code>timeout</code>: Maximum time to wait for server startup</p>
+<ul>
+<li>Unit: seconds</li>
+<li>Increase for slower systems</li>
+</ul>
+</li>
+<li>
+<p><code>check_interval</code>: Time between server health checks</p>
+<ul>
+<li>Unit: seconds</li>
+<li>Adjust based on system responsiveness</li>
+</ul>
+</li>
+</ul>
+<p><strong>GPU Settings:</strong></p>
+<ul>
+<li>
+<p><code>gpu_layers</code>: Number of model layers to offload to GPU</p>
+<ul>
+<li>Higher = more GPU utilization</li>
+<li>Lower = more CPU utilization</li>
+<li>Model-dependent (typically 24-40)</li>
+</ul>
+</li>
+<li>
+<p><code>gpu_memory_fraction</code>: Portion of GPU memory to use</p>
+<ul>
+<li>Range: 0.0 to 1.0</li>
+<li>Higher values may improve performance</li>
+<li>Lower values leave room for other applications</li>
+</ul>
+</li>
+<li>
+<p><code>gpu_devices</code>: Specific GPU devices to use</p>
+<ul>
+<li>Single GPU: <code>gpu_devices=0</code></li>
+<li>Multiple GPUs: <code>gpu_devices=[0, 1]</code></li>
+<li>None: <code>gpu_devices=None</code></li>
+</ul>
+</li>
+</ul>
+<p><strong>CPU Settings:</strong></p>
+<ul>
+<li>
+<p><code>cpu_threads</code>: Number of CPU threads to use</p>
+<ul>
+<li>Default: System dependent</li>
+<li>Recommended: Leave some threads for system</li>
+<li>Example: <code>os.cpu_count() - 2</code></li>
+</ul>
+</li>
+<li>
+<p><code>memory_limit</code>: Maximum RAM allocation</p>
+<ul>
+<li>Must use <code>GiB</code> or <code>MiB</code> units</li>
+<li>Examples: "8GiB", "16384MiB"</li>
+<li>Should not exceed available system RAM</li>
+</ul>
+</li>
+</ul>
+<p><strong>Compute Settings:</strong></p>
+<ul>
+<li><code>compute_unit</code>: Preferred compute device<ul>
+<li>"auto": Let Ollama decide (recommended)</li>
+<li>"cpu": Force CPU-only operation</li>
+<li>"gpu": Force GPU operation if available</li>
+</ul>
+</li>
+</ul>
+<p><strong>Additional Settings:</strong></p>
+<ul>
+<li>
+<p><code>env_vars</code>: Additional environment variables</p>
+<ul>
+<li>Used for platform-specific settings</li>
+<li>Example: <code>{"CUDA_VISIBLE_DEVICES": "0,1"}</code></li>
+</ul>
+</li>
+<li>
+<p><code>extra_args</code>: Additional CLI arguments</p>
+<ul>
+<li>Passed directly to Ollama server</li>
+<li>Example: <code>["--verbose", "--debug"]</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="common-use-cases">Common Use Cases<a class="headerlink" href="#common-use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="1-development-and-prototyping">1. Development and Prototyping<a class="headerlink" href="#1-development-and-prototyping" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Quick setup for development</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">with</span> <span class="n">OllamaManager</span><span class="p">()</span> <span class="k">as</span> <span class="n">manager</span><span class="p">:</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">client</span> <span class="o">=</span> <span class="n">ClientAI</span><span class="p">(</span><span class="s1">&#39;ollama&#39;</span><span class="p">)</span>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>```python
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a># Quick setup for development
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>with OllamaManager() as manager:
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    client = ClientAI(&#39;ollama&#39;)
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
-</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>    # Test different prompts
-</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    prompts = [
-</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>        &quot;Write a poem about AI&quot;,
-</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>        &quot;Explain quantum physics&quot;,
-</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>        &quot;Create a Python function&quot;
-</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>    ]
-</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>
-</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>    for prompt in prompts:
-</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>        response = client.generate_text(prompt, model=&quot;llama2&quot;)
-</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>        print(f&quot;Prompt: {prompt}\nResponse: {response}\n&quot;)
-</span></code></pre></div></p>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="c1"># Test different prompts</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">prompts</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>        <span class="s2">&quot;Write a poem about AI&quot;</span><span class="p">,</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>        <span class="s2">&quot;Explain quantum physics&quot;</span><span class="p">,</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>        <span class="s2">&quot;Create a Python function&quot;</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>    <span class="p">]</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    <span class="k">for</span> <span class="n">prompt</span> <span class="ow">in</span> <span class="n">prompts</span><span class="p">:</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">generate_text</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;llama2&quot;</span><span class="p">)</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="se">\n</span><span class="s2">Response: </span><span class="si">{</span><span class="n">response</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
 <h3 id="2-multiple-model-testing">2. Multiple Model Testing<a class="headerlink" href="#2-multiple-model-testing" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Test different models with different configurations</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;llama2&quot;</span><span class="p">,</span> <span class="s2">&quot;codellama&quot;</span><span class="p">,</span> <span class="s2">&quot;mistral&quot;</span><span class="p">]</span>

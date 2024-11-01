@@ -1943,12 +1943,15 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>To add a new provider, you'll need to:</p>
 <ol>
-<li>Create a new directory for the provider</li>
-<li>Implement the provider-specific types</li>
-<li>Implement the provider class</li>
-<li>Update the main ClientAI class</li>
-<li>Update the package constants</li>
-<li>Add tests for the new provider</li>
+<li><a href="#step-1-create-a-new-directory">Create a new directory for the provider</a></li>
+<li><a href="#step-2-implement-provider-specific-types">Implement the provider-specific types</a></li>
+<li><a href="#step-3-implement-the-provider-class">Implement the provider class</a></li>
+<li><a href="#step-4-implement-unified-error-handling">Implement Unified Error Handling</a></li>
+<li><a href="#step-5-update-the-main-clientai-class">Update the main ClientAI class</a></li>
+<li><a href="#step-6-update-package-constants-and-dependencies">Update the package constants</a></li>
+<li><a href="#step-7-add-tests">Add tests for the new provider</a></li>
+<li><a href="#step-8-test-error-handling">Test Error Handling</a></li>
+<li><a href="#step-9-update-documentation">Update Documentation</a></li>
 </ol>
 <p>Let's go through each step in detail.</p>
 <h2 id="step-1-create-a-new-directory">Step 1: Create a New Directory<a class="headerlink" href="#step-1-create-a-new-directory" title="Permanent link">&para;</a></h2>
@@ -2026,8 +2029,8 @@
 <h2 id="step-4-implement-unified-error-handling">Step 4: Implement Unified Error Handling<a class="headerlink" href="#step-4-implement-unified-error-handling" title="Permanent link">&para;</a></h2>
 <p>Before implementing the provider class, set up error handling for your provider. This ensures consistent error reporting across all providers.</p>
 <ol>
-<li>First, import the necessary error types:</li>
-</ol>
+<li>
+<p>First, import the necessary error types:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># clientai/newai/provider.py</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span> <span class="nn">..exceptions</span> <span class="kn">import</span> <span class="p">(</span>
@@ -2040,9 +2043,9 @@
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="ne">TimeoutError</span><span class="p">,</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span>
 </span></code></pre></div>
-<ol>
-<li>Implement the error mapping method in your provider class:</li>
-</ol>
+</li>
+<li>
+<p>Implement the error mapping method in your provider class:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">class</span> <span class="nc">Provider</span><span class="p">(</span><span class="n">AIProvider</span><span class="p">):</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="o">...</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="k">def</span> <span class="nf">_map_exception_to_clientai_error</span><span class="p">(</span>
@@ -2102,6 +2105,8 @@
 </span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a>            <span class="n">original_error</span><span class="o">=</span><span class="n">e</span>
 </span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a>        <span class="p">)</span>
 </span></code></pre></div>
+</li>
+</ol>
 <h2 id="step-5-update-the-main-clientai-class">Step 5: Update the Main ClientAI Class<a class="headerlink" href="#step-5-update-the-main-clientai-class" title="Permanent link">&para;</a></h2>
 <p>Update the <code>clientai/client_ai.py</code> file to include support for your new provider:</p>
 <ol>
@@ -2152,22 +2157,22 @@
 </ol>
 <h2 id="step-6-update-package-constants-and-dependencies">Step 6: Update Package Constants and Dependencies<a class="headerlink" href="#step-6-update-package-constants-and-dependencies" title="Permanent link">&para;</a></h2>
 <ol>
-<li>In the <code>clientai/_constants.py</code> file, add a constant for your new provider:</li>
-</ol>
+<li>
+<p>In the <code>clientai/_constants.py</code> file, add a constant for your new provider:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">NEWAI_INSTALLED</span> <span class="o">=</span> <span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;newai&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </span></code></pre></div>
-<ol>
-<li>Update the <code>clientai/__init__.py</code> file to export the new constant:</li>
-</ol>
+</li>
+<li>
+<p>Update the <code>clientai/__init__.py</code> file to export the new constant:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span> <span class="nn">._constants</span> <span class="kn">import</span> <span class="n">NEWAI_INSTALLED</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="c1"># ... existing exports ...</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="s2">&quot;NEWAI_INSTALLED&quot;</span><span class="p">,</span>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">]</span>
 </span></code></pre></div>
-<ol>
-<li>Update the <code>pyproject.toml</code> file to include the new provider as an optional dependency:</li>
-</ol>
+</li>
+<li>
+<p>Update the <code>pyproject.toml</code> file to include the new provider as an optional dependency:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">[tool.poetry.dependencies]</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">python</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^3.9&quot;</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">pydantic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^2.9.2&quot;</span>
@@ -2176,18 +2181,18 @@
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">ollama</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;^0.3.3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
 </span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">newai-package</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;^1.0.0&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">optional</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span><span class="w">  </span><span class="c1"># Add this line</span>
 </span></code></pre></div>
-<ol>
-<li>Define an optional group for the new provider:</li>
-</ol>
+</li>
+<li>
+<p>Define an optional group for the new provider:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">[tool.poetry.group.newai]</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">optional</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">[tool.poetry.group.newai.dependencies]</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">newai-package</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^1.0.0&quot;</span>
 </span></code></pre></div>
-<ol>
-<li>Include the new provider in the development dependencies:</li>
-</ol>
+</li>
+<li>
+<p>Include the new provider in the development dependencies:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[tool.poetry.group.dev.dependencies]</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">ruff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^0.6.8&quot;</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">pytest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^8.3.3&quot;</span>
@@ -2197,8 +2202,10 @@
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">ollama</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^0.3.3&quot;</span>
 </span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="n">newai-package</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;^1.0.0&quot;</span><span class="w">  </span><span class="c1"># Add this line</span>
 </span></code></pre></div>
-<ol>
-<li>Run <code>poetry update</code> to update the <code>poetry.lock</code> file with the new dependencies.</li>
+</li>
+<li>
+<p>Run <code>poetry update</code> to update the <code>poetry.lock</code> file with the new dependencies.</p>
+</li>
 </ol>
 <p>These changes allow users to install the new provider's dependencies using Poetry:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>poetry install --with newai
