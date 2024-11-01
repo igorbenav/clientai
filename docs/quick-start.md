@@ -105,6 +105,37 @@ response = client.chat(
 print(response)
 ```
 
+### Ollama Server Management
+
+If you're running Ollama locally, ClientAI provides a convenient way to manage the Ollama server:
+
+```python title="ollama_manager.py"
+from clientai.ollama import OllamaManager
+
+# Start and automatically stop the server using a context manager
+with OllamaManager() as manager:
+    # Server is now running
+    client = ClientAI('ollama')
+    response = client.generate_text("Hello, world!", model="llama2")
+    print(response)
+```
+
+You can also configure basic server settings:
+
+```python
+from clientai.ollama import OllamaManager, OllamaServerConfig
+
+config = OllamaServerConfig(
+    host="127.0.0.1",
+    port=11434,
+    gpu_layers=35  # Optional: Number of layers to run on GPU
+)
+
+with OllamaManager(config) as manager:
+    # Your code here
+    pass
+```
+
 ## Next Steps
 
 Now that you've seen the basics of ClientAI, you can:
