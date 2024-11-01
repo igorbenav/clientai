@@ -1,6 +1,6 @@
 import http.client
 import subprocess
-from typing import Any, cast
+from typing import Any, Union, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -28,7 +28,7 @@ class MockProcess:
         self.wait = MagicMock()
         self.communicate = MagicMock(return_value=("", ""))
 
-    def poll(self) -> int | None:
+    def poll(self) -> Union[int, None]:
         """Mock poll method."""
         return self._poll_value
 
