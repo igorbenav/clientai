@@ -5,6 +5,7 @@
 Ollama Manager provides a streamlined way to prototype and develop applications using Ollama's AI models. Instead of manually managing the Ollama server process, installing it as a service, or running it in a separate terminal, Ollama Manager handles the entire lifecycle programmatically.
 
 **Key Benefits for Prototyping:**
+
 - Start/stop Ollama server automatically within your Python code
 - Configure resources dynamically based on your needs
 - Handle multiple server instances for testing
@@ -234,57 +235,68 @@ config = OllamaServerConfig(
 Each setting explained:
 
 **Server Settings:**
+
 - `host`: IP address to bind the server to
-  - Default: "127.0.0.1" (localhost)
-  - Use "0.0.0.0" to allow external connections
+    - Default: "127.0.0.1" (localhost)
+    - Use "0.0.0.0" to allow external connections
+
 - `port`: Port number for the server
-  - Default: 11434
-  - Change if default port is in use
+    - Default: 11434
+    - Change if default port is in use
+
 - `timeout`: Maximum time to wait for server startup
-  - Unit: seconds
-  - Increase for slower systems
+    - Unit: seconds
+    - Increase for slower systems
+
 - `check_interval`: Time between server health checks
-  - Unit: seconds
-  - Adjust based on system responsiveness
+    - Unit: seconds
+    - Adjust based on system responsiveness
 
 **GPU Settings:**
+
 - `gpu_layers`: Number of model layers to offload to GPU
-  - Higher = more GPU utilization
-  - Lower = more CPU utilization
-  - Model-dependent (typically 24-40)
+    - Higher = more GPU utilization
+    - Lower = more CPU utilization
+    - Model-dependent (typically 24-40)
+
 - `gpu_memory_fraction`: Portion of GPU memory to use
-  - Range: 0.0 to 1.0
-  - Higher values may improve performance
-  - Lower values leave room for other applications
+    - Range: 0.0 to 1.0
+    - Higher values may improve performance
+    - Lower values leave room for other applications
+
 - `gpu_devices`: Specific GPU devices to use
-  - Single GPU: `gpu_devices=0`
-  - Multiple GPUs: `gpu_devices=[0, 1]`
-  - None: `gpu_devices=None`
+    - Single GPU: `gpu_devices=0`
+    - Multiple GPUs: `gpu_devices=[0, 1]`
+    - None: `gpu_devices=None`
 
 **CPU Settings:**
+
 - `cpu_threads`: Number of CPU threads to use
-  - Default: System dependent
-  - Recommended: Leave some threads for system
-  - Example: `os.cpu_count() - 2`
+    - Default: System dependent
+    - Recommended: Leave some threads for system
+    - Example: `os.cpu_count() - 2`
+
 - `memory_limit`: Maximum RAM allocation
-  - Must use `GiB` or `MiB` units
-  - Examples: "8GiB", "16384MiB"
-  - Should not exceed available system RAM
+    - Must use `GiB` or `MiB` units
+    - Examples: "8GiB", "16384MiB"
+    - Should not exceed available system RAM
 
 **Compute Settings:**
+
 - `compute_unit`: Preferred compute device
-  - "auto": Let Ollama decide (recommended)
-  - "cpu": Force CPU-only operation
-  - "gpu": Force GPU operation if available
+    - "auto": Let Ollama decide (recommended)
+    - "cpu": Force CPU-only operation
+    - "gpu": Force GPU operation if available
 
 **Additional Settings:**
+
 - `env_vars`: Additional environment variables
-  - Used for platform-specific settings
-  - Example: `{"CUDA_VISIBLE_DEVICES": "0,1"}`
+    - Used for platform-specific settings
+    - Example: `{"CUDA_VISIBLE_DEVICES": "0,1"}`
+
 - `extra_args`: Additional CLI arguments
-  - Passed directly to Ollama server
-  - Example: `["--verbose", "--debug"]`
-```
+    - Passed directly to Ollama server
+    - Example: `["--verbose", "--debug"]`
 
 ## Common Use Cases
 

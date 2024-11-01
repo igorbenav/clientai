@@ -6,12 +6,15 @@ This guide will walk you through the process of adding support for a new AI prov
 
 To add a new provider, you'll need to:
 
-1. Create a new directory for the provider
-2. Implement the provider-specific types
-3. Implement the provider class
-4. Update the main ClientAI class
-5. Update the package constants
-6. Add tests for the new provider
+1. [Create a new directory for the provider](#step-1-create-a-new-directory)
+2. [Implement the provider-specific types](#step-2-implement-provider-specific-types)
+3. [Implement the provider class](#step-3-implement-the-provider-class)
+4. [Implement Unified Error Handling](#step-4-implement-unified-error-handling)
+5. [Update the main ClientAI class](#step-5-update-the-main-clientai-class)
+6. [Update the package constants](#step-6-update-package-constants-and-dependencies)
+7. [Add tests for the new provider](#step-7-add-tests)
+8. [Test Error Handling](#step-8-test-error-handling)
+9. [Update Documentation](#step-9-update-documentation)
 
 Let's go through each step in detail.
 
@@ -106,82 +109,82 @@ Before implementing the provider class, set up error handling for your provider.
 
 1. First, import the necessary error types:
 
-```python
-# clientai/newai/provider.py
+    ```python
+    # clientai/newai/provider.py
 
-from ..exceptions import (
-    APIError,
-    AuthenticationError,
-    ClientAIError,
-    InvalidRequestError,
-    ModelError,
-    RateLimitError,
-    TimeoutError,
-)
-```
+    from ..exceptions import (
+        APIError,
+        AuthenticationError,
+        ClientAIError,
+        InvalidRequestError,
+        ModelError,
+        RateLimitError,
+        TimeoutError,
+    )
+    ```
 
 2. Implement the error mapping method in your provider class:
 
-```python
-class Provider(AIProvider):
-    ...
-    def _map_exception_to_clientai_error(
-        self,
-        e: Exception,
-        status_code: Optional[int] = None
-    ) -> ClientAIError:
-        """
-        Maps NewAI-specific exceptions to ClientAI exceptions.
+    ```python
+    class Provider(AIProvider):
+        ...
+        def _map_exception_to_clientai_error(
+            self,
+            e: Exception,
+            status_code: Optional[int] = None
+        ) -> ClientAIError:
+            """
+            Maps NewAI-specific exceptions to ClientAI exceptions.
 
-        Args:
-            e: The caught exception
-            status_code: Optional HTTP status code
+            Args:
+                e: The caught exception
+                status_code: Optional HTTP status code
 
-        Returns:
-            ClientAIError: The appropriate ClientAI exception
-        """
-        error_message = str(e)
-        status_code = status_code or getattr(e, "status_code", None)
+            Returns:
+                ClientAIError: The appropriate ClientAI exception
+            """
+            error_message = str(e)
+            status_code = status_code or getattr(e, "status_code", None)
 
-        # Map NewAI-specific exceptions to ClientAI exceptions
-        if isinstance(e, NewAIAuthError):
-            return AuthenticationError(
+            # Map NewAI-specific exceptions to ClientAI exceptions
+            if isinstance(e, NewAIAuthError):
+                return AuthenticationError(
+                    error_message,
+                    status_code=401,
+                    original_error=e
+                )
+            elif isinstance(e, NewAIRateLimitError):
+                return RateLimitError(
+                    error_message,
+                    status_code=429,
+                    original_error=e
+                )
+            elif "model not found" in error_message.lower():
+                return ModelError(
+                    error_message,
+                    status_code=404,
+                    original_error=e
+                )
+            elif isinstance(e, NewAIInvalidRequestError):
+                return InvalidRequestError(
+                    error_message,
+                    status_code=400,
+                    original_error=e
+                )
+            elif isinstance(e, NewAITimeoutError):
+                return TimeoutError(
+                    error_message,
+                    status_code=408,
+                    original_error=e
+                )
+            
+            # Default to APIError for unknown errors
+            return APIError(
                 error_message,
-                status_code=401,
+                status_code,
                 original_error=e
             )
-        elif isinstance(e, NewAIRateLimitError):
-            return RateLimitError(
-                error_message,
-                status_code=429,
-                original_error=e
-            )
-        elif "model not found" in error_message.lower():
-            return ModelError(
-                error_message,
-                status_code=404,
-                original_error=e
-            )
-        elif isinstance(e, NewAIInvalidRequestError):
-            return InvalidRequestError(
-                error_message,
-                status_code=400,
-                original_error=e
-            )
-        elif isinstance(e, NewAITimeoutError):
-            return TimeoutError(
-                error_message,
-                status_code=408,
-                original_error=e
-            )
-        
-        # Default to APIError for unknown errors
-        return APIError(
-            error_message,
-            status_code,
-            original_error=e
-        )
-```
+    ```
 
 ## Step 5: Update the Main ClientAI Class
 
@@ -236,54 +239,54 @@ Update the `clientai/client_ai.py` file to include support for your new provider
 
 1. In the `clientai/_constants.py` file, add a constant for your new provider:
 
-```python
-NEWAI_INSTALLED = find_spec("newai") is not None
-```
+    ```python
+    NEWAI_INSTALLED = find_spec("newai") is not None
+    ```
 
 2. Update the `clientai/__init__.py` file to export the new constant:
 
-```python
-from ._constants import NEWAI_INSTALLED
-__all__ = [
-    # ... existing exports ...
-    "NEWAI_INSTALLED",
-]
-```
+    ```python
+    from ._constants import NEWAI_INSTALLED
+    __all__ = [
+        # ... existing exports ...
+        "NEWAI_INSTALLED",
+    ]
+    ```
 
 3. Update the `pyproject.toml` file to include the new provider as an optional dependency:
 
-```toml
-[tool.poetry.dependencies]
-python = "^3.9"
-pydantic = "^2.9.2"
-openai = {version = "^1.50.2", optional = true}
-replicate = {version = "^0.34.1", optional = true}
-ollama = {version = "^0.3.3", optional = true}
-newai-package = {version = "^1.0.0", optional = true}  # Add this line
-```
+    ```toml
+    [tool.poetry.dependencies]
+    python = "^3.9"
+    pydantic = "^2.9.2"
+    openai = {version = "^1.50.2", optional = true}
+    replicate = {version = "^0.34.1", optional = true}
+    ollama = {version = "^0.3.3", optional = true}
+    newai-package = {version = "^1.0.0", optional = true}  # Add this line
+    ```
 
 4. Define an optional group for the new provider:
 
-```toml
-[tool.poetry.group.newai]
-optional = true
+    ```toml
+    [tool.poetry.group.newai]
+    optional = true
 
-[tool.poetry.group.newai.dependencies]
-newai-package = "^1.0.0"
-```
+    [tool.poetry.group.newai.dependencies]
+    newai-package = "^1.0.0"
+    ```
 
 5. Include the new provider in the development dependencies:
 
-```toml
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.6.8"
-pytest = "^8.3.3"
-mypy = "1.9.0"
-openai = "^1.50.2"
-replicate = "^0.34.1"
-ollama = "^0.3.3"
-newai-package = "^1.0.0"  # Add this line
-```
+    ```toml
+    [tool.poetry.group.dev.dependencies]
+    ruff = "^0.6.8"
+    pytest = "^8.3.3"
+    mypy = "1.9.0"
+    openai = "^1.50.2"
+    replicate = "^0.34.1"
+    ollama = "^0.3.3"
+    newai-package = "^1.0.0"  # Add this line
+    ```
 
 6. Run `poetry update` to update the `poetry.lock` file with the new dependencies.
 
