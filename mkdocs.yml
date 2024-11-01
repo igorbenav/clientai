@@ -46,12 +46,14 @@ nav:
   - Installing: installing.md
   - Quick-Start: quick-start.md
   - Usage:
-    - usage/overview.md
-    - usage/initialization.md
-    - usage/text_generation.md
-    - usage/chat_functionality.md
-    - usage/multiple_providers.md
-    - usage/error_handling.md
+    - ClientAI:
+      - usage/overview.md
+      - usage/initialization.md
+      - usage/text_generation.md
+      - usage/chat_functionality.md
+      - usage/multiple_providers.md
+      - usage/error_handling.md
+    - usage/ollama_manager.md
   - Examples:
     - Overview: examples/overview.md
     - Examples:
@@ -68,9 +70,12 @@ nav:
     - ClientAI: api/clientai.md
     - AIProvider: api/ai_provider.md
     - Specific Providers:
-      - Ollama: api/ollama_provider.md
-      - OpenAI: api/openai_provider.md
-      - Replicate: api/replicate_provider.md
+      - Ollama: api/specific_providers/ollama_provider.md
+      - OpenAI: api/specific_providers/openai_provider.md
+      - Replicate: api/specific_providers/replicate_provider.md
+    - Ollama Manager:
+      - OllamaManager: api/ollama_manager/ollama_manager.md
+      - OllamaServerConfig: api/ollama_manager/ollama_server_config.md
   - Community:
     - Overview: community/overview.md
     - Contributing: community/CONTRIBUTING.md

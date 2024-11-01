@@ -16,9 +16,14 @@ ClientAI's API is comprised of several key components, each serving a specific p
 
 3. **Provider-Specific Classes**: These classes implement the AIProvider interface for each supported AI service (OpenAI, Replicate, Ollama).
 
-    - [OpenAI Provider Reference](openai_provider.md)
-    - [Replicate Provider Reference](replicate_provider.md)
-    - [Ollama Provider Reference](ollama_provider.md)
+    - [OpenAI Provider Reference](specific_providers/openai_provider.md)
+    - [Replicate Provider Reference](specific_providers/replicate_provider.md)
+    - [Ollama Provider Reference](specific_providers/ollama_provider.md)
+
+4. **Ollama Manager**: These classes handle the local Ollama server configuration and lifecycle management.
+
+    - [OllamaManager Class Reference](ollama_manager/ollama_manager.md)
+    - [OllamaServerConfig Class Reference](ollama_manager/ollama_server_config.md)
 
 ## Usage
 
