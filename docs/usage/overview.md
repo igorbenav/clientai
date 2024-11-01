@@ -28,7 +28,14 @@ Explore techniques for effectively using multiple AI providers within a single p
 
 - [Multiple Providers Guide](multiple_providers.md)
 
-### 5. Handling Responses and Errors
+
+### 5. Using Ollama Manager
+
+Learn how to use Ollama Manager for streamlined prototyping and development. This guide covers server lifecycle management, resource configuration, and best practices for different use cases.
+
+- [Ollama Manager Guide](ollama_manager.md)
+
+### 6. Handling Responses and Errors
 
 Learn best practices for handling responses from AI providers and managing potential errors. This guide covers response parsing, error handling, and retry strategies.
 

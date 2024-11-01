@@ -100,7 +100,90 @@ class Provider(AIProvider):
 
 Make sure to handle both streaming and non-streaming responses, as well as the `return_full_response` option.
 
-## Step 4: Update the Main ClientAI Class
+## Step 4: Implement Unified Error Handling
+
+Before implementing the provider class, set up error handling for your provider. This ensures consistent error reporting across all providers.
+
+1. First, import the necessary error types:
+
+```python
+# clientai/newai/provider.py
+
+from ..exceptions import (
+    APIError,
+    AuthenticationError,
+    ClientAIError,
+    InvalidRequestError,
+    ModelError,
+    RateLimitError,
+    TimeoutError,
+)
+```
+
+2. Implement the error mapping method in your provider class:
+
+```python
+class Provider(AIProvider):
+    ...
+    def _map_exception_to_clientai_error(
+        self,
+        e: Exception,
+        status_code: Optional[int] = None
+    ) -> ClientAIError:
+        """
+        Maps NewAI-specific exceptions to ClientAI exceptions.
+
+        Args:
+            e: The caught exception
+            status_code: Optional HTTP status code
+
+        Returns:
+            ClientAIError: The appropriate ClientAI exception
+        """
+        error_message = str(e)
+        status_code = status_code or getattr(e, "status_code", None)
+
+        # Map NewAI-specific exceptions to ClientAI exceptions
+        if isinstance(e, NewAIAuthError):
+            return AuthenticationError(
+                error_message,
+                status_code=401,
+                original_error=e
+            )
+        elif isinstance(e, NewAIRateLimitError):
+            return RateLimitError(
+                error_message,
+                status_code=429,
+                original_error=e
+            )
+        elif "model not found" in error_message.lower():
+            return ModelError(
+                error_message,
+                status_code=404,
+                original_error=e
+            )
+        elif isinstance(e, NewAIInvalidRequestError):
+            return InvalidRequestError(
+                error_message,
+                status_code=400,
+                original_error=e
+            )
+        elif isinstance(e, NewAITimeoutError):
+            return TimeoutError(
+                error_message,
+                status_code=408,
+                original_error=e
+            )
+        
+        # Default to APIError for unknown errors
+        return APIError(
+            error_message,
+            status_code,
+            original_error=e
+        )
+```
+
+## Step 5: Update the Main ClientAI Class
 
 Update the `clientai/client_ai.py` file to include support for your new provider:
 
@@ -149,7 +232,7 @@ Update the `clientai/client_ai.py` file to include support for your new provider
         ...
     ```
 
-## Step 5: Update Package Constants and Dependencies
+## Step 6: Update Package Constants and Dependencies
 
 1. In the `clientai/_constants.py` file, add a constant for your new provider:
 
@@ -216,7 +299,7 @@ If users are not using Poetry and are installing the package via pip, they can s
 pip install clientai[newai]
 ```
 
-## Step 6: Add Tests
+## Step 7: Add Tests
 
 Create a new test file for your provider in the `tests` directory:
 
@@ -229,7 +312,20 @@ tests/
 
 Implement tests for your new provider, ensuring that you cover both the `generate_text` and `chat` methods, as well as streaming and non-streaming scenarios.
 
-## Step 7: Update Documentation
+## Step 8: Test Error Handling
+
+Also create a new test file to test your provider's exceptions in the `tests` directory:
+
+```
+tests/
+    newai/
+        __init__.py
+        test_exceptions.py
+```
+
+Add tests to ensure unified tests are being handled with a reference to the original error.
+
+## Step 9: Update Documentation
 
 Don't forget to update the documentation to include information about the new provider:
 
