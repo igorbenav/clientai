@@ -64,6 +64,17 @@ client = ClientAI('ollama', host="your-ollama-host")
 # Now you can use the client for text generation or chat
 ```
 
+### Groq
+
+```python title="groq_setup.py" hl_lines="4"
+from clientai import ClientAI
+
+# Initialize the Groq client
+client = ClientAI('groq', host="your-ollama-host")
+
+# Now you can use the client for text generation or chat
+```
+
 ## Basic Usage
 
 Once you have initialized the client, you can use it for text generation and chat functionality:

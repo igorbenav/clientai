@@ -55,6 +55,16 @@ ollama_client = ClientAI('ollama', host="http://localhost:11434")
 
 Ensure that you have Ollama running locally on the specified host.
 
+## Groq Initialization
+
+To initialize ClientAI with Groq:
+
+```python
+from clientai import ClientAI
+
+replicate_client = ClientAI('groq', api_key="your-groq-api-key")
+```
+
 ## Multiple Provider Initialization
 
 You can initialize multiple providers in the same script:
@@ -64,6 +74,7 @@ from clientai import ClientAI
 
 openai_client = ClientAI('openai', api_key="your-openai-api-key")
 replicate_client = ClientAI('replicate', api_key="your-replicate-api-key")
+groq_client = ClientAI('groq', api_key="your-groq-api-key")
 ollama_client = ClientAI('ollama', host="http://localhost:11434")
 ```
 

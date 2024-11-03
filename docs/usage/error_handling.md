@@ -120,6 +120,45 @@ def _map_exception_to_clientai_error(self, e: Exception, status_code: int = None
         return APIError(error_message, status_code, original_error=e)
 ```
 
+### Groq
+
+```python
+def _map_exception_to_clientai_error(self, e: Exception) -> ClientAIError:
+    error_message = str(e)
+
+    if isinstance(e, (GroqAuthenticationError | PermissionDeniedError)):
+        return AuthenticationError(
+            error_message,
+            status_code=getattr(e, "status_code", 401),
+            original_error=e,
+        )
+    elif isinstance(e, GroqRateLimitError):
+        return RateLimitError(error_message, status_code=429, original_error=e)
+    elif isinstance(e, NotFoundError):
+        return ModelError(error_message, status_code=404, original_error=e)
+    elif isinstance(e, (BadRequestError, UnprocessableEntityError, ConflictError)):
+        return InvalidRequestError(
+            error_message,
+            status_code=getattr(e, "status_code", 400),
+            original_error=e,
+        )
+    elif isinstance(e, APITimeoutError):
+        return TimeoutError(error_message, status_code=408, original_error=e)
+    elif isinstance(e, InternalServerError):
+        return APIError(
+            error_message,
+            status_code=getattr(e, "status_code", 500),
+            original_error=e,
+        )
+    elif isinstance(e, APIStatusError):
+        status = getattr(e, "status_code", 500)
+        if status >= 500:
+            return APIError(error_message, status_code=status, original_error=e)
+        return InvalidRequestError(error_message, status_code=status, original_error=e)
+
+    return ClientAIError(error_message, status_code=500, original_error=e)
+```
+
 ## Best Practices
 
 1. **Specific Exception Handling**: Catch specific exceptions when you need to handle them differently.

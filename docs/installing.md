@@ -10,6 +10,7 @@ Before installing ClientAI, ensure you have the following prerequisites:
     * For OpenAI: `openai` library
     * For Replicate: `replicate` library
     * For Ollama: `ollama` library
+    * For Groq: `groq` library
 
 ## Installing
 
@@ -37,14 +38,16 @@ To install ClientAI with support for specific providers:
 pip install clientai[openai]  # For OpenAI support
 pip install clientai[replicate]  # For Replicate support
 pip install clientai[ollama]  # For Ollama support
+pip install clientai[groq]  # For Groq support
 ```
 
 Or with poetry:
 
 ```sh
-poetry add clientai[openai]
-poetry add clientai[replicate]
-poetry add clientai[ollama]
+poetry add "clientai[openai]"
+poetry add "clientai[replicate]"
+poetry add "clientai[ollama]"
+poetry add "clientai[groq]"
 ```
 
 ### Full Installation
@@ -58,5 +61,5 @@ pip install clientai[all]
 Or with poetry:
 
 ```sh
-poetry add clientai[all]
+poetry add "clientai[all]"
 ```

@@ -1,4 +1,9 @@
-from ._constants import OLLAMA_INSTALLED, OPENAI_INSTALLED, REPLICATE_INSTALLED
+from ._constants import (
+    GROQ_INSTALLED,
+    OLLAMA_INSTALLED,
+    OPENAI_INSTALLED,
+    REPLICATE_INSTALLED,
+)
 from .client_ai import ClientAI
 
 __all__ = [
@@ -6,4 +11,5 @@ __all__ = [
     "OPENAI_INSTALLED",
     "REPLICATE_INSTALLED",
     "OLLAMA_INSTALLED",
+    "GROQ_INSTALLED",
 ]
