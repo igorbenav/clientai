@@ -136,7 +136,7 @@ def _map_exception_to_clientai_error(self, e: Exception) -> ClientAIError:
         return RateLimitError(error_message, status_code=429, original_error=e)
     elif isinstance(e, NotFoundError):
         return ModelError(error_message, status_code=404, original_error=e)
-    elif isinstance(e, (BadRequestError | UnprocessableEntityError | ConflictError)):
+    elif isinstance(e, (BadRequestError, UnprocessableEntityError, ConflictError)):
         return InvalidRequestError(
             error_message,
             status_code=getattr(e, "status_code", 400),

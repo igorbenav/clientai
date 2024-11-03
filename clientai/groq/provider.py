@@ -113,7 +113,7 @@ class Provider(AIProvider):
         """
         error_message = str(e)
 
-        if isinstance(e, (GroqAuthenticationError | PermissionDeniedError)):
+        if isinstance(e, (GroqAuthenticationError, PermissionDeniedError)): # noqa: UP038
             return AuthenticationError(
                 error_message,
                 status_code=getattr(e, "status_code", 401),
@@ -125,8 +125,8 @@ class Provider(AIProvider):
             )
         elif isinstance(e, NotFoundError):
             return ModelError(error_message, status_code=404, original_error=e)
-        elif isinstance(
-            e, (BadRequestError | UnprocessableEntityError | ConflictError)
+        elif isinstance( # noqa: UP038
+            e, (BadRequestError, UnprocessableEntityError, ConflictError)
         ):
             return InvalidRequestError(
                 error_message,
