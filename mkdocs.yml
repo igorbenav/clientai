@@ -64,6 +64,7 @@ nav:
       - Ollama: advanced/ollama_specific.md
       - OpenAI: advanced/openai_specific.md
       - Replicate: advanced/replicate_specific.md
+      - Groq: advanced/groq_specific.md
     - Error Handling: advanced/error_handling.md
   - API Reference:
     - Overview: api/overview.md
@@ -73,6 +74,7 @@ nav:
       - Ollama: api/specific_providers/ollama_provider.md
       - OpenAI: api/specific_providers/openai_provider.md
       - Replicate: api/specific_providers/replicate_provider.md
+      - Groq: api/specific_providers/groq_provider.md
     - Ollama Manager:
       - OllamaManager: api/ollama_manager/ollama_manager.md
       - OllamaServerConfig: api/ollama_manager/ollama_server_config.md
