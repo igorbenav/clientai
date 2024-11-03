@@ -1824,14 +1824,14 @@
 </p>
 <hr>
 <p align="justify">
-<b>ClientAI</b> is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
+<b>ClientAI</b> is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, Groq and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
 </p>
 <hr>
 
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Unified Interface</strong>: Consistent methods for text generation and chat across multiple AI providers.</li>
-<li><strong>Multiple Providers</strong>: Support for OpenAI, Replicate, and Ollama, with easy extensibility for future providers.</li>
+<li><strong>Multiple Providers</strong>: Support for OpenAI, Replicate, Groq and Ollama, with easy extensibility for future providers.</li>
 <li><strong>Streaming Support</strong>: Efficient streaming of responses for real-time applications.</li>
 <li><strong>Flexible Configuration</strong>: Easy setup with provider-specific configurations.</li>
 <li><strong>Customizable</strong>: Extensible design for adding new providers or customizing existing ones.</li>
@@ -1871,7 +1871,7 @@
 <p>Before installing ClientAI, ensure you have the following prerequisites:</p>
 <ul>
 <li><strong>Python:</strong> Version 3.9 or newer.</li>
-<li><strong>Dependencies:</strong> The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., <code>openai</code>, <code>replicate</code>, <code>ollama</code>) are optional and can be installed separately.</li>
+<li><strong>Dependencies:</strong> The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., <code>openai</code>, <code>replicate</code>, <code>ollama</code>, <code>groq</code>) are optional and can be installed separately.</li>
 </ul>
 <h2 id="installing">Installing<a class="headerlink" href="#installing" title="Permanent link">&para;</a></h2>
 <p>To install ClientAI with all providers, run:</p>
@@ -1881,6 +1881,7 @@
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>install<span class="w"> </span>clientai<span class="o">[</span>openai<span class="o">]</span><span class="w">  </span><span class="c1"># For OpenAI support</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>clientai<span class="o">[</span>replicate<span class="o">]</span><span class="w">  </span><span class="c1"># For Replicate support</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>pip<span class="w"> </span>install<span class="w"> </span>clientai<span class="o">[</span>ollama<span class="o">]</span><span class="w">  </span><span class="c1"># For Ollama support</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>pip<span class="w"> </span>install<span class="w"> </span>clientai<span class="o">[</span>groq<span class="o">]</span><span class="w">  </span><span class="c1"># For Groq support</span>
 </span></code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>ClientAI offers a consistent way to interact with different AI providers:</p>
