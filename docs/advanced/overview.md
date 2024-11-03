@@ -15,6 +15,9 @@ Different AI providers offer unique parameters and features. Understanding these
 3. **Replicate Specific Guide**: Discover Replicate's distinctive offerings, including model versioning and custom deployment options.
       - [Replicate Specific Guide](replicate_specific.md)
 
+3. **Groq Specific Guide**: Also check Groq's specific settings and parameters.
+      - [Groq Specific Guide](groq_specific.md)
+
 ## Advanced Usage Topics
 
 4. **Optimizing Performance:** Tips and tricks for improving response time, reducing token usage, and enhancing overall efficiency.
