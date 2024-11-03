@@ -26,14 +26,14 @@
 </p>
 <hr>
 <p align="justify">
-<b>ClientAI</b> is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
+<b>ClientAI</b> is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, Groq and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
 </p>
 <hr>
 
 ## Features
 
 - **Unified Interface**: Consistent methods for text generation and chat across multiple AI providers.
-- **Multiple Providers**: Support for OpenAI, Replicate, and Ollama, with easy extensibility for future providers.
+- **Multiple Providers**: Support for OpenAI, Replicate, Groq and Ollama, with easy extensibility for future providers.
 - **Streaming Support**: Efficient streaming of responses for real-time applications.
 - **Flexible Configuration**: Easy setup with provider-specific configurations.
 - **Customizable**: Extensible design for adding new providers or customizing existing ones.
@@ -78,7 +78,7 @@ print(response)
 Before installing ClientAI, ensure you have the following prerequisites:
 
 * **Python:** Version 3.9 or newer.
-* **Dependencies:** The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`) are optional and can be installed separately.
+* **Dependencies:** The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`, `groq`) are optional and can be installed separately.
 
 ## Installing
 
@@ -94,6 +94,7 @@ Or, if you prefer to install only specific providers:
 pip install clientai[openai]  # For OpenAI support
 pip install clientai[replicate]  # For Replicate support
 pip install clientai[ollama]  # For Ollama support
+pip install clientai[groq]  # For Groq support
 ```
 
 ## Usage
