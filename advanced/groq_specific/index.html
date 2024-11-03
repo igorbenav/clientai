@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://github.com/igorbenav/clientai/advanced/groq_specific/">
       
       
+        <link rel="prev" href="../replicate_specific/">
+      
+      
+        <link rel="next" href="../error_handling/">
       
       
       <link rel="icon" href="../../assets/logo.png">
@@ -22,7 +26,7 @@
     
     
       
-        <title>Groq-Specific Parameters in ClientAI - ClientAI</title>
+        <title>Groq - ClientAI</title>
       
     
     
@@ -111,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Groq-Specific Parameters in ClientAI
+              Groq
             
           </span>
         </div>
@@ -318,10 +322,12 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../overview/" class="md-tabs__link">
           
   
@@ -903,8 +909,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -921,12 +929,12 @@
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -940,7 +948,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Advanced
@@ -972,8 +980,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -983,16 +993,18 @@
       
         
       
+        
+      
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" checked>
         
           
           <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
@@ -1006,7 +1018,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6_2">
             <span class="md-nav__icon md-icon"></span>
             Specific Providers
@@ -1071,6 +1083,331 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Groq
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Groq
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generate_text-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      generate_text Method
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="generate_text Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groq-specific-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Groq-Specific Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Groq-Specific Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#frequency_penalty-optionalfloat" class="md-nav__link">
+    <span class="md-ellipsis">
+      frequency_penalty: Optional[float]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presence_penalty-optionalfloat" class="md-nav__link">
+    <span class="md-ellipsis">
+      presence_penalty: Optional[float]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#max_tokens-optionalint" class="md-nav__link">
+    <span class="md-ellipsis">
+      max_tokens: Optional[int]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#response_format-optionaldict" class="md-nav__link">
+    <span class="md-ellipsis">
+      response_format: Optional[Dict]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seed-optionalint" class="md-nav__link">
+    <span class="md-ellipsis">
+      seed: Optional[int]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temperature-optionalfloat" class="md-nav__link">
+    <span class="md-ellipsis">
+      temperature: Optional[float]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#top_p-optionalfloat" class="md-nav__link">
+    <span class="md-ellipsis">
+      top_p: Optional[float]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#n-optionalint" class="md-nav__link">
+    <span class="md-ellipsis">
+      n: Optional[int]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stop-optionalunionstr-liststr" class="md-nav__link">
+    <span class="md-ellipsis">
+      stop: Optional[Union[str, List[str]]]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stream-optionalbool" class="md-nav__link">
+    <span class="md-ellipsis">
+      stream: Optional[bool]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stream_options-optionaldict" class="md-nav__link">
+    <span class="md-ellipsis">
+      stream_options: Optional[Dict]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-optionalstr" class="md-nav__link">
+    <span class="md-ellipsis">
+      user: Optional[str]
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      chat Method
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="chat Method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-structure_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groq-specific-parameters_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Groq-Specific Parameters
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Groq-Specific Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tools-optionallistdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      tools: Optional[List[Dict]]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tool_choice-optionalunionstr-dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      tool_choice: Optional[Union[str, Dict]]
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallel_tool_calls-optionalbool" class="md-nav__link">
+    <span class="md-ellipsis">
+      parallel_tool_calls: Optional[bool]
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-structured-output-with-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: Structured Output with Tools
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-advanced-text-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: Advanced Text Generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-streaming-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Streaming Generation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-validation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Parameter Validation Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1242,6 +1579,8 @@
       
         
       
+        
+      
     
     
     
@@ -1326,6 +1665,27 @@
   
   <span class="md-ellipsis">
     Replicate
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/specific_providers/groq_provider/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Groq
   </span>
   
 
