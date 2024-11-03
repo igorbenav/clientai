@@ -1,14 +1,19 @@
 from importlib import import_module
 from typing import Any, Generic, List, cast
 
-from ._constants import OLLAMA_INSTALLED, OPENAI_INSTALLED, REPLICATE_INSTALLED
+from ._constants import (
+    GROQ_INSTALLED,
+    OLLAMA_INSTALLED,
+    OPENAI_INSTALLED,
+    REPLICATE_INSTALLED,
+)
 from ._typing import AIGenericResponse, Message, P, S, T
 
 
 class ClientAI(Generic[P, T, S]):
     """
     A unified client for interacting with a single AI provider
-    (OpenAI, Replicate, or Ollama).
+    (OpenAI, Replicate, Ollama, or Groq).
 
     This class provides a consistent interface for common
     AI operations such as text generation and chat
@@ -24,7 +29,7 @@ class ClientAI(Generic[P, T, S]):
 
     Args:
         provider_name: The name of the AI provider to use
-                       ('openai', 'replicate', or 'ollama').
+                       ('openai', 'replicate', 'ollama', or 'groq').
         **kwargs (Any): Provider-specific initialization parameters.
 
     Raises:
@@ -46,11 +51,16 @@ class ClientAI(Generic[P, T, S]):
         ```python
         ai = ClientAI('ollama', host="your-ollama-host")
         ```
+
+        Initialize with Groq:
+        ```python
+        ai = ClientAI('groq', api_key="your-groq-key")
+        ```
     """
 
     def __init__(self, provider_name: str, **kwargs):
         prov_name = provider_name
-        if prov_name not in ["openai", "replicate", "ollama"]:
+        if prov_name not in ["openai", "replicate", "ollama", "groq"]:
             raise ValueError(f"Unsupported provider: {prov_name}")
 
         if (
@@ -60,6 +70,8 @@ class ClientAI(Generic[P, T, S]):
             and not REPLICATE_INSTALLED
             or prov_name == "ollama"
             and not OLLAMA_INSTALLED
+            or prov_name == "groq"
+            and not GROQ_INSTALLED
         ):
             raise ImportError(
                 f"The {prov_name} provider is not installed. "
@@ -71,7 +83,7 @@ class ClientAI(Generic[P, T, S]):
                 f".{prov_name}.provider", package="clientai"
             )
             provider_class = getattr(provider_module, "Provider")
-            if prov_name in ["openai", "replicate"]:
+            if prov_name in ["openai", "replicate", "groq"]:
                 self.provider = cast(
                     P, provider_class(api_key=kwargs.get("api_key"))
                 )
@@ -151,6 +163,14 @@ class ClientAI(Generic[P, T, S]):
             response = ai.generate_text(
                 "What is the capital of France?",
                 model="llama2",
+            )
+            ```
+
+            Generate text using Groq:
+            ```python
+            response = ai.generate_text(
+                "Explain quantum computing",
+                model="llama3-8b-8192",
             )
             ```
         """
@@ -239,6 +259,17 @@ class ClientAI(Generic[P, T, S]):
                 {"role": "user", "content": "What are the laws of robotics?"}
             ]
             response = ai.chat(messages, model="llama2")
+            ```
+
+            Chat using Groq:
+            ```python
+            messages = [
+                {"role": "user", "content": "What is quantum computing?"}
+            ]
+            response = ai.chat(
+                messages,
+                model="llama3-8b-8192",
+            )
             ```
         """
         return self.provider.chat(
