@@ -24,7 +24,7 @@
 
 ---
 
-**ClientAI** is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
+**ClientAI** is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, Groq and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
 
 **Documentation**: [igorbenav.github.io/clientai/](https://igorbenav.github.io/clientai/)
 
@@ -33,7 +33,7 @@
 ## Features
 
 - 🔄 **Unified Interface**: Consistent methods for text generation and chat across multiple AI providers.
-- 🔌 **Multiple Providers**: Support for OpenAI, Replicate, and Ollama, with easy extensibility for future providers.
+- 🔌 **Multiple Providers**: Support for OpenAI, Replicate, Groq and Ollama, with easy extensibility for future providers.
 - 🌊 **Streaming Support**: Efficient streaming of responses for real-time applications.
 - 🎛️ **Flexible Configuration**: Easy setup with provider-specific configurations.
 - 🔧 **Customizable**: Extensible design for adding new providers or customizing existing ones.
@@ -45,7 +45,7 @@
 Before installing ClientAI, ensure you have the following:
 
 - **Python**: Version 3.9 or newer.
-- **Dependencies**: The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`) are optional and can be installed separately.
+- **Dependencies**: The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`, `groq`) are optional and can be installed separately.
 
 ## Installing
 
@@ -61,6 +61,7 @@ Or, if you prefer to install only specific providers:
 pip install clientai[openai]  # For OpenAI support
 pip install clientai[replicate]  # For Replicate support
 pip install clientai[ollama]  # For Ollama support
+pip install clientai[groq]  # For Groq support
 ```
 
 ## Usage
@@ -80,6 +81,9 @@ replicate_client = ClientAI('replicate', api_key="your-replicate-key")
 
 # Initialize with Ollama
 ollama_client = ClientAI('ollama', host="your-ollama-host")
+
+# Initialize with Groq
+groq_client = ClientAI('groq', host="your-groq-key")
 ```
 
 ### Generating Text
@@ -101,6 +105,12 @@ response = replicate_client.generate_text(
 response = ollama_client.generate_text(
     "What is the capital of France?",
     model="llama2",
+)
+
+# Using Groq
+response = groq_client.generate_text(
+    "Who was the first US president?",
+    model="llama3-8b-8192",
 )
 ```
 
@@ -129,6 +139,12 @@ response = replicate_client.chat(
 response = ollama_client.chat(
     messages,
     model="llama2",
+)
+
+# Using Groq
+response = groq_client.chat(
+    messages,
+    model="llama3-8b-8192",
 )
 ```
 
