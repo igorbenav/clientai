@@ -1,32 +1,35 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import dataclass
 from typing import (
     Any,
     List,
     Literal,
     Optional,
     Protocol,
-    TypedDict,
     Union,
 )
 
 from .._common_types import GenericResponse
 
 
-class Message(TypedDict):
+@dataclass
+class Message:
     role: Literal["system", "user", "assistant"]
     content: str
 
 
-class GroqChoice(TypedDict):
+@dataclass
+class GroqChoice:
     index: int
     message: Message
     logprobs: Optional[Any]
     finish_reason: Optional[str]
 
 
-class GroqUsage(TypedDict):
+@dataclass
+class GroqUsage:
     queue_time: float
     prompt_tokens: int
     prompt_time: float
@@ -36,11 +39,13 @@ class GroqUsage(TypedDict):
     total_time: float
 
 
-class GroqMetadata(TypedDict):
+@dataclass
+class GroqMetadata:
     id: str
 
 
-class GroqResponse(TypedDict):
+@dataclass
+class GroqResponse:
     id: str
     object: str
     created: int
@@ -51,18 +56,21 @@ class GroqResponse(TypedDict):
     x_groq: GroqMetadata
 
 
-class GroqStreamDelta(TypedDict):
-    role: Optional[Literal["system", "user", "assistant"]]
-    content: Optional[str]
+@dataclass
+class GroqStreamDelta:
+    role: Optional[Literal["system", "user", "assistant"]] = None
+    content: Optional[str] = None
 
 
-class GroqStreamChoice(TypedDict):
+@dataclass
+class GroqStreamChoice:
     index: int
     delta: GroqStreamDelta
     finish_reason: Optional[str]
 
 
-class GroqStreamResponse(TypedDict):
+@dataclass
+class GroqStreamResponse:
     id: str
     object: str
     created: int
@@ -74,7 +82,12 @@ class GroqStreamResponse(TypedDict):
 
 class GroqChatCompletionProtocol(Protocol):
     def create(
-        self, **kwargs: Any
+        self,
+        *,
+        messages: List[dict[str, str]],
+        model: str,
+        stream: bool = False,
+        **kwargs: Any,
     ) -> Union[GroqResponse, Iterator[GroqStreamResponse]]: ...
 
 

@@ -97,7 +97,7 @@ class Provider(AIProvider):
             if return_full_response:
                 yield chunk
             else:
-                content = chunk["choices"][0]["delta"].get("content")
+                content = chunk.choices[0].delta.content
                 if content:
                     yield content
 
@@ -113,7 +113,7 @@ class Provider(AIProvider):
         """
         error_message = str(e)
 
-        if isinstance(e, (GroqAuthenticationError, PermissionDeniedError)): # noqa: UP038
+        if isinstance(e, (GroqAuthenticationError, PermissionDeniedError)):  # noqa: UP038
             return AuthenticationError(
                 error_message,
                 status_code=getattr(e, "status_code", 401),
@@ -125,7 +125,7 @@ class Provider(AIProvider):
             )
         elif isinstance(e, NotFoundError):
             return ModelError(error_message, status_code=404, original_error=e)
-        elif isinstance( # noqa: UP038
+        elif isinstance(  # noqa: UP038
             e, (BadRequestError, UnprocessableEntityError, ConflictError)
         ):
             return InvalidRequestError(
@@ -219,7 +219,7 @@ class Provider(AIProvider):
                 if return_full_response:
                     return response
                 else:
-                    return response["choices"][0]["message"]["content"]
+                    return response.choices[0].message.content
 
         except Exception as e:
             raise self._map_exception_to_clientai_error(e)
@@ -284,7 +284,7 @@ class Provider(AIProvider):
                 if return_full_response:
                     return response
                 else:
-                    return response["choices"][0]["message"]["content"]
+                    return response.choices[0].message.content
 
         except Exception as e:
             raise self._map_exception_to_clientai_error(e)
