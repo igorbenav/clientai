@@ -4,3 +4,5 @@ OPENAI_INSTALLED = find_spec("openai") is not None
 REPLICATE_INSTALLED = find_spec("replicate") is not None
 OLLAMA_INSTALLED = find_spec("ollama") is not None
 GROQ_INSTALLED = find_spec("groq") is not None
+
+REDIS_INSTALLED = find_spec("redis") is not None

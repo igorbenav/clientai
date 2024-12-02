@@ -183,6 +183,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -193,11 +194,13 @@ class Provider(AIProvider):
             prompt: The input prompt for text generation.
             model: The name or identifier of the Replicate model to use.
             return_full_response: If True, return the full response object.
-                If False, return only the generated text. Defaults to False.
+                If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
-                Defaults to False.
-            **kwargs: Additional keyword arguments
-                      to pass to the Replicate API.
+            json_output: If True, set output="json" in the input parameters
+                to get JSON-formatted responses. The prompt should specify
+                the desired JSON structure.
+            **kwargs: Additional keyword arguments to pass
+                      to the Replicate API.
 
         Returns:
             ReplicateGenericResponse: The generated text, full response object,
@@ -223,6 +226,21 @@ class Provider(AIProvider):
             print(response["output"])
             ```
 
+            Generate JSON output:
+            ```python
+            response = provider.generate_text(
+                '''Create a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }''',
+                model="meta/llama-2-70b-chat:latest",
+                json_output=True
+            )
+            print(response)  # Will be JSON formatted
+            ```
+
             Generate text (streaming):
             ```python
             for chunk in provider.generate_text(
@@ -234,8 +252,15 @@ class Provider(AIProvider):
             ```
         """
         try:
+            input_params = {"prompt": prompt}
+            if json_output:
+                input_params["output"] = "json"
+
             prediction = self.client.predictions.create(
-                model=model, input={"prompt": prompt}, stream=stream, **kwargs
+                model=model,
+                input=input_params,
+                stream=stream,
+                **kwargs,
             )
 
             if stream:
@@ -262,6 +287,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -272,11 +298,13 @@ class Provider(AIProvider):
                       'role' and 'content'.
             model: The name or identifier of the Replicate model to use.
             return_full_response: If True, return the full response object.
-                If False, return only the generated text. Defaults to False.
+                If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
-                Defaults to False.
-            **kwargs: Additional keyword arguments
-                      to pass to the Replicate API.
+            json_output: If True, set output="json" in the input parameters
+                to get JSON-formatted responses. The messages should specify
+                the desired JSON structure.
+            **kwargs: Additional keyword arguments to pass
+                      to the Replicate API.
 
         Returns:
             ReplicateGenericResponse: The chat response, full response object,
@@ -286,9 +314,9 @@ class Provider(AIProvider):
             Chat (message content only):
             ```python
             messages = [
-                {"role": "user", "content": "What is the capital of France?"},
-                {"role": "assistant", "content": "The capital is Paris."},
-                {"role": "user", "content": "What is its population?"}
+                {"role": "user", "content": "What is quantum computing?"},
+                {"role": "assistant", "content": "Quantum computing uses..."},
+                {"role": "user", "content": "What are its applications?"}
             ]
             response = provider.chat(
                 messages,
@@ -297,14 +325,22 @@ class Provider(AIProvider):
             print(response)
             ```
 
-            Chat (full response):
+            Chat with JSON output:
             ```python
+            messages = [
+                {"role": "user", "content": '''Create a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }'''}
+            ]
             response = provider.chat(
                 messages,
                 model="meta/llama-2-70b-chat:latest",
-                return_full_response=True
+                json_output=True
             )
-            print(response["output"])
+            print(response)  # Will be JSON formatted
             ```
 
             Chat (streaming):
@@ -323,8 +359,15 @@ class Provider(AIProvider):
             )
             prompt += "\nassistant: "
 
+            input_params = {"prompt": prompt}
+            if json_output:
+                input_params["output"] = "json"
+
             prediction = self.client.predictions.create(
-                model=model, input={"prompt": prompt}, stream=stream, **kwargs
+                model=model,
+                input=input_params,
+                stream=stream,
+                **kwargs,
             )
 
             if stream:

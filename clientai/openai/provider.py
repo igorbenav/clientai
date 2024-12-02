@@ -146,6 +146,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> OpenAIGenericResponse:
         """
@@ -158,6 +159,9 @@ class Provider(AIProvider):
                 If False, return only the generated text. Defaults to False.
             stream: If True, return an iterator for streaming responses.
                 Defaults to False.
+            json_output: If True, format the response as valid JSON using
+                OpenAI's native JSON mode. The prompt should specify the
+                desired JSON structure. Defaults to False.
             **kwargs: Additional keyword arguments to pass to the OpenAI API.
 
         Returns:
@@ -196,14 +200,35 @@ class Provider(AIProvider):
             ):
                 print(chunk, end="", flush=True)
             ```
+
+            Generate JSON output:
+            ```python
+            response = provider.generate_text(
+                '''Generate a user profile with the following structure:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }''',
+                model="gpt-3.5-turbo",
+                json_output=True
+            )
+            print(response)  # Will be valid JSON
+            ```
         """
         try:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                stream=stream,
-                **kwargs,
-            )
+            messages = [{"role": "user", "content": prompt}]
+
+            completion_kwargs = {
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+            }
+            if json_output:
+                completion_kwargs["response_format"] = {"type": "json_object"}
+            completion_kwargs.update(kwargs)
+
+            response = self.client.chat.completions.create(**completion_kwargs)
 
             if stream:
                 return cast(
@@ -229,6 +254,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> OpenAIGenericResponse:
         """
@@ -242,6 +268,9 @@ class Provider(AIProvider):
                 If False, return only the generated text. Defaults to False.
             stream: If True, return an iterator for streaming responses.
                 Defaults to False.
+            json_output: If True, format the response as valid JSON using
+                OpenAI's native JSON mode. The messages should specify the
+                desired JSON structure. Defaults to False.
             **kwargs: Additional keyword arguments to pass to the OpenAI API.
 
         Returns:
@@ -285,11 +314,36 @@ class Provider(AIProvider):
             ):
                 print(chunk, end="", flush=True)
             ```
+
+            Chat with JSON output:
+            ```python
+            messages = [
+                {"role": "user", "content": '''Generate a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }'''}
+            ]
+            response = provider.chat(
+                messages,
+                model="gpt-3.5-turbo",
+                json_output=True
+            )
+            print(response)  # Will be valid JSON
+            ```
         """
         try:
-            response = self.client.chat.completions.create(
-                model=model, messages=messages, stream=stream, **kwargs
-            )
+            completion_kwargs = {
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+            }
+            if json_output:
+                completion_kwargs["response_format"] = {"type": "json_object"}
+            completion_kwargs.update(kwargs)
+
+            response = self.client.chat.completions.create(**completion_kwargs)
 
             if stream:
                 return cast(

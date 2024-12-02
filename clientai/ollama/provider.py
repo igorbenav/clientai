@@ -148,6 +148,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> OllamaGenericResponse:
         """
@@ -157,9 +158,11 @@ class Provider(AIProvider):
             prompt: The input prompt for text generation.
             model: The name or identifier of the Ollama model to use.
             return_full_response: If True, return the full response object.
-                If False, return only the generated text. Defaults to False.
+                If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
-                Defaults to False.
+            json_output: If True, set format="json" to get JSON-formatted
+                responses using Ollama's native JSON support. The prompt
+                should specify the desired JSON structure.
             **kwargs: Additional keyword arguments to pass to the Ollama API.
 
         Returns:
@@ -170,7 +173,7 @@ class Provider(AIProvider):
             Generate text (text only):
             ```python
             response = provider.generate_text(
-                "Explain the concept of machine learning",
+                "Explain machine learning",
                 model="llama2",
             )
             print(response)
@@ -179,7 +182,7 @@ class Provider(AIProvider):
             Generate text (full response):
             ```python
             response = provider.generate_text(
-                "Explain the concept of machine learning",
+                "Explain machine learning",
                 model="llama2",
                 return_full_response=True
             )
@@ -189,16 +192,37 @@ class Provider(AIProvider):
             Generate text (streaming):
             ```python
             for chunk in provider.generate_text(
-                "Explain the concept of machine learning",
+                "Explain machine learning",
                 model="llama2",
                 stream=True
             ):
                 print(chunk, end="", flush=True)
             ```
+
+            Generate JSON output:
+            ```python
+            response = provider.generate_text(
+                '''Create a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }''',
+                model="llama2",
+                json_output=True
+            )
+            print(response)  # Will be JSON formatted
+            ```
         """
         try:
+            if json_output:
+                kwargs["format"] = "json"
+
             response = self.client.generate(
-                model=model, prompt=prompt, stream=stream, **kwargs
+                model=model,
+                prompt=prompt,
+                stream=stream,
+                **kwargs,
             )
 
             if stream:
@@ -225,6 +249,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> OllamaGenericResponse:
         """
@@ -235,9 +260,11 @@ class Provider(AIProvider):
                       'role' and 'content'.
             model: The name or identifier of the Ollama model to use.
             return_full_response: If True, return the full response object.
-                If False, return only the generated text. Defaults to False.
+                If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
-                Defaults to False.
+            json_output: If True, set format="json" to get JSON-formatted
+                responses using Ollama's native JSON support. The messages
+                should specify the desired JSON structure.
             **kwargs: Additional keyword arguments to pass to the Ollama API.
 
         Returns:
@@ -248,9 +275,9 @@ class Provider(AIProvider):
             Chat (message content only):
             ```python
             messages = [
-                {"role": "user", "content": "What is the capital of Japan?"},
-                {"role": "assistant", "content": "The capital is Tokyo."},
-                {"role": "user", "content": "What is its population?"}
+                {"role": "user", "content": "What is machine learning?"},
+                {"role": "assistant", "content": "Machine learning is..."},
+                {"role": "user", "content": "Give me some examples"}
             ]
             response = provider.chat(
                 messages,
@@ -269,19 +296,33 @@ class Provider(AIProvider):
             print(response["message"]["content"])
             ```
 
-            Chat (streaming):
+            Chat with JSON output:
             ```python
-            for chunk in provider.chat(
+            messages = [
+                {"role": "user", "content": '''Create a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }'''}
+            ]
+            response = provider.chat(
                 messages,
                 model="llama2",
-                stream=True
-            ):
-                print(chunk, end="", flush=True)
+                json_output=True
+            )
+            print(response)  # Will be JSON formatted
             ```
         """
         try:
+            if json_output:
+                kwargs["format"] = "json"
+
             response = self.client.chat(
-                model=model, messages=messages, stream=stream, **kwargs
+                model=model,
+                messages=messages,
+                stream=stream,
+                **kwargs,
             )
 
             if stream:

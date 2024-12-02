@@ -71,7 +71,8 @@ class OpenAIStreamResponse:
 class OpenAIChatCompletionProtocol(Protocol):
     def create(
         self, **kwargs: Any
-    ) -> Union[OpenAIResponse, Iterator[OpenAIStreamResponse]]: ...
+    ) -> Union[OpenAIResponse, Iterator[OpenAIStreamResponse]]:
+        ...
 
 
 class OpenAIChatProtocol(Protocol):
@@ -89,7 +90,8 @@ class OpenAIChatCompletions(Protocol):
         messages: List[Message],
         stream: bool = False,
         **kwargs: Any,
-    ) -> Union[OpenAIResponse, OpenAIStreamResponse]: ...
+    ) -> Union[OpenAIResponse, OpenAIStreamResponse]:
+        ...
 
 
 OpenAIProvider = Any
