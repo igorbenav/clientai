@@ -161,6 +161,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -170,20 +171,30 @@ class Provider(AIProvider):
             prompt: The input prompt for text generation.
             model: The name or identifier of the Groq model to use.
             return_full_response: If True, return the full response object.
-                If False, return only the generated text.
+                If False, return only the generated text. Defaults to False.
             stream: If True, return an iterator for streaming responses.
+                Defaults to False.
+            json_output: If True, format the response as valid JSON using
+                Groq's native JSON mode (beta). Note that this is incompatible
+                with streaming and stop sequences. Will return a 400 error with
+                code "json_validate_failed" if JSON generation fails. Defaults
+                to False.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
             GroqGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
+        Raises:
+            InvalidRequestError: If json_output and stream are both True.
+            ClientAIError: If an error occurs during the API call.
+
         Examples:
             Generate text (text only):
             ```python
             response = provider.generate_text(
                 "Explain quantum computing",
-                model="llama2-70b-4096",
+                model="llama3-8b-8192",
             )
             print(response)
             ```
@@ -192,19 +203,40 @@ class Provider(AIProvider):
             ```python
             response = provider.generate_text(
                 "Explain quantum computing",
-                model="llama2-70b-4096",
+                model="llama3-8b-8192",
                 return_full_response=True
             )
-            print(response.choices[0].message["content"])
+            print(response.choices[0].message.content)
+            ```
+
+            Generate JSON output:
+            ```python
+            response = provider.generate_text(
+                '''Create a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }''',
+                model="llama3-8b-8192",
+                json_output=True
+            )
+            print(response)  # Will be valid JSON
             ```
         """
         try:
-            response = self.client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=model,
-                stream=stream,
-                **kwargs,
-            )
+            messages: List[Message] = [{"role": "user", "content": prompt}]
+
+            completion_kwargs: dict[str, Any] = {
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+            }
+            if json_output:
+                completion_kwargs["response_format"] = {"type": "json_object"}
+            completion_kwargs.update(kwargs)
+
+            response = self.client.chat.completions.create(**completion_kwargs)
 
             if stream:
                 return cast(
@@ -219,7 +251,7 @@ class Provider(AIProvider):
                 if return_full_response:
                     return response
                 else:
-                    return response.choices[0].message.content
+                    return cast(str, response.choices[0].message.content)
 
         except Exception as e:
             raise self._map_exception_to_clientai_error(e)
@@ -230,6 +262,7 @@ class Provider(AIProvider):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -242,11 +275,20 @@ class Provider(AIProvider):
             return_full_response: If True, return the full response object.
                 If False, return only the chat content.
             stream: If True, return an iterator for streaming responses.
+            json_output: If True, format the response as valid JSON using
+                Groq's native JSON mode (beta). Note that this is incompatible
+                with streaming and stop sequences. Will return a 400 error with
+                code "json_validate_failed" if JSON generation fails.
+                Defaults to False.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
             GroqGenericResponse: The chat response, full response object,
             or an iterator for streaming responses.
+
+        Raises:
+            InvalidRequestError: If json_output and stream are both True.
+            ClientAIError: If an error occurs during the API call.
 
         Examples:
             Chat (message content only):
@@ -258,18 +300,50 @@ class Provider(AIProvider):
             ]
             response = provider.chat(
                 messages,
-                model="llama2-70b-4096",
+                model="llama3-8b-8192",
             )
             print(response)
             ```
+
+            Chat (full response):
+            ```python
+            response = provider.chat(
+                messages,
+                model="llama3-8b-8192",
+                return_full_response=True
+            )
+            print(response.choices[0].message.content)
+            ```
+
+            Chat with JSON output:
+            ```python
+            messages = [
+                {"role": "user", "content": '''Generate a user profile with:
+                {
+                    "name": "A random name",
+                    "age": "A random age between 20-80",
+                    "occupation": "A random occupation"
+                }'''}
+            ]
+            response = provider.chat(
+                messages,
+                model="llama3-8b-8192",
+                json_output=True
+            )
+            print(response)  # Will be valid JSON
+            ```
         """
         try:
-            response = self.client.chat.completions.create(
-                messages=messages,
-                model=model,
-                stream=stream,
-                **kwargs,
-            )
+            completion_kwargs: dict[str, Any] = {
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+            }
+            if json_output:
+                completion_kwargs["response_format"] = {"type": "json_object"}
+            completion_kwargs.update(kwargs)
+
+            response = self.client.chat.completions.create(**completion_kwargs)
 
             if stream:
                 return cast(
@@ -284,7 +358,7 @@ class Provider(AIProvider):
                 if return_full_response:
                     return response
                 else:
-                    return response.choices[0].message.content
+                    return cast(str, response.choices[0].message.content)
 
         except Exception as e:
             raise self._map_exception_to_clientai_error(e)

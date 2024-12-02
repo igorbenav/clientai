@@ -16,6 +16,7 @@ class AIProvider(ABC):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> GenericResponse:
         """
@@ -27,6 +28,8 @@ class AIProvider(ABC):
             return_full_response: If True, return the full response object
                                   instead of just the generated text.
             stream: If True, return an iterator for streaming responses.
+            json_output: If True, format the response as valid JSON.
+                        Each provider uses its native JSON support mechanism.
             **kwargs: Additional keyword arguments specific to
                       the provider's API.
 
@@ -34,6 +37,12 @@ class AIProvider(ABC):
             GenericResponse:
                 The generated text response, full response object,
                 or an iterator for streaming responses.
+
+        Note:
+            When json_output is True:
+            - OpenAI/Groq use response_format={"type": "json_object"}
+            - Replicate adds output="json" to input parameters
+            - Ollama uses format="json" parameter
         """
         pass
 
@@ -44,6 +53,7 @@ class AIProvider(ABC):
         model: str,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> GenericResponse:
         """
@@ -56,6 +66,8 @@ class AIProvider(ABC):
             return_full_response: If True, return the full response object
                                   instead of just the chat content.
             stream: If True, return an iterator for streaming responses.
+            json_output: If True, format the response as valid JSON.
+                        Each provider uses its native JSON support mechanism.
             **kwargs: Additional keyword arguments specific to
                       the provider's API.
 
@@ -63,5 +75,11 @@ class AIProvider(ABC):
             GenericResponse:
                 The chat response, either as a string, a dictionary,
                 or an iterator for streaming responses.
+
+        Note:
+            When json_output is True:
+            - OpenAI/Groq use response_format={"type": "json_object"}
+            - Replicate adds output="json" to input parameters
+            - Ollama uses format="json" parameter
         """
         pass

@@ -99,9 +99,9 @@ def mock_platform_info():
                     )
                     env["GPU_DEVICE_ORDINAL"] = ",".join(map(str, devices))
                 if config.gpu_memory_fraction is not None:
-                    env["GPU_MAX_HEAP_SIZE"] = (
-                        f"{int(config.gpu_memory_fraction * 100)}%"
-                    )
+                    env[
+                        "GPU_MAX_HEAP_SIZE"
+                    ] = f"{int(config.gpu_memory_fraction * 100)}%"
 
             return env
 
@@ -319,9 +319,9 @@ def test_gpu_specific_environment(gpu_vendor, config, expected_env):
                     )
                     env["GPU_DEVICE_ORDINAL"] = ",".join(map(str, devices))
                 if cfg.gpu_memory_fraction is not None:
-                    env["GPU_MAX_HEAP_SIZE"] = (
-                        f"{int(cfg.gpu_memory_fraction * 100)}%"
-                    )
+                    env[
+                        "GPU_MAX_HEAP_SIZE"
+                    ] = f"{int(cfg.gpu_memory_fraction * 100)}%"
 
             return env
 
