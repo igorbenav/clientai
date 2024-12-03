@@ -204,7 +204,7 @@ class RunFunction:
         return self.func(*args, **kwargs)
 
 
-def _create_step_decorator(step_type: StepType):
+def create_step_decorator(step_type: StepType):
     """
     Generate a decorator to define a step of a specific type (e.g., THINK).
 
@@ -378,10 +378,10 @@ def _create_model_config(
 
 
 # Export step decorators
-think = _create_step_decorator(StepType.THINK)
-act = _create_step_decorator(StepType.ACT)
-observe = _create_step_decorator(StepType.OBSERVE)
-synthesize = _create_step_decorator(StepType.SYNTHESIZE)
+think = create_step_decorator(StepType.THINK)
+act = create_step_decorator(StepType.ACT)
+observe = create_step_decorator(StepType.OBSERVE)
+synthesize = create_step_decorator(StepType.SYNTHESIZE)
 
 
 @overload
