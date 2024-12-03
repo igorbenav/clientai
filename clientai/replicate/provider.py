@@ -181,6 +181,7 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -193,6 +194,9 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Replicate model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                      If provided, will be added as a system message before
+                      the prompt.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -252,7 +256,12 @@ class Provider(AIProvider):
             ```
         """
         try:
-            input_params = {"prompt": prompt}
+            formatted_prompt = ""
+            if system_prompt:
+                formatted_prompt = f"<system>{system_prompt}</system>\n"
+            formatted_prompt += f"<user>{prompt}</user>\n<assistant>"
+
+            input_params = {"prompt": formatted_prompt}
             if json_output:
                 input_params["output"] = "json"
 
@@ -285,6 +294,7 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -297,6 +307,9 @@ class Provider(AIProvider):
             messages: A list of message dictionaries, each containing
                       'role' and 'content'.
             model: The name or identifier of the Replicate model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                      If provided, will be inserted at the start of the
+                      conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -354,10 +367,19 @@ class Provider(AIProvider):
             ```
         """
         try:
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
             prompt = "\n".join(
-                [f"{m['role']}: {m['content']}" for m in messages]
+                [
+                    f"<{m['role']}>{m['content']}</{m['role']}>"
+                    for m in chat_messages
+                ]
             )
-            prompt += "\nassistant: "
+            prompt += "\n<assistant>"
 
             input_params = {"prompt": prompt}
             if json_output:

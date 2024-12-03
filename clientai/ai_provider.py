@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Optional
 
 from ._common_types import GenericResponse, Message
 
@@ -14,6 +14,7 @@ class AIProvider(ABC):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -25,6 +26,7 @@ class AIProvider(ABC):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the AI model to use.
+            system_prompt: Optional system prompt to guide model behavior.
             return_full_response: If True, return the full response object
                                   instead of just the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -51,6 +53,7 @@ class AIProvider(ABC):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -63,6 +66,7 @@ class AIProvider(ABC):
             messages: A list of message dictionaries, each containing
                       'role' and 'content'.
             model: The name or identifier of the AI model to use.
+            system_prompt: Optional system prompt to guide model behavior.
             return_full_response: If True, return the full response object
                                   instead of just the chat content.
             stream: If True, return an iterator for streaming responses.

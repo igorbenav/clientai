@@ -146,6 +146,7 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -157,6 +158,8 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Ollama model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           Uses Ollama's native system parameter.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -217,6 +220,8 @@ class Provider(AIProvider):
         try:
             if json_output:
                 kwargs["format"] = "json"
+            if system_prompt:
+                kwargs["system"] = system_prompt
 
             response = self.client.generate(
                 model=model,
@@ -247,6 +252,7 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -259,6 +265,9 @@ class Provider(AIProvider):
             messages: A list of message dictionaries, each containing
                       'role' and 'content'.
             model: The name or identifier of the Ollama model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be inserted at the start of the
+                           conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -315,12 +324,18 @@ class Provider(AIProvider):
             ```
         """
         try:
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
             if json_output:
                 kwargs["format"] = "json"
 
             response = self.client.chat(
                 model=model,
-                messages=messages,
+                messages=chat_messages,
                 stream=stream,
                 **kwargs,
             )

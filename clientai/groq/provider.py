@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, List, Union, cast
+from typing import Any, List, Optional, Union, cast
 
 from .._common_types import Message
 from ..ai_provider import AIProvider
@@ -159,6 +159,7 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -170,6 +171,9 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Groq model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be added as a system message
+                           before the prompt.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text. Defaults to False.
             stream: If True, return an iterator for streaming responses.
@@ -225,7 +229,10 @@ class Provider(AIProvider):
             ```
         """
         try:
-            messages: List[Message] = [{"role": "user", "content": prompt}]
+            messages: List[Optional[Message]] = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
 
             completion_kwargs: dict[str, Any] = {
                 "model": model,
@@ -260,6 +267,7 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
@@ -270,8 +278,11 @@ class Provider(AIProvider):
 
         Args:
             messages: A list of message dictionaries, each containing
-                    'role' and 'content'.
+                      'role' and 'content'.
             model: The name or identifier of the Groq model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be inserted at the start of
+                           the conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the chat content.
             stream: If True, return an iterator for streaming responses.
@@ -334,9 +345,15 @@ class Provider(AIProvider):
             ```
         """
         try:
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
             completion_kwargs: dict[str, Any] = {
                 "model": model,
-                "messages": messages,
+                "messages": chat_messages,
                 "stream": stream,
             }
             if json_output:

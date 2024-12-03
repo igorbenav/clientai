@@ -1,5 +1,5 @@
 from importlib import import_module
-from typing import Any, Generic, List, cast
+from typing import Any, Generic, List, Optional, cast
 
 from ._constants import (
     GROQ_INSTALLED,
@@ -30,6 +30,8 @@ class ClientAI(Generic[P, T, S]):
     Args:
         provider_name: The name of the AI provider to use
                        ('openai', 'replicate', 'ollama', or 'groq').
+        system_prompt: Optional system prompt to guide the model's behavior
+                       across all interactions.
         **kwargs (Any): Provider-specific initialization parameters.
 
     Raises:
@@ -58,7 +60,9 @@ class ClientAI(Generic[P, T, S]):
         ```
     """
 
-    def __init__(self, provider_name: str, **kwargs):
+    def __init__(
+        self, provider_name: str, system_prompt: Optional[str] = None, **kwargs
+    ):
         prov_name = provider_name
         if prov_name not in ["openai", "replicate", "ollama", "groq"]:
             raise ValueError(f"Unsupported provider: {prov_name}")
@@ -77,6 +81,8 @@ class ClientAI(Generic[P, T, S]):
                 f"The {prov_name} provider is not installed. "
                 f"Please install it with 'pip install clientai[{prov_name}]'."
             )
+
+        self.system_prompt = system_prompt
 
         try:
             provider_module = import_module(
@@ -100,6 +106,7 @@ class ClientAI(Generic[P, T, S]):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
@@ -111,6 +118,8 @@ class ClientAI(Generic[P, T, S]):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the AI model to use.
+            system_prompt: Optional system prompt to override the default one.
+                           If None, uses the one specified in initialization.
             return_full_response: If True, returns the full structured response
                                   If False, returns only the generated text.
             stream: If True, returns an iterator for streaming responses.
@@ -174,9 +183,11 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
         """
+        effective_system_prompt = system_prompt or self.system_prompt
         return self.provider.generate_text(
             prompt,
             model,
+            system_prompt=effective_system_prompt,
             return_full_response=return_full_response,
             stream=stream,
             **kwargs,
@@ -186,6 +197,7 @@ class ClientAI(Generic[P, T, S]):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
@@ -198,6 +210,8 @@ class ClientAI(Generic[P, T, S]):
             messages: A list of message dictionaries, each
                       containing 'role' and 'content'.
             model: The name or identifier of the AI model to use.
+            system_prompt: Optional system prompt to override the default one.
+                           If None, uses the one specified in initialization.
             return_full_response: If True, returns the full structured response
                                   If False, returns the assistant's message.
             stream: If True, returns an iterator for streaming responses.
@@ -272,9 +286,11 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
         """
+        effective_system_prompt = system_prompt or self.system_prompt
         return self.provider.chat(
             messages,
             model,
+            system_prompt=effective_system_prompt,
             return_full_response=return_full_response,
             stream=stream,
             **kwargs,
