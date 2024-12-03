@@ -11,12 +11,11 @@ logger = logging.getLogger(__name__)
 
 class StepExecutionEngine:
     """
-    Handles the execution of individual workflow steps in an agent system.
+    Handles the execution of individual workflow steps.
 
-    This class manages the execution of workflow steps, including
-    LLM interactions, retry logic, and prompt construction.
-    It serves as the core execution engine for processing steps
-    within an agent's workflow.
+    This class manages the execution of workflow steps, including LLM interactions,
+    retry logic, and prompt construction. It supports both direct function execution
+    and LLM-based execution with automatic parameter binding.
 
     Attributes:
         _client: The AI client interface for API communication.
@@ -30,7 +29,6 @@ class StepExecutionEngine:
         ...     default_model="gpt-4",
         ...     default_kwargs={"temperature": 0.7}
         ... )
-        >>> result = engine.execute_step(step, agent, "input data")
     """
 
     def __init__(
@@ -300,12 +298,12 @@ class StepExecutionEngine:
         self, step: Step, agent: Any, *args: Any, **kwargs: Any
     ) -> Optional[str]:
         """
-        Execute a single workflow step with appropriate error handling
-        and logging.
+        Execute a single workflow step.
 
-        This is the main entry point for step execution. It handles both
-        LLM-based and local function execution, manages results storage,
-        and provides comprehensive error handling.
+        This method handles both LLM-based and direct function execution. For
+        LLM-based steps, it builds prompts and manages the LLM interaction.
+        For direct execution, it passes the provided arguments to the step
+        function.
 
         Args:
             step: The workflow step to execute.
