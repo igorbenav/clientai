@@ -13,8 +13,9 @@ class StepExecutionEngine:
     """
     Handles the execution of individual workflow steps.
 
-    This class manages the execution of workflow steps, including LLM interactions,
-    retry logic, and prompt construction. It supports both direct function execution
+    This class manages the execution of workflow steps,
+    including LLM interactions, retry logic, and prompt
+    construction. It supports both direct function execution
     and LLM-based execution with automatic parameter binding.
 
     Attributes:

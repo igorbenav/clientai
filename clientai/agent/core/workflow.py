@@ -13,13 +13,14 @@ class WorkflowManager:
     """
     Manages the workflow of steps for an agent.
 
-    This class registers steps, organizes them into a sequence, and executes them
-    in the defined order. It supports two methods of passing data between steps:
+    This class registers steps, organizes them into a sequence,
+    and executes them in the defined order. It supports two
+    methods of passing data between steps:
 
     1. Automatic Parameter Binding:
-       Steps can receive previous results through their parameters. Parameters are
-       filled in reverse chronological order (most recent first). The number of 
-       parameters determines how many previous results are passed:
+       Steps can receive previous results through their parameters.
+       Parameters are filled in reverse chronological order (most recent first)
+       The number of parameters determines how many previous results are passed
 
        Example:
            >>> class MyAgent(Agent):
@@ -39,9 +40,9 @@ class WorkflowManager:
            ...         return "Final result"
 
     2. Context Access:
-       Steps can access any previous result through the agent's context. This is
-       useful for more complex workflows or when steps need to access results
-       out of order:
+       Steps can access any previous result through the agent's context.
+       This is useful for more complex workflows or when steps need to
+       access results out of order:
 
        Example:
            >>> class MyAgent(Agent):
@@ -141,7 +142,9 @@ class WorkflowManager:
             >>> result = manager.execute(agent, "input data", engine)
             >>> print(result)
         """
-        logger.info(f"Starting workflow execution with {len(self._steps)} steps")
+        logger.info(
+            f"Starting workflow execution with {len(self._steps)} steps"
+        )
         logger.debug(f"Input data: {input_data}")
 
         if self._custom_run:
@@ -154,28 +157,28 @@ class WorkflowManager:
 
         for step in self._steps.values():
             logger.info(f"Executing step: {step.name} ({step.step_type})")
-            
+
             param_count = len(step.func.__code__.co_varnames) - 1
             available_results = len(agent.context.last_results) + 1
 
             if param_count > available_results:
                 raise ValueError(
-                    f"Step '{step.name}' declares {param_count} parameters but only "
-                    f"{available_results} previous results are available "
-                    f"(including input data and results from steps: "
+                    f"Step '{step.name}' declares {param_count} parameters, "
+                    f"but only {available_results} previous results are "
+                    f"available (including input data and results from steps: "
                     f"{', '.join(self._steps.keys())})"
                 )
-            
+
             if param_count == 0:
                 result = engine.execute_step(step, agent)
             elif param_count == 1:
                 result = engine.execute_step(step, agent, last_result)
             else:
                 previous_results = [
-                    agent.context.last_results[s.name] 
-                    for s in reversed(list(self._steps.values())) 
+                    agent.context.last_results[s.name]
+                    for s in reversed(list(self._steps.values()))
                     if s.name in agent.context.last_results
-                ][:param_count - 1]
+                ][: param_count - 1]
                 args = [last_result] + previous_results
                 result = engine.execute_step(step, agent, *args)
 
