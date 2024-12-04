@@ -35,6 +35,14 @@ class Memory(Generic[K, V], ABC):
         ...
         ...     def clear(self) -> None:
         ...         self._storage.clear()
+
+        Use the memory implementation:
+        >>> memory = DictMemory()
+        >>> memory.store("counter", 42)
+        >>> value = memory.retrieve("counter")
+        >>> print(value)  # Output: 42
+        >>> memory.remove("counter")
+        >>> print(memory.retrieve("counter", 0))  # Output: 0
     """
 
     @abstractmethod
@@ -49,8 +57,8 @@ class Memory(Generic[K, V], ABC):
                      operations (e.g., expiration, metadata).
 
         Raises:
-            TypeError: If key or value types don't match the
-                       memory implementation.
+            TypeError: If key or value types don't match the memory
+                       implementation.
             ValueError: If the value cannot be stored for
                         implementation-specific reasons.
 
