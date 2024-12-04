@@ -10,6 +10,7 @@ from typing import (
 )
 
 from ..config.models import ModelConfig
+from ..tools import ToolSelectionConfig
 from .base import Step
 from .types import StepType
 
@@ -206,41 +207,39 @@ class RunFunction:
 
 def create_step_decorator(step_type: StepType):
     """
-    Generate a decorator to define a step of a specific type (e.g., THINK).
+    Generate a decorator for defining workflow steps of a specific type.
 
-    This function creates a decorator that can be used to mark methods as steps
-    in the agent's workflow. The generated decorator captures metadata about
-    the step, such as its name, type, description, and whether it should
-    interact with an LLM.
+    This factory function creates decorators (like @think, @act, etc.) that mark methods
+    as specific types of workflow steps. The generated decorators handle both tool selection
+    and LLM interaction configuration.
 
     Args:
-        step_type: The type of step (THINK, ACT, OBSERVE, SYNTHESIZE).
+        step_type: The type of step (THINK, ACT, OBSERVE, SYNTHESIZE) this decorator will create
 
     Returns:
-        Callable: A decorator function for defining a step.
+        A decorator function that can be used to mark methods as workflow steps
 
-    Examples:
-        Create a custom decorator:
+    Example:
+        Creating a custom step decorator:
         ```python
         from steps.types import StepType
 
-        custom_decorator = _create_step_decorator(StepType.THINK)
+        analyze_step = create_step_decorator(StepType.THINK)
 
-        @custom_decorator("custom_step", description="A custom THINK step.")
-        def custom_function(self, input_data: str) -> str:
-            return f"Custom processing: {input_data}"
+        class CustomAgent(Agent):
+            @analyze_step(
+                "analyze_data",
+                description="Analyzes input data",
+                tool_confidence=0.8
+            )
+            def analyze(self, data: str) -> str:
+                return f"Please analyze: {data}"
         ```
 
-        Use generated decorators:
-        ```python
-        @think("example", description="Local THINK step.", send_to_llm=False)
-        def example_function(self, input_data: str) -> str:
-            return f"Processing locally: {input_data}"
-
-        @think
-        def another_example(self, input_data: str) -> str:
-            return f"Analyze: {input_data}"
-        ```
+    Note:
+        The generated decorator can be used in two ways:
+        1. With parameters
+        2. As a bare decorator
     """
 
     def decorator(
@@ -250,28 +249,136 @@ def create_step_decorator(step_type: StepType):
         description: Optional[str] = None,
         send_to_llm: bool = True,
         json_output: bool = False,
+        use_tools: bool = True,
+        tool_selection_config: Optional[ToolSelectionConfig] = None,
+        tool_confidence: Optional[float] = None,
+        tool_model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
+        max_tools_per_step: Optional[int] = None,
     ) -> Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]:
         """
-        Decorator function that wraps step methods.
+        Core decorator implementation for workflow steps.
+
+        This decorator configures how a step function should be executed within the workflow,
+        including its interaction with the LLM and tool selection behavior.
 
         Args:
-            name: Optional name for the step. If not provided, the function
-                 name is used. Can also be the function itself when used
-                 without parameters.
-            model: Optional model configuration for LLM interaction.
-            description: Optional description of what the step does.
-            send_to_llm: Whether this step should send its output to the LLM.
+            name: The name of the step. If omitted, the function name is used. Can also be
+                 the function itself when used as a bare decorator.
+            model: Model configuration for this specific step. Can be:
+                - A string (model name)
+                - A dictionary of model parameters
+                - A ModelConfig instance
+                If not provided, uses the agent's default model.
+            description: Human-readable description of what this step does.
+            send_to_llm: Whether this step's output should be sent to the language model.
+                        Set to False for steps that process data locally.
             json_output: Whether the LLM should format its response as JSON.
+            use_tools: Whether this step should use automatic tool selection.
+            tool_selection_config: Complete tool selection configuration for this step.
+                                 Mutually exclusive with individual tool parameters.
+            tool_confidence: Minimum confidence threshold for tool selection (0.0-1.0).
+                           Overrides the agent's default threshold for this step.
+            tool_model: Specific model to use for tool selection in this step.
+                       Can be a string, dict, or ModelConfig.
+            max_tools_per_step: Maximum number of tools to use in this step.
+                               Overrides the agent's default for this step.
 
         Returns:
-            Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]:
-                Either the wrapped function or a wrapper function, depending on
-                how the decorator is used.
+            A decorated step function that will be executed as part of the workflow
+
+        Raises:
+            ValueError: If both tool_selection_config and individual tool parameters are provided
+                       or if the configuration is otherwise invalid
+
+        Example:
+            Basic usage with tool selection:
+            ```python
+            class MyAgent(Agent):
+                @think(
+                    "analyze",
+                    description="Analyzes input data",
+                    use_tools=True,
+                    tool_confidence=0.8,
+                    tool_model="gpt-4"
+                )
+                def analyze_data(self, input_data: str) -> str:
+                    return f"Please analyze this data: {input_data}"
+
+                @act(
+                    "process",
+                    description="Processes analysis results",
+                    use_tools=False  # Disable tool selection for this step
+                )
+                def process_results(self, analysis: str) -> str:
+                    return f"Process these results: {analysis}"
+            ```
+
+            Using complete tool selection configuration:
+            ```python
+            class MyAgent(Agent):
+                @think(
+                    "analyze",
+                    description="Complex analysis step",
+                    tool_selection_config=ToolSelectionConfig(
+                        confidence_threshold=0.8,
+                        max_tools_per_step=3,
+                        prompt_template="Custom tool selection prompt: {task}"
+                    )
+                )
+                def complex_analysis(self, data: str) -> str:
+                    return f"Perform complex analysis on: {data}"
+            ```
+
+            Using as a bare decorator:
+            ```python
+            class MyAgent(Agent):
+                @think  # No parameters, uses defaults
+                def simple_analysis(self, data: str) -> str:
+                    return f"Analyze: {data}"
+            ```
+
+        Note:
+            - The decorator ensures type safety by requiring string return types
+            - Tool selection parameters are mutually exclusive with tool_selection_config
+            - The step's model configuration takes precedence over the agent's default
+            - When used as a bare decorator, all parameters use their default values
         """
 
         def wrapper(func: Callable[..., str]) -> StepFunction:
+            """Inner wrapper that creates the StepFunction instance."""
             wrapped = StepFunction(func)
             step_name = name if isinstance(name, str) else func.__name__
+
+            if tool_selection_config and any(
+                x is not None
+                for x in [tool_confidence, tool_model, max_tools_per_step]
+            ):
+                raise ValueError(
+                    "Cannot specify both tool_selection_config and individual tool parameters "
+                    "(tool_confidence, tool_model, max_tools_per_step)"
+                )
+
+            final_tool_config = None
+            if tool_selection_config:
+                final_tool_config = tool_selection_config
+            elif any(
+                x is not None for x in [tool_confidence, max_tools_per_step]
+            ):
+                config_params = {}
+                if tool_confidence is not None:
+                    config_params["confidence_threshold"] = tool_confidence
+                if max_tools_per_step is not None:
+                    config_params["max_tools_per_step"] = max_tools_per_step
+                final_tool_config = ToolSelectionConfig(**config_params)
+
+            tool_model_config = None
+            if tool_model is not None:
+                if isinstance(tool_model, str):
+                    tool_model_config = ModelConfig(name=tool_model)
+                elif isinstance(tool_model, dict):
+                    tool_model_config = ModelConfig(**tool_model)
+                else:
+                    tool_model_config = tool_model
 
             wrapped._step_info = Step.create(
                 func=func,
@@ -283,6 +390,9 @@ def create_step_decorator(step_type: StepType):
                 else None,
                 send_to_llm=send_to_llm,
                 json_output=json_output,
+                use_tools=use_tools,
+                tool_selection_config=final_tool_config,
+                tool_model=tool_model_config,
             )
             return wrapped
 
@@ -377,7 +487,6 @@ def _create_model_config(
         )
 
 
-# Export step decorators
 think = create_step_decorator(StepType.THINK)
 act = create_step_decorator(StepType.ACT)
 observe = create_step_decorator(StepType.OBSERVE)

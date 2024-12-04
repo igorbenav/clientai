@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Optional, get_type_hints
+from typing import Any, Callable, List, Optional, get_type_hints
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..config.models import ModelConfig
 from ..config.steps import StepConfig
+from ..tools import ToolCallDecision, ToolSelectionConfig
 from .types import StepType
 
 
@@ -77,18 +78,30 @@ class Step(BaseModel):
         llm_config: LLM configuration if the step interacts with an LLM.
         send_to_llm: Whether the step sends its data to an LLM. Default True.
         json_output: Whether the LLM should return a JSON. Default False.
+        use_tools: Whether tool selection is enabled for this step. Default True.
+        tool_selection_config: Configuration for tool selection behavior.
+        tool_model: Optional specific model to use for tool selection.
         config: Configuration settings for the step.
         metadata: Metadata extracted from the step function.
+        tool_decisions: Records of tool selection and execution decisions.
 
-    Methods:
-        validate_function: Ensures the step function is callable
-                           and returns a string.
-        validate_name: Ensures the step name is valid Python identifier.
-        is_compatible_with: Checks if the step can receive
-                            output from another step.
-        can_execute_with: Determines if the step can execute with given input.
-        __str__: Provides a human-readable string representation of the step.
-        create: Factory method to create a validated Step instance.
+    Examples:
+        Create a step with tool configuration:
+        ```python
+        step = Step.create(
+            func=example_function,
+            step_type=StepType.THINK,
+            name="analyze",
+            use_tools=True,
+            tool_selection_config=ToolSelectionConfig(
+                confidence_threshold=0.8
+            ),
+            tool_model=ModelConfig(
+                name="llama-2",
+                temperature=0.0
+            )
+        )
+        ```
     """
 
     func: Callable[..., Any]
@@ -98,8 +111,12 @@ class Step(BaseModel):
     llm_config: Optional[ModelConfig] = None
     send_to_llm: bool = True
     json_output: bool = False
+    use_tools: bool = True
+    tool_selection_config: Optional[ToolSelectionConfig] = None
+    tool_model: Optional[ModelConfig] = None
     config: StepConfig = Field(default_factory=StepConfig)
     metadata: Optional[FunctionMetadata] = None
+    tool_decisions: Optional[List[ToolCallDecision]] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True, validate_assignment=True
@@ -283,6 +300,9 @@ class Step(BaseModel):
         llm_config: Optional[ModelConfig] = None,
         send_to_llm: Optional[bool] = None,
         json_output: bool = False,
+        use_tools: bool = True,
+        tool_selection_config: Optional[ToolSelectionConfig] = None,
+        tool_model: Optional[ModelConfig] = None,
         step_config: Optional[StepConfig] = None,
     ) -> "Step":
         """
@@ -292,27 +312,41 @@ class Step(BaseModel):
             func: The function representing the step logic.
             step_type: The type of step (THINK, ACT, etc.).
             name: A custom name for the step. Defaults to the function's name.
-            description: A description of the step. Defaults to
-                         the function's docstring.
+            description: A description of the step. Defaults to function's docstring.
             llm_config: Model configuration for LLM-based steps.
             send_to_llm: Whether the step sends its prompt to an LLM.
             json_output: Whether the LLM should format its response as JSON.
+            use_tools: Whether to enable tool selection for this step.
+            tool_selection_config: Configuration for tool selection behavior.
+            tool_model: Specific model to use for tool selection.
             step_config: Additional step-specific configuration.
 
         Returns:
             Step: A validated Step instance.
 
         Examples:
-            Create a step:
+            Basic step with tool selection:
             ```python
             step = Step.create(
-                func=example_function,
+                func=analyze_data,
+                step_type=StepType.THINK,
+                use_tools=True,
+                tool_selection_config=ToolSelectionConfig(
+                    confidence_threshold=0.8
+                )
+            )
+            ```
+
+            Step with custom tool selection model:
+            ```python
+            step = Step.create(
+                func=process_data,
                 step_type=StepType.ACT,
-                name="example_step",
-                description="An example step.",
-                llm_config=ModelConfig(name="gpt-4"),
-                send_to_llm=True,
-                json_output=True
+                use_tools=True,
+                tool_model=ModelConfig(
+                    name="llama-2",
+                    temperature=0.0
+                )
             )
             ```
         """
@@ -325,6 +359,9 @@ class Step(BaseModel):
             llm_config=llm_config,
             send_to_llm=send_to_llm if send_to_llm is not None else True,
             json_output=json_output,
+            use_tools=use_tools,
+            tool_selection_config=tool_selection_config,
+            tool_model=tool_model,
             config=step_config or StepConfig(),
             metadata=metadata,
         )
