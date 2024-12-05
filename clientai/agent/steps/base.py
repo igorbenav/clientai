@@ -78,7 +78,7 @@ class Step(BaseModel):
         llm_config: LLM configuration if the step interacts with an LLM.
         send_to_llm: Whether the step sends its data to an LLM. Default True.
         json_output: Whether the LLM should return a JSON. Default False.
-        use_tools: Whether tool selection is enabled for this step. Default True.
+        use_tools: Whether tool selection is enabled for step. Default True.
         tool_selection_config: Configuration for tool selection behavior.
         tool_model: Optional specific model to use for tool selection.
         config: Configuration settings for the step.
@@ -312,7 +312,7 @@ class Step(BaseModel):
             func: The function representing the step logic.
             step_type: The type of step (THINK, ACT, etc.).
             name: A custom name for the step. Defaults to the function's name.
-            description: A description of the step. Defaults to function's docstring.
+            description: A description of the step. Defaults to the docstring.
             llm_config: Model configuration for LLM-based steps.
             send_to_llm: Whether the step sends its prompt to an LLM.
             json_output: Whether the LLM should format its response as JSON.

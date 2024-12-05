@@ -20,32 +20,66 @@ logger = logging.getLogger(__name__)
 
 class Agent:
     """
-    A framework for creating and managing LLM-powered agents with automated tool selection.
+    A framework for creating and managing LLM-powered agents
+    with automated tool selection.
 
-    The Agent class provides a flexible framework for building AI agents that can:
-    - Execute multi-step workflows
+    The Agent class provides a flexible framework for building AI agents that:
+    - Execute multi-step workflows with LLM integration
+    - Register and manage tools through decorators or direct registration
     - Automatically select and use appropriate tools
     - Maintain context and state across steps
     - Interact with language models for decision making
 
     Key Features:
+        - Simple tool registration through decorators or direct methods
         - Automated tool selection with configurable confidence thresholds
         - Support for different models in main workflow vs tool selection
         - Flexible step configuration with decorators
         - Built-in context management
         - Comprehensive workflow control
 
-    Attributes:
-        context (AgentContext): Manages the agent's state and memory
-        tool_registry (ToolRegistry): Registry of available tools
-        execution_engine (StepExecutionEngine): Handles step execution
-        workflow_manager (WorkflowManager): Manages workflow execution order
+    Tool Registration:
+        Tools can be registered in three ways:
+        1. Using the global @tool decorator:
+           ```python
+           @tool(name="Calculator", description="Adds numbers")
+           def add(x: int, y: int) -> int:
+               return x + y
+           ```
+
+        2. Using the agent's register_tool decorator:
+           ```python
+           @agent.register_tool(
+               name="TextProcessor",
+               description="Formats text"
+            )
+           def process_text(text: str) -> str:
+               return text.upper()
+           ```
+
+        3. Direct registration with register_tool():
+           ```python
+           def multiply(x: int, y: int) -> int:
+               return x * y
+
+           agent.register_tool(
+               multiply,
+               name="Multiplier",
+               description="Multiplies numbers"
+           )
+           ```
 
     Example:
-        Basic agent definition:
+        Creating an agent with tools and steps:
         ```python
         class MyAgent(Agent):
-            @think("analyze", use_tools=True, tool_confidence=0.8)
+            # Tool registration using decorator
+            @tool(name="Calculator")
+            def add(self, x: int, y: int) -> int:
+                return x + y
+
+            # Workflow step
+            @think("analyze", use_tools=True)
             def analyze_data(self, input_data: str) -> str:
                 return f"Analyze this data: {input_data}"
 
@@ -57,21 +91,26 @@ class Agent:
         agent = MyAgent(
             client=my_client,
             model="gpt-4",
-            tool_confidence=0.7,  # Default confidence threshold
-            tool_model="llama-2"  # Model for tool selection
+            tool_confidence=0.7,
+            tool_model="llama-2"
         )
 
-        # Add tools
-        agent.add_tool(
-            tool=my_tool_function,
-            scopes=["think", "act"],
-            name="MyTool",
-            description="Tool description"
+        # Direct tool registration
+        agent.register_tool(
+            utility_function,
+            name="Utility",
+            description="Utility function"
         )
 
         # Run the agent
         result = agent.run("Input data")
         ```
+
+    Attributes:
+        context (AgentContext): Manages the agent's state and memory
+        tool_registry (ToolRegistry): Registry of available tools
+        execution_engine (StepExecutionEngine): Handles step execution
+        workflow_manager (WorkflowManager): Manages workflow execution order
     """
 
     def __init__(
@@ -88,13 +127,14 @@ class Agent:
         """
         Initialize an Agent instance with specified configurations.
 
-        This constructor sets up the agent with its core components and configurations.
-        It allows for either detailed configuration via ToolSelectionConfig or simplified
-        configuration via individual parameters.
+        This constructor sets up the agent with its core components
+        and configurations. It allows for either detailed configuration
+        via ToolSelectionConfig or simplified configuration via
+        individual parameters.
 
         Args:
             client: The AI client for model interactions
-            default_model: The primary model configuration for the agent. Can be:
+            default_model: The primary model config for the agent. Can be:
                 - A string (model name)
                 - A dict with model parameters
                 - A ModelConfig instance
@@ -106,8 +146,9 @@ class Agent:
             **default_model_kwargs: Additional kwargs for the default model
 
         Raises:
-            ValueError: If default_model is not specified or if both tool_selection_config
-                      and individual tool parameters are provided
+            ValueError: If default_model is not specified or if both
+                        tool_selection_config and individual tool
+                        parameters are provided
 
         Example:
             ```python
@@ -144,7 +185,8 @@ class Agent:
             for x in [tool_confidence, tool_model, max_tools_per_step]
         ):
             raise ValueError(
-                "Cannot specify both tool_selection_config and individual tool parameters "
+                "Cannot specify both tool_selection_config and individual "
+                "tool parameters "
                 "(tool_confidence, tool_model, max_tools_per_step)"
             )
 
@@ -229,18 +271,20 @@ class Agent:
         Add a tool to the agent's registry.
 
         Registers a new tool with the agent, making it available for use in
-        specified workflow steps. Tools can be provided either as plain functions
-        or as pre-configured Tool instances.
+        specified workflow steps. Tools can be provided either as plain
+        functions or as pre-configured Tool instances.
 
         Args:
             tool: The tool to register, either as a function or Tool instance
-            scopes: List of scopes where the tool can be used, or a single scope string.
-                   Valid scopes are: "think", "act", "observe", "synthesize", "all"
+            scopes: List of scopes where the tool can be used,
+                    or a single scope string. Valid scopes are:
+                    "think", "act", "observe", "synthesize", "all"
             name: Optional custom name for the tool
             description: Optional description of the tool's functionality
 
         Raises:
-            ValueError: If tool configuration is invalid or if any scope is invalid
+            ValueError: If tool configuration is invalid
+                        or if any scope is invalid
 
         Example:
             ```python
@@ -318,7 +362,8 @@ class Agent:
         Retrieve tools available to the agent, optionally filtered by scope.
 
         Args:
-            scope: Optional scope to filter tools by. If None, returns all tools.
+            scope: Optional scope to filter tools by.
+                   If None, returns all tools.
 
         Returns:
             List[Tool]: List of available tools matching the criteria
@@ -392,20 +437,142 @@ class Agent:
         self.context.clear()
         self.workflow_manager.reset()
 
+    def register_tool(
+        self,
+        tool: Union[Callable[..., Any], Tool],
+        *,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Tool:
+        """
+        Register a tool with the agent.
+
+        Provides a flexible way to register tools with the agent,
+        either by passing a function or a pre-created Tool instance.
+        Can also be used as a decorator.
+
+        Args:
+            tool: Function to register as a tool or a pre-created Tool instance
+            name: Optional custom name for the tool
+            description: Optional description of the tool's functionality
+
+        Returns:
+            Tool: The registered Tool instance
+
+        Raises:
+            ValueError: If a tool with the same name is already registered
+
+        Examples:
+            Direct registration:
+            ```python
+            def add(x: int, y: int) -> int:
+                return x + y
+
+            tool = agent.register_tool(
+                add,
+                name="Calculator",
+                description="Adds numbers"
+            )
+            ```
+
+            Register pre-created Tool:
+            ```python
+            my_tool = Tool.create(multiply, name="Multiplier")
+            agent.register_tool(my_tool)
+            ```
+
+            As a decorator:
+            ```python
+            @agent.register_tool(
+                name="TextProcessor",
+                description="Processes text"
+            )
+            def process_text(text: str) -> str:
+                return text.upper()
+            ```
+        """
+        if isinstance(tool, Tool):
+            tool_instance = tool
+        else:
+            tool_instance = Tool.create(
+                func=tool,
+                name=name,
+                description=description,
+            )
+
+        tool_config = ToolConfig(
+            tool=tool_instance,
+            scopes=frozenset({ToolScope.ALL}),
+            name=tool_instance.name,
+            description=tool_instance.description,
+        )
+
+        self.tool_registry.register(tool_config)
+        return tool_instance
+
+    def register_tool_decorator(
+        self,
+        *,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Callable[[Callable[..., Any]], Tool]:
+        """
+        Create a decorator for registering tools with the agent.
+
+        This method provides a decorator-based way to register tools, allowing
+        for clean integration of tool registration with function definitions.
+
+        Args:
+            name: Optional custom name for the tool
+            description: Optional description of the tool's functionality
+
+        Returns:
+            Callable: A decorator function that registers the
+                      decorated function as a tool
+
+        Examples:
+            Basic usage:
+            ```python
+            class MyAgent(Agent):
+                @register_tool_decorator(name="Calculator")
+                def add(x: int, y: int) -> int:
+                    return x + y
+
+                @register_tool_decorator(
+                    name="TextProcessor",
+                    description="Processes text input"
+                )
+                def process_text(text: str) -> str:
+                    return text.upper()
+            ```
+        """
+
+        def decorator(func: Callable[..., Any]) -> Tool:
+            return self.register_tool(func, name=name, description=description)
+
+        return decorator
+
     def _register_class_tools(self) -> None:
-        """Register any tools defined as class methods."""
+        """
+        Register any tools defined as class methods using decorators.
+
+        This internal method scans the class for methods decorated with either
+        @tool or @register_tool_decorator and registers them with the agent.
+        It supports both standalone tools and class-bound tool methods.
+
+        The method is called during agent initialization to ensure all
+        decorated tools are properly registered.
+        """
         logger.debug("Registering class-level tools")
         for name, attr in self.__class__.__dict__.items():
             if hasattr(attr, "_is_tool"):
                 logger.debug(f"Found class tool: {name}")
-                scopes = ("think", "act", "observe", "synthesize")
-                config = ToolConfig(
-                    tool=getattr(self, name),
-                    scopes=frozenset(ToolScope.from_str(s) for s in scopes),
+                method = getattr(self, name)
+                self.register_tool(
+                    tool=method,
                     name=getattr(attr, "_tool_name", name),
                     description=getattr(attr, "_tool_description", None),
                 )
-                self.tool_registry.register(config)
 
     def __str__(self) -> str:
         """

@@ -1,3 +1,4 @@
+import json
 import time
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -8,6 +9,7 @@ from clientai.agent.config.models import ModelConfig
 from clientai.agent.config.steps import StepConfig
 from clientai.agent.core.execution import StepExecutionEngine
 from clientai.agent.steps import Step, StepType
+from clientai.agent.tools import Tool, ToolSelectionConfig
 from clientai.exceptions import ClientAIError
 
 
@@ -128,35 +130,66 @@ class TestStepExecutionEngine:
                 engine.execute_step(step, mock_agent, "test_input")
 
     def test_tool_integration(self, engine, mock_client, mock_agent):
-        """Test tool integration during step execution."""
-        mock_tool = Mock()
-        mock_tool.name = "test_tool"
-        mock_tool.description = "Test tool description"
-        mock_tool.signature_str = "test_tool(x: str) -> str"
-        mock_tool.return_value = "Tool execution result"
-        mock_tool.__call__ = Mock(return_value="Tool execution result")
+        """Test tool integration with automatic tool selection."""
+        call_spy = Mock()
+
+        def tool_callable(x: str) -> str:
+            call_spy(x)  # Record the call
+            return "Tool execution result"
+
+        mock_tool = Tool.create(
+            func=tool_callable,
+            name="test_tool",
+            description="Test tool description",
+        )
 
         mock_agent.get_tools.return_value = [mock_tool]
 
+        mock_client.generate_text.side_effect = [
+            json.dumps(
+                {
+                    "tool_calls": [
+                        {
+                            "tool_name": "test_tool",
+                            "arguments": {"x": "test_input"},
+                            "confidence": 0.95,
+                            "reasoning": "Test reasoning",
+                        }
+                    ]
+                }
+            ),
+            "Generated response",
+        ]
+
         def tool_func(agent: Any, input_data: str) -> str:
-            tool_result = agent.get_tools()[0](input_data)
-            return f"""Use tool for: {input_data}
-    Tool result: {tool_result}"""
+            return f"Use tool for: {input_data}"
 
         step = Step.create(
             func=tool_func,
             step_type=StepType.ACT,
             name="tool_step",
             send_to_llm=True,
+            use_tools=True,
+            tool_selection_config=ToolSelectionConfig(
+                confidence_threshold=0.8, max_tools_per_step=1
+            ),
         )
 
         result = engine.execute_step(step, mock_agent, "test_input")
-        assert result == "Generated response"
 
-        prompt = mock_client.generate_text.call_args[0][0]
-        assert "Tool execution result" in prompt
-        assert "test_tool(x: str) -> str" in prompt
-        assert "Test tool description" in prompt
+        assert mock_client.generate_text.call_count >= 1
+        first_call = mock_client.generate_text.call_args_list[0]
+        tool_selection_prompt = first_call[0][0]
+        assert "test_tool" in tool_selection_prompt
+
+        call_spy.assert_called_once_with("test_input")
+
+        second_call = mock_client.generate_text.call_args_list[1]
+        final_prompt = second_call[0][0]
+        assert "Tool Execution Results" in final_prompt
+        assert "Tool execution result" in final_prompt
+
+        assert result == "Generated response"
         assert mock_agent.context.last_results["tool_step"] == result
 
     def test_error_recovery(self, engine, mock_client, mock_agent):

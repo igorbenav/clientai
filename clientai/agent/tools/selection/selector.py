@@ -11,10 +11,11 @@ logger = logging.getLogger(__name__)
 
 class ToolSelector:
     """
-    Manages the automatic selection and execution of tools using LLM-based decision making.
+    Manages the automatic selection and execution
+    of tools using LLM-based decision making.
 
-    The ToolSelector uses a language model to analyze tasks and determine which tools
-    would be most appropriate to use. It handles:
+    The ToolSelector uses a language model to analyze tasks and
+    determine which tools would be most appropriate to use. It handles:
     - Tool selection based on task requirements
     - Confidence-based filtering
     - Argument validation
@@ -80,10 +81,12 @@ class ToolSelector:
 
     def _format_tool_descriptions(self, tools: List[Tool]) -> str:
         """
-        Format a list of tools into a string description suitable for LLM prompts.
+        Format a list of tools into a string
+        description suitable for LLM prompts.
 
-        Creates a formatted string containing each tool's signature and description,
-        organized in a clear, readable format for the LLM to understand.
+        Creates a formatted string containing each tool's
+        signature and description, organized in a clear,
+        readable format for the LLM to understand.
 
         Args:
             tools: List of tools to describe
@@ -246,7 +249,8 @@ class ToolSelector:
 
             if confidence < self.config.confidence_threshold:
                 logger.debug(
-                    f"Skipping tool {tool_name} due to low confidence: {confidence}"
+                    f"Skipping tool {tool_name} due to "
+                    f"low confidence: {confidence}"
                 )
                 continue
 
@@ -315,7 +319,8 @@ class ToolSelector:
         if not all(arg in valid_params for arg in arguments):
             logger.warning(
                 f"Unknown parameters for {tool.name}: "
-                f"valid parameters are {valid_params}, got {list(arguments.keys())}"
+                f"valid parameters are {valid_params}, "
+                f"got {list(arguments.keys())}"
             )
             return False
 

@@ -8,15 +8,17 @@ class ToolSelectionConfig(BaseModel):
     """
     Configuration settings for automatic tool selection behavior.
 
-    This class defines parameters that control how tools are automatically selected
-    and used during workflow execution. It includes settings for confidence
-    thresholds, tool limits, and prompt customization.
+    This class defines parameters that control how tools are automatically
+    selected and used during workflow execution. It includes settings for
+    confidence thresholds, tool limits, and prompt customization.
 
     Attributes:
-        confidence_threshold: Minimum confidence level (0.0-1.0) required for a tool
-            to be selected. Higher values mean more selective tool usage.
-        max_tools_per_step: Maximum number of tools that can be used in a single
-            workflow step. Prevents excessive tool usage.
+        confidence_threshold: Minimum confidence level (0.0-1.0) required
+                              for a tool to be selected. Higher values
+                              mean more selective tool usage.
+        max_tools_per_step: Maximum number of tools that can be used in
+                            a single workflow step. Prevents excessive
+                            tool usage.
         prompt_template: Template string for generating tool selection prompts.
             Uses {task}, {context}, and {tool_descriptions} placeholders.
 
@@ -52,10 +54,11 @@ class ToolSelectionConfig(BaseModel):
     max_tools_per_step: int = Field(
         3,
         ge=1,
-        description="Maximum number of tools that can be used in a single step",
+        description="Maximum number of tools that can be used in a step",
     )
     prompt_template: str = """
-        Given the current task and available tools, determine if and how to use tools to help accomplish the task.
+        Given the current task and available tools,
+        determine if and how to use tools to help accomplish the task.
 
         Task: {task}
         Current Context: {context}
@@ -63,7 +66,8 @@ class ToolSelectionConfig(BaseModel):
         Available Tools:
         {tool_descriptions}
 
-        Analyze the task and determine which tools would be helpful. Respond in JSON format with this structure:
+        Analyze the task and determine which tools would be helpful.
+        Respond in JSON format with this structure:
         {{
             "tool_calls": [
                 {{
@@ -82,11 +86,13 @@ class ToolSelectionConfig(BaseModel):
 @dataclass
 class ToolCallDecision:
     """
-    Represents a decision about calling a specific tool, including the execution results.
+    Represents a decision about calling a specific tool,
+    including the execution results.
 
-    This class tracks both the decision to use a tool (including confidence and reasoning)
-    and the results of executing that decision. It provides a complete record of a tool's
-    selection and usage.
+    This class tracks both the decision to use a tool
+    (including confidence and reasoning) and the results
+    of executing that decision. It provides a complete
+    record of a tool's selection and usage.
 
     Attributes:
         tool_name: Name of the selected tool
@@ -114,7 +120,7 @@ class ToolCallDecision:
 
     Note:
         - Error and result are mutually exclusive - only one should be set
-        - Confidence should match the ToolSelectionConfig threshold requirements
+        - Confidence should match the ToolSelectionConfig requirements
         - Arguments should match the tool's expected signature
     """
 

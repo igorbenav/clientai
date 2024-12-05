@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 
 class StepExecutionEngine:
     """
-    Handles the execution of workflow steps with integrated tool selection and LLM interaction.
+    Handles the execution of workflow steps with integrated tool
+    selection and LLM interaction.
 
-    The StepExecutionEngine is responsible for executing individual workflow steps,
-    managing tool selection, and coordinating LLM interactions. It handles:
+    The StepExecutionEngine is responsible for executing individual
+    workflow steps, managing tool selection, and coordinating LLM
+    interactions. It handles:
     - Step execution with proper configuration
     - Automated tool selection and execution
     - LLM interaction with retry logic
@@ -67,10 +69,12 @@ class StepExecutionEngine:
 
         Args:
             client: The AI client for model interactions
-            default_model: Default model configuration (string name or ModelConfig)
+            default_model: Default model configuration
+                           (string name or ModelConfig)
             default_kwargs: Default parameters for model calls
             tool_selection_config: Configuration for tool selection behavior
-            tool_model: Model to use for tool selection (defaults to default_model)
+            tool_model: Model to use for tool selection
+                        (default default_model)
 
         Example:
             ```python
@@ -196,7 +200,8 @@ class StepExecutionEngine:
                         )
 
                         logger.debug(
-                            f"Tool selector returned {len(decisions)} decisions"
+                            f"Tool selector returned "
+                            f"{len(decisions)} decisions"
                         )
 
                         if decisions:
@@ -272,12 +277,16 @@ class StepExecutionEngine:
             The LLM's response as a string
 
         Raises:
-            ClientAIError: If the API call fails or returns invalid response type
+            ClientAIError: If the API call fails or returns
+                           invalid response type
 
         Example:
             ```python
             try:
-                response = engine._execute_single_call(step, "Analyze this text")
+                response = engine._execute_single_call(
+                    step,
+                    "Analyze this text"
+                )
                 print(response)
             except ClientAIError as e:
                 print(f"API call failed: {e}")
@@ -445,7 +454,8 @@ class StepExecutionEngine:
         """
         logger.info(f"Executing step '{step.name}'")
         logger.debug(
-            f"Step configuration: use_tools={step.use_tools}, send_to_llm={step.send_to_llm}"
+            f"Step configuration: use_tools={step.use_tools}, "
+            f"send_to_llm={step.send_to_llm}"
         )
 
         if not step.config.enabled:

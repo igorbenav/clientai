@@ -209,12 +209,13 @@ def create_step_decorator(step_type: StepType):
     """
     Generate a decorator for defining workflow steps of a specific type.
 
-    This factory function creates decorators (like @think, @act, etc.) that mark methods
-    as specific types of workflow steps. The generated decorators handle both tool selection
-    and LLM interaction configuration.
+    This factory function creates decorators (like @think, @act, etc.)
+    that mark methods as specific types of workflow steps. The generated
+    decorators handle both tool selection and LLM interaction configuration.
 
     Args:
-        step_type: The type of step (THINK, ACT, OBSERVE, SYNTHESIZE) this decorator will create
+        step_type: The type of step (THINK, ACT, OBSERVE, SYNTHESIZE)
+                   this decorator will create
 
     Returns:
         A decorator function that can be used to mark methods as workflow steps
@@ -258,37 +259,42 @@ def create_step_decorator(step_type: StepType):
         """
         Core decorator implementation for workflow steps.
 
-        This decorator configures how a step function should be executed within the workflow,
-        including its interaction with the LLM and tool selection behavior.
+        This decorator configures how a step function should be executed
+        within the workflow, including its interaction with the LLM and
+        tool selection behavior.
 
         Args:
-            name: The name of the step. If omitted, the function name is used. Can also be
-                 the function itself when used as a bare decorator.
+            name: The name of the step. If omitted, the function name is used.
+                  Can be the function itself when used as a bare decorator.
             model: Model configuration for this specific step. Can be:
                 - A string (model name)
                 - A dictionary of model parameters
                 - A ModelConfig instance
                 If not provided, uses the agent's default model.
             description: Human-readable description of what this step does.
-            send_to_llm: Whether this step's output should be sent to the language model.
-                        Set to False for steps that process data locally.
+            send_to_llm: Whether this step's output should be sent to the
+                         language model. Set to False for steps that process
+                         data locally.
             json_output: Whether the LLM should format its response as JSON.
             use_tools: Whether this step should use automatic tool selection.
-            tool_selection_config: Complete tool selection configuration for this step.
-                                 Mutually exclusive with individual tool parameters.
-            tool_confidence: Minimum confidence threshold for tool selection (0.0-1.0).
-                           Overrides the agent's default threshold for this step.
+            tool_selection_config: Complete tool selection configuration for
+                                   this step. Mutually exclusive with
+                                   individual tool parameters.
+            tool_confidence: Minimum confidence for tool selection (0.0-1.0).
+                             Overrides agent's default threshold for this step.
             tool_model: Specific model to use for tool selection in this step.
                        Can be a string, dict, or ModelConfig.
             max_tools_per_step: Maximum number of tools to use in this step.
                                Overrides the agent's default for this step.
 
         Returns:
-            A decorated step function that will be executed as part of the workflow
+            A decorated step function that will be executed
+            as part of the workflow
 
         Raises:
-            ValueError: If both tool_selection_config and individual tool parameters are provided
-                       or if the configuration is otherwise invalid
+            ValueError: If both tool_selection_config and individual tool
+                        parameters are provided or if the configuration is
+                        otherwise invalid
 
         Example:
             Basic usage with tool selection:
@@ -338,10 +344,9 @@ def create_step_decorator(step_type: StepType):
             ```
 
         Note:
-            - The decorator ensures type safety by requiring string return types
-            - Tool selection parameters are mutually exclusive with tool_selection_config
-            - The step's model configuration takes precedence over the agent's default
-            - When used as a bare decorator, all parameters use their default values
+            - Tool parameters are mutually exclusive with tool_selection_config
+            - The step's model config takes precedence over the agent's default
+            - When used as a bare decorator, parameters use the default values
         """
 
         def wrapper(func: Callable[..., str]) -> StepFunction:
@@ -354,7 +359,8 @@ def create_step_decorator(step_type: StepType):
                 for x in [tool_confidence, tool_model, max_tools_per_step]
             ):
                 raise ValueError(
-                    "Cannot specify both tool_selection_config and individual tool parameters "
+                    "Cannot specify both tool_selection_config and "
+                    "individual tool parameters "
                     "(tool_confidence, tool_model, max_tools_per_step)"
                 )
 
