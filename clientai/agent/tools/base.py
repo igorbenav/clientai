@@ -193,21 +193,80 @@ class Tool:
         """
         return self.signature.format()
 
-    def __str__(self) -> str:
+    def format_tool_info(self, indent: str = "") -> str:
         """
-        Get a string representation of the tool.
+        Format the tool's information in a standardized way for LLM prompts.
 
-        Provides a human-readable string showing the tool's name and signature.
-        This is useful for logging and debugging.
+        Creates a consistently formatted string representation of the tool
+        that includes its name, signature, and description in a hierarchical
+        format. This format is designed to be clear for both human readers
+        and LLM processing.
+
+        Args:
+            indent: Optional indentation prefix for each line.
+                   Useful for nested formatting. Defaults to no indentation.
 
         Returns:
-            A string showing the tool's name and signature.
+            A formatted string containing the tool's complete information in
+            a standardized format.
 
         Examples:
-            >>> @tool
-            ... def calculate(x: int, y: int) -> int:
+            Basic formatting:
+            >>> @tool(name="Calculator")
+            ... def add(x: int, y: int) -> int:
+            ...     '''Add two numbers together.'''
             ...     return x + y
-            >>> print(calculate)
-            # Output: "Tool(name='calculate', signature='calculate(x: int...')"
+            >>> print(add.format_tool_info())
+            # Output:
+            # - Calculator
+            #   Signature: add(x: int, y: int) -> int
+            #   Description: Add two numbers together
+
+            With custom indentation:
+            >>> print(add.format_tool_info("  "))
+            # Output:
+            #   - Calculator
+            #     Signature: add(x: int, y: int) -> int
+            #     Description: Add two numbers together
+
+        Note:
+            This format is specifically designed to be:
+            1. Hierarchical with clear indentation
+            2. Consistent across all tools
+            3. Easy to parse in LLM prompts
+            4. Human-readable for debugging
         """
-        return f"Tool(name='{self.name}', signature='{self.signature_str}')"
+        return (
+            f"{indent}- {self.name}\n"
+            f"{indent}  Signature: {self.signature_str}\n"
+            f"{indent}  Description: {self.description}"
+        )
+
+    def __str__(self) -> str:
+        """
+        Get a complete string representation of the tool.
+
+        Provides a formatted string containing all relevant tool information
+        using the standardized format defined by format_tool_info(). This
+        ensures consistency between string representation and prompt formatting.
+
+        Returns:
+            A formatted string containing the tool's complete information.
+
+        Example:
+            >>> @tool(name="Calculator")
+            ... def add(x: int, y: int) -> int:
+            ...     '''Add two numbers together.'''
+            ...     return x + y
+            >>> print(str(add))
+            # Output:
+            # - Calculator
+            #   Signature: add(x: int, y: int) -> int
+            #   Description: Add two numbers together
+
+        Note:
+            This method uses format_tool_info() to ensure consistency between
+            string representation and prompt formatting. The format is designed
+            to be both human-readable and suitable for LLM processing.
+        """
+        return self.format_tool_info()

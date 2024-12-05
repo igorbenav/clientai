@@ -183,7 +183,6 @@ class StepExecutionEngine:
                 )
             prompt = result
 
-            # Handle tool selection if enabled
             if step.use_tools:
                 logger.debug("Tool usage is enabled for this step")
                 available_tools = agent.get_tools(step.step_type.name.lower())

@@ -9,31 +9,13 @@ from typing import (
     overload,
 )
 
+from ..config.defaults import STEP_TYPE_DEFAULTS
 from ..config.models import ModelConfig
 from ..tools import ToolSelectionConfig
 from .base import Step
 from .types import StepType
 
 T = TypeVar("T")
-
-STEP_TYPE_DEFAULTS = {
-    StepType.THINK: {
-        "temperature": 0.7,
-        "top_p": 0.9,
-    },
-    StepType.ACT: {
-        "temperature": 0.2,
-        "top_p": 0.8,
-    },
-    StepType.OBSERVE: {
-        "temperature": 0.1,
-        "top_p": 0.5,
-    },
-    StepType.SYNTHESIZE: {
-        "temperature": 0.4,
-        "top_p": 0.7,
-    },
-}
 
 
 class StepFunction:
