@@ -11,12 +11,14 @@ logger = logging.getLogger(__name__)
 
 class ToolSelector:
     """
-    Manages the automatic selection and execution of tools using LLM-based decision making.
+    Manages the automatic selection and execution
+    of tools using LLM-based decision making.
 
-    The ToolSelector uses a language model to analyze tasks and determine which tools
-    would be most appropriate to use, considering both the task requirements and the 
-    current context. It provides a complete pipeline for tool selection, validation,
-    and execution with comprehensive error handling and logging.
+    The ToolSelector uses a language model to analyze tasks and determine
+    which tools would be most appropriate to use, considering both the
+    task requirements and the current context. It provides a complete
+    pipeline for tool selection, validation, and execution with
+    comprehensive error handling and logging.
 
     The selector's key responsibilities include:
     1. Analyzing tasks and context to determine tool requirements
@@ -34,9 +36,9 @@ class ToolSelector:
         - Context-aware decision making
 
     Attributes:
-        config (ToolSelectionConfig): Configuration for tool selection behavior,
+        config: Configuration for tool selection behavior,
             including confidence thresholds and tool limits
-        model_config (ModelConfig): Configuration for the LLM used in selection,
+        model_config: Configuration for the LLM used in selection,
             including model name and parameters
 
     Example:
@@ -112,13 +114,13 @@ class ToolSelector:
         """
         self.config = config or ToolSelectionConfig()
         self.model_config = model_config or ModelConfig(
-            name="llama-3.2-3b-preview", 
-            temperature=0.0,
-            json_output=True
+            name="llama-3.2-3b-preview", temperature=0.0, json_output=True
         )
         logger.debug("Initialized ToolSelector")
         logger.debug(f"Using model: {self.model_config.name}")
-        logger.debug(f"Confidence threshold: {self.config.confidence_threshold}")
+        logger.debug(
+            f"Confidence threshold: {self.config.confidence_threshold}"
+        )
 
     def _format_context(self, context: Dict[str, Any]) -> str:
         """
@@ -154,7 +156,8 @@ class ToolSelector:
 
         Note:
             - The output format is designed to be clear and consistent
-            - Complex nested structures are preserved in their string representation
+            - Complex nested structures are preserved in their
+              string representation
             - Empty context is handled with a clear "no context" message
         """
         if not context:
@@ -179,8 +182,8 @@ class ToolSelector:
                   its name, signature, and description.
 
         Returns:
-            A formatted string containing the complete information for all tools,
-            organized in a clear, hierarchical structure.
+            A formatted string containing the complete information for
+            all tools, organized in a clear, hierarchical structure.
 
         Example:
             ```python
@@ -213,12 +216,13 @@ class ToolSelector:
         client: Any,
     ) -> List[ToolCallDecision]:
         """
-        Use LLM to select appropriate tools for a given task, considering context.
+        Use LLM to select appropriate tools for
+        a given task, considering context.
 
-        Analyzes the task description, available tools, and current context to
-        determine which tools would be most appropriate to use. Makes selections
-        based on confidence thresholds, validates arguments, and provides
-        reasoning for each selection.
+        Analyzes the task description, available tools, and current
+        context to determine which tools would be most appropriate
+        to use. Makes selections based on confidence thresholds,
+        validates arguments, and provides reasoning for each selection.
 
         Args:
             task: Description of the task to accomplish. Should be clear and
@@ -237,7 +241,7 @@ class ToolSelector:
             - Validated arguments for each tool
             - Confidence levels in the selections
             - Reasoning for each selection
-            
+
         Example:
             ```python
             decisions = selector.select_tools(
@@ -291,7 +295,7 @@ class ToolSelector:
                             "param_name": "param_value"
                         }},
                         "confidence": <0.0-1.0>,
-                        "reasoning": "<why you chose this tool, considering the context>"
+                        "reasoning": "<why you chose this tool>"
                     }}
                 ]
             }}
@@ -312,19 +316,25 @@ class ToolSelector:
                 decisions = json.loads(response)
                 logger.debug(f"Parsed decisions: {decisions}")
             except json.JSONDecodeError:
-                logger.warning("Failed to parse JSON response, attempting to extract JSON")
+                logger.warning(
+                    "Failed to parse JSON response, attempting to extract JSON"
+                )
                 start = response.find("{")
                 end = response.rfind("}") + 1
                 if start >= 0 and end > start:
                     json_str = response[start:end]
                     decisions = json.loads(json_str)
-                    logger.debug(f"Successfully extracted and parsed JSON: {decisions}")
+                    logger.debug(
+                        f"Successfully extracted and parsed JSON: {decisions}"
+                    )
                 else:
                     logger.error("Could not find valid JSON in response")
                     return []
 
         except Exception as e:
-            logger.error(f"Failed to get or parse LLM tool selection response: {e}")
+            logger.error(
+                f"Failed to get or parse LLM tool selection response: {e}"
+            )
             return []
 
         tool_decisions = []
@@ -333,7 +343,9 @@ class ToolSelector:
         for call in decisions.get("tool_calls", []):
             tool_name = call.get("tool_name")
             if tool_name not in tools_by_name:
-                logger.warning(f"Tool '{tool_name}' not found in available tools")
+                logger.warning(
+                    f"Tool '{tool_name}' not found in available tools"
+                )
                 continue
 
             arguments = call.get("arguments", {})
@@ -347,12 +359,17 @@ class ToolSelector:
 
             if confidence < self.config.confidence_threshold:
                 logger.debug(
-                    f"Skipping tool {tool_name} due to low confidence: {confidence}"
+                    f"Skipping tool {tool_name} "
+                    "due to low confidence: {confidence}"
                 )
                 continue
 
-            if not self._validate_tool_arguments(tools_by_name[tool_name], arguments):
-                logger.warning(f"Invalid arguments for tool {tool_name}: {arguments}")
+            if not self._validate_tool_arguments(
+                tools_by_name[tool_name], arguments
+            ):
+                logger.warning(
+                    f"Invalid arguments for tool {tool_name}: {arguments}"
+                )
                 continue
 
             tool_decisions.append(
@@ -365,7 +382,9 @@ class ToolSelector:
             )
             logger.debug(f"Added decision for tool '{tool_name}'")
 
-        logger.debug(f"Final tool decisions: {[d.tool_name for d in tool_decisions]}")
+        logger.debug(
+            f"Final tool decisions: {[d.tool_name for d in tool_decisions]}"
+        )
         return tool_decisions
 
     def _validate_tool_arguments(
@@ -487,22 +506,29 @@ class ToolSelector:
             # Process results
             for decision in updated_decisions:
                 if decision.error:
-                    print(f"Error executing {decision.tool_name}: {decision.error}")
+                    print(
+                        f"Error in {decision.tool_name}: {decision.error}"
+                    )
                 else:
-                    print(f"Result from {decision.tool_name}: {decision.result}")
+                    print(
+                        f"Result from {decision.tool_name}: {decision.result}"
+                    )
             ```
 
         Notes:
             - Each decision is executed independently
-            - Execution errors in one decision don't prevent others from executing
+            - Execution errors in one decision don't prevent others
+              from executing
             - Original decision objects are modified with results/errors
             - All execution attempts are logged for debugging
-            - Tools are executed with their provided arguments without modification
+            - Tools are executed with their provided arguments
+              without modification
             - Results can be any type that the tools return
             - Errors are captured as strings in the decision object
 
         Raises:
-            KeyError: If a tool name in decisions isn't found in the tools dictionary
+            KeyError: If a tool name in decisions isn't found in the tools
+                      dictionary
             Exception: Any exception from tool execution is caught and stored
                       in the decision's error field
         """

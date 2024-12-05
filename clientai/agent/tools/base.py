@@ -246,9 +246,10 @@ class Tool:
         """
         Get a complete string representation of the tool.
 
-        Provides a formatted string containing all relevant tool information
-        using the standardized format defined by format_tool_info(). This
-        ensures consistency between string representation and prompt formatting.
+        Provides a formatted string containing all relevant tool
+        information using the standardized format defined by
+        format_tool_info(). This ensures consistency between
+        string representation and prompt formatting.
 
         Returns:
             A formatted string containing the tool's complete information.
