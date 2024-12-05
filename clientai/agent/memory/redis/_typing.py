@@ -23,16 +23,16 @@ class RedisClientProtocol(Protocol):
 
     def set(
         self,
-        name: Union[str, bytes],
+        name: Union[str, bytes, memoryview],
         value: Union[str, bytes, int, float],
-        ex: Optional[Union[float, timedelta]] = None,
-        px: Optional[Union[float, timedelta]] = None,
+        ex: Optional[Union[int, timedelta]] = None,
+        px: Optional[Union[int, timedelta]] = None,
         nx: bool = False,
         xx: bool = False,
         keepttl: bool = False,
         get: bool = False,
-        exat: Optional[Any] = None,
-        pxat: Optional[Any] = None,
+        exat: Optional[int] = None,
+        pxat: Optional[int] = None,
     ) -> Optional[bool]:
         """
         Set a key-value pair with optional parameters.
@@ -54,7 +54,9 @@ class RedisClientProtocol(Protocol):
         """
         ...
 
-    def get(self, name: Union[str, bytes]) -> Optional[bytes]:
+    def get(
+        self, name: Union[str, bytes, memoryview]
+    ) -> Optional[Union[bytes, Any]]:
         """
         Get the value of a key.
 
@@ -66,7 +68,7 @@ class RedisClientProtocol(Protocol):
         """
         ...
 
-    def delete(self, *names: Union[str, bytes]) -> int:
+    def delete(self, *names: Union[str, bytes, memoryview]) -> Union[int, Any]:
         """
         Delete one or more keys.
 
@@ -78,7 +80,9 @@ class RedisClientProtocol(Protocol):
         """
         ...
 
-    def keys(self, pattern: Union[str, bytes] = "*") -> list[bytes]:
+    def keys(
+        self, pattern: Union[str, bytes, memoryview] = "*"
+    ) -> list[bytes]:
         """
         Find all keys matching the given pattern.
 

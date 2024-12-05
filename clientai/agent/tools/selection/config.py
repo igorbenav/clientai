@@ -46,13 +46,13 @@ class ToolSelectionConfig(BaseModel):
     """
 
     confidence_threshold: float = Field(
-        0.7,
+        default=0.7,
         ge=0.0,
         le=1.0,
         description="Minimum confidence level required for tool selection",
     )
     max_tools_per_step: int = Field(
-        3,
+        default=3,
         ge=1,
         description="Maximum number of tools that can be used in a step",
     )
