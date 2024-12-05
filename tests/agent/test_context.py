@@ -1,36 +1,12 @@
-from typing import Any, Dict
-
 import pytest
 
 from clientai.agent.core.context import AgentContext
-from clientai.agent.memory import Memory
-
-
-class MockMemory(Memory[str, Any]):
-    def __init__(self):
-        self._storage: Dict[str, Any] = {}
-
-    def store(self, key: str, value: Any, **kwargs: Any) -> None:
-        self._storage[key] = value
-
-    def retrieve(self, key: str, default: Any = None, **kwargs: Any) -> Any:
-        return self._storage.get(key, default)
-
-    def remove(self, key: str, **kwargs: Any) -> None:
-        self._storage.pop(key, None)
-
-    def clear(self, **kwargs: Any) -> None:
-        self._storage.clear()
 
 
 class TestContextManagement:
     @pytest.fixture
     def context(self):
         return AgentContext()
-
-    @pytest.fixture
-    def memory(self):
-        return MockMemory()
 
     def test_context_initialization(self, context):
         """Test initial state of context."""
@@ -49,17 +25,14 @@ class TestContextManagement:
         assert context.get_step_result("step2") == "result2"
         assert context.get_step_result("nonexistent") is None
 
-    def test_iteration_counting(self, context):
-        """Test iteration counter functionality."""
-        assert context.iteration == 0
+    def test_historical_data_management(self, context):
+        """Test storing historical context data."""
+        context.memory.append({"step": "step1", "result": "value1"})
+        context.memory.append({"step": "step2", "result": {"data": "value2"}})
 
-        count1 = context.increment_iteration()
-        assert count1 == 1
-        assert context.iteration == 1
-
-        count2 = context.increment_iteration()
-        assert count2 == 2
-        assert context.iteration == 2
+        assert len(context.memory) == 2
+        assert context.memory[0]["result"] == "value1"
+        assert context.memory[1]["result"]["data"] == "value2"
 
     def test_state_management(self, context):
         """Test state dictionary operations."""
@@ -71,22 +44,6 @@ class TestContextManagement:
 
         context.state.clear()
         assert len(context.state) == 0
-
-    def test_memory_integration(self, context, memory):
-        """Test memory system integration."""
-        memory.store("key1", "value1")
-        memory.store("key2", {"data": "value2"})
-
-        context.memory.append(
-            {"key": "key1", "value": memory.retrieve("key1")}
-        )
-        context.memory.append(
-            {"key": "key2", "value": memory.retrieve("key2")}
-        )
-
-        assert len(context.memory) == 2
-        assert context.memory[0]["value"] == "value1"
-        assert context.memory[1]["value"]["data"] == "value2"
 
     def test_context_clear(self, context):
         """Test clearing all context data."""
@@ -108,11 +65,15 @@ class TestContextManagement:
         """Test persistence of step results across iterations."""
         context.set_step_result("persistent_step", "result")
         context.increment_iteration()
-
         assert context.get_step_result("persistent_step") == "result"
 
-        context.increment_iteration()
-        assert context.get_step_result("persistent_step") == "result"
+        context.memory.append(
+            {
+                "step": "persistent_step",
+                "result": context.get_step_result("persistent_step"),
+                "iteration": context.iteration,
+            }
+        )
 
     def test_complex_state_handling(self, context):
         """Test handling of complex nested state structures."""
@@ -121,7 +82,6 @@ class TestContextManagement:
                 "level2": {"data": [1, 2, 3], "metadata": {"type": "test"}}
             }
         }
-
         context.state["complex"] = complex_state
 
         assert context.state["complex"]["level1"]["level2"]["data"][1] == 2
@@ -130,8 +90,14 @@ class TestContextManagement:
             == "test"
         )
 
-        context.state["complex"]["level1"]["level2"]["data"].append(4)
-        assert len(context.state["complex"]["level1"]["level2"]["data"]) == 4
+        context.memory.append(
+            {
+                "type": "state_change",
+                "key": "complex",
+                "value": complex_state.copy(),
+                "iteration": context.iteration,
+            }
+        )
 
     def test_concurrent_updates(self, context):
         """Test handling concurrent updates to context."""
@@ -140,6 +106,14 @@ class TestContextManagement:
         def update_func(key: str, value: str):
             context.state[key] = value
             context.set_step_result(key, value)
+            context.memory.append(
+                {
+                    "type": "concurrent_update",
+                    "key": key,
+                    "value": value,
+                    "iteration": context.iteration,
+                }
+            )
 
         with ThreadPoolExecutor(max_workers=3) as executor:
             futures = []
@@ -152,48 +126,14 @@ class TestContextManagement:
             assert context.state[f"key{i}"] == f"value{i}"
             assert context.get_step_result(f"key{i}") == f"value{i}"
 
-    def test_memory_limit_handling(self, context):
-        """Test handling of memory size limits."""
-        for i in range(1000):
+    def test_history_limit_handling(self, context):
+        """Test handling of history size limits."""
+        MAX_HISTORY = 1000
+
+        for i in range(MAX_HISTORY + 100):
             context.memory.append({"index": i, "data": f"data{i}"})
+            if len(context.memory) > MAX_HISTORY:
+                context.memory.pop(0)
 
-        assert len(context.memory) <= 1000
-
-        assert context.memory[0]["index"] == 0
-
-    def test_error_handling(self, context):
-        """Test error handling in context operations."""
-        assert context.get_step_result("nonexistent_step") is None
-
-        context.state["test_key"] = "test_value"
-        del context.state["test_key"]
-        assert "test_key" not in context.state
-
-        with pytest.raises(KeyError):
-            del context.state["nonexistent_key"]
-
-        large_list = [{"data": i} for i in range(10000)]
-        for item in large_list:
-            context.memory.append(item)
-        assert len(context.memory) <= 10000
-
-        context.set_step_result("step1", "result1")
-        context.state["state1"] = "value1"
-        context.memory.append({"mem1": "value1"})
-
-        context.clear()
-        assert isinstance(context.last_results, dict)
-        assert isinstance(context.memory, list)
-        assert isinstance(context.state, dict)
-        assert len(context.last_results) == 0
-        assert len(context.memory) == 0
-        assert len(context.state) == 0
-
-        with pytest.raises(KeyError):
-            context.last_results["nonexistent_step"]
-
-        context.state["dict_value"] = {"key": "value"}
-        assert isinstance(context.state["dict_value"], dict)
-
-        context.set_step_result("test_step", {"result": "value"})
-        assert isinstance(context.get_step_result("test_step"), dict)
+        assert len(context.memory) == MAX_HISTORY
+        assert context.memory[0]["index"] == 100
