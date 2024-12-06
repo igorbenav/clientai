@@ -60,10 +60,15 @@ class TestWorkflowManager:
         agent = TestAgent()
         workflow_manager.register_class_steps(agent)
 
+        def mock_execute_step(step, agent, data, **kwargs):
+            return f"{step.name}_{data}"
+
+        mock_engine.execute_step.side_effect = mock_execute_step
+
         result = workflow_manager.execute(mock_agent, "input", mock_engine)
 
         assert mock_engine.execute_step.call_count == 2
-        assert result == "input"
+        assert result == "step2_step1_input"
 
     def test_custom_run_method(self, workflow_manager, mock_agent):
         """Test workflow execution with custom run method."""
@@ -216,10 +221,10 @@ class TestWorkflowManager:
 
         executed_steps = []
 
-        def side_effect(step, agent, data):
+        def side_effect(step, agent, data, **kwargs):
             if step.config.enabled:
                 executed_steps.append(step.name)
-                return data
+                return f"{step.name}_result"
             return None
 
         mock_engine.execute_step.side_effect = side_effect

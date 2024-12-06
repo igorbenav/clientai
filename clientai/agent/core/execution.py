@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Iterator, Optional, Union, cast
 
 from clientai.client_ai import ClientAI
 from clientai.exceptions import ClientAIError
@@ -261,87 +261,68 @@ class StepExecutionEngine:
             logger.error(f"Error building prompt for step '{step.name}': {e}")
             raise
 
-    def _execute_single_call(self, step: Step, prompt: str) -> str:
+    def _execute_single_call(
+        self,
+        step: Step,
+        prompt: str,
+        api_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[str, Iterator[str]]:
         """
         Execute a single LLM API call with proper configuration.
 
-        Makes a single call to the LLM with the specified prompt and
-        appropriate model configuration.
-
         Args:
             step: The step being executed
             prompt: The prompt to send to the LLM
+            api_kwargs: Optional dictionary of API call arguments
 
         Returns:
-            The LLM's response as a string
+            Either a string or an iterator of strings for streaming responses
 
         Raises:
-            ClientAIError: If the API call fails or returns
-                           invalid response type
-
-        Example:
-            ```python
-            try:
-                response = engine._execute_single_call(
-                    step,
-                    "Analyze this text"
-                )
-                print(response)
-            except ClientAIError as e:
-                print(f"API call failed: {e}")
-            ```
+            ClientAIError: If the call fails or returns invalid response type
         """
-        model_config = step.llm_config or self._default_model
-        api_kwargs = {
-            **self._default_kwargs,
-            **(
-                model_config.get_parameters()
-                if isinstance(model_config, ModelConfig)
-                else {}
-            ),
-        }
+        if api_kwargs is None:
+            model_config = step.llm_config or self._default_model
+            api_kwargs = {
+                **self._default_kwargs,
+                **(
+                    model_config.get_parameters()
+                    if isinstance(model_config, ModelConfig)
+                    else {}
+                ),
+            }
 
         result = self._client.generate_text(
             prompt,
-            model=self._get_model_name(model_config),
+            model=self._get_model_name(step.llm_config or self._default_model),
             **api_kwargs,
         )
 
-        if not isinstance(result, str):
-            raise ClientAIError(
-                f"Expected string response, got {type(result)}"
-            )
-        return result
+        return cast(Union[str, Iterator[str]], result)
 
-    def _execute_with_retry(self, step: Step, prompt: str) -> str:
+    def _execute_with_retry(
+        self,
+        step: Step,
+        prompt: str,
+        api_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[str, Iterator[str]]:
         """
         Execute an LLM call with configurable retry logic.
-
-        Attempts the LLM call multiple times based on the step's retry
-        configuration, logging warnings for failed attempts.
 
         Args:
             step: The step being executed
             prompt: The prompt to send to the LLM
+            api_kwargs: Optional dictionary of API call arguments
 
         Returns:
-            The successful LLM response
+            Either a string or an iterator of strings for streaming responses
 
         Raises:
             ClientAIError: If all retry attempts fail
-
-        Example:
-            ```python
-            try:
-                response = engine._execute_with_retry(step, "Analyze this")
-                print(response)
-            except ClientAIError:
-                print("All retry attempts failed")
-            ```
         """
         for attempt in range(step.config.retry_count + 1):
             try:
-                return self._execute_single_call(step, prompt)
+                return self._execute_single_call(step, prompt, api_kwargs)
             except ClientAIError as e:
                 if attempt >= step.config.retry_count:
                     raise
@@ -352,32 +333,29 @@ class StepExecutionEngine:
                 continue
         raise ClientAIError("All retry attempts failed")
 
-    def _execute_llm_call(self, step: Step, prompt: str) -> str:
+    def _execute_llm_call(
+        self,
+        step: Step,
+        prompt: str,
+        api_kwargs: Optional[Dict[str, Any]] = None,
+    ) -> Union[str, Iterator[str]]:
         """
         Execute an LLM call with appropriate retry handling.
-
-        Determines whether to use retry logic based on the step's
-        configuration and executes the call accordingly.
 
         Args:
             step: The step being executed
             prompt: The prompt to send to the LLM
+            api_kwargs: Optional dictionary of API call arguments
 
         Returns:
-            The LLM's response
+            Either a string or an iterator of strings for streaming responses
 
         Raises:
             ClientAIError: If the LLM call fails
-
-        Example:
-            ```python
-            response = engine._execute_llm_call(step, "Generate a summary")
-            print(response)
-            ```
         """
         if step.config.use_internal_retry:
-            return self._execute_with_retry(step, prompt)
-        return self._execute_single_call(step, prompt)
+            return self._execute_with_retry(step, prompt, api_kwargs)
+        return self._execute_single_call(step, prompt, api_kwargs)
 
     def _get_model_name(
         self, model_config: Union[str, ModelConfig, None]
@@ -411,8 +389,13 @@ class StepExecutionEngine:
         raise ValueError("No valid model configuration found")
 
     def execute_step(
-        self, step: Step, agent: Any, *args: Any, **kwargs: Any
-    ) -> Optional[str]:
+        self,
+        step: Step,
+        agent: Any,
+        *args: Any,
+        stream: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> Optional[Union[str, Iterator[str]]]:
         """
         Execute a single workflow step with full configuration.
 
@@ -421,15 +404,22 @@ class StepExecutionEngine:
         - LLM interaction if required
         - Error handling and retries
         - Result storage in context
+        - Stream override handling
 
         Args:
             step: The step to execute
             agent: The agent instance
             *args: Additional positional arguments for the step
+            stream: Optional bool to override step's stream configuration.
+                If provided, overrides any step-level streaming settings.
             **kwargs: Additional keyword arguments for the step
 
         Returns:
-            The step execution result, or None if step is disabled/failed
+            Optional[Union[str, Iterator[str]]]: The step execution result,
+                which can be:
+                - None if step is disabled or failed
+                - A complete string if streaming is disabled
+                - An iterator of string chunks if streaming is enabled
 
         Raises:
             ClientAIError: If a required step fails
@@ -437,24 +427,25 @@ class StepExecutionEngine:
 
         Example:
             ```python
-            result = engine.execute_step(
-                step=my_step,
-                agent=my_agent,
-                input_data="Process this text"
-            )
-            if result:
-                print(f"Step succeeded: {result}")
-            ```
+            # Execute with default stream setting from step
+            result = engine.execute_step(step, agent, "input data")
 
-        Note:
-            - Steps marked as required will raise errors on failure
-            - Non-required steps return None on failure
-            - Results are automatically stored in agent context
+            # Force streaming on for this execution
+            result = engine.execute_step(
+                step, agent, "input data", stream=True
+            )
+
+            # Force streaming off for this execution
+            result = engine.execute_step(
+                step, agent, "input data", stream=False
+            )
+            ```
         """
         logger.info(f"Executing step '{step.name}'")
         logger.debug(
             f"Step configuration: use_tools={step.use_tools}, "
-            f"send_to_llm={step.send_to_llm}"
+            f"send_to_llm={step.send_to_llm}, "
+            f"stream={stream}"
         )
 
         if not step.config.enabled:
@@ -462,23 +453,49 @@ class StepExecutionEngine:
             return None
 
         try:
+            result = None
+
             if step.send_to_llm:
                 logger.debug("Building prompt")
                 prompt = self._build_prompt(step, agent, *args, **kwargs)
                 logger.debug(f"Built prompt: {prompt}")
 
-                logger.debug("Executing LLM call")
-                result = self._execute_llm_call(step, prompt)
-                logger.debug(f"LLM result: {result}")
-            else:
-                result = step.func(agent, *args, **kwargs)
-                if not isinstance(result, str):
-                    raise ValueError(
-                        f"Step function must return str, got {type(result)}"
+                model_config = step.llm_config or self._default_model
+
+                if isinstance(model_config, ModelConfig):
+                    if stream is not None:
+                        model_config = model_config.merge(stream=stream)
+                elif isinstance(model_config, str):
+                    model_config = ModelConfig(
+                        name=model_config,
+                        stream=stream if stream is not None else False,
                     )
 
-            logger.debug(f"Storing result in context with key: {step.name}")
-            agent.context.last_results[step.name] = result
+                api_kwargs = {
+                    **self._default_kwargs,
+                    **(
+                        model_config.get_parameters()
+                        if isinstance(model_config, ModelConfig)
+                        else {}
+                    ),
+                }
+
+                logger.debug(f"Executing LLM call with streaming={stream}")
+                result = self._execute_llm_call(step, prompt, api_kwargs)
+                logger.debug("LLM call completed")
+
+            else:
+                result = step.func(agent, *args, **kwargs)
+                if not isinstance(result, (str, Iterator)):  # noqa: UP038
+                    raise ValueError(
+                        f"Step function must return str or Iterator, "
+                        f"got {type(result)}"
+                    )
+
+            if result is not None and not isinstance(result, Iterator):
+                agent.context.last_results[step.name] = result
+                if step.config.pass_result:
+                    agent.context.current_input = result
 
             return result
 

@@ -232,6 +232,7 @@ def create_step_decorator(step_type: StepType):
         model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
         description: Optional[str] = None,
         send_to_llm: bool = True,
+        stream: bool = False,
         json_output: bool = False,
         use_tools: bool = True,
         tool_selection_config: Optional[ToolSelectionConfig] = None,
@@ -259,6 +260,7 @@ def create_step_decorator(step_type: StepType):
             send_to_llm: Whether this step's output should be sent to the
                          language model. Set to False for steps that process
                          data locally.
+            stream: Whether to stream the LLM's response
             json_output: Whether the LLM should format its response as JSON.
             use_tools: Whether this step should use automatic tool selection.
             tool_selection_config: Complete tool selection configuration for
@@ -379,6 +381,7 @@ def create_step_decorator(step_type: StepType):
                 if model and send_to_llm
                 else None,
                 send_to_llm=send_to_llm,
+                stream=stream,
                 json_output=json_output,
                 use_tools=use_tools,
                 tool_selection_config=final_tool_config,

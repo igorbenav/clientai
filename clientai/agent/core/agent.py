@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Union
 
 from clientai._typing import AIProviderProtocol
 from clientai.client_ai import ClientAI
@@ -262,6 +262,60 @@ class Agent:
             "model must be a string, dict with 'name', or ModelConfig"
         )
 
+    def _should_stream(self, stream_override: Optional[bool] = None) -> bool:
+        """
+        Determine if the workflow should return a streaming response.
+        Can be overridden by explicit stream parameter.
+
+        Args:
+            stream_override: Optional bool to override step configuration
+
+        Returns:
+            bool: True if streaming should be enabled
+        """
+        if stream_override is not None:
+            return stream_override
+
+        steps = self.workflow_manager.get_steps()
+        if not steps:
+            return False
+
+        last_step = next(reversed(steps.values()))
+        return getattr(last_step, "stream", False)
+
+    def _handle_streaming(
+        self,
+        result: Union[str, Iterator[str]],
+        stream_override: Optional[bool] = None,
+    ) -> Union[str, Iterator[str]]:
+        """
+        Process the workflow result based on streaming configuration.
+
+        Args:
+            result: Raw result from workflow execution
+            stream_override: Optional bool to override streaming configuration
+
+        Returns:
+            Union[str, Iterator[str]]: Either a streaming iterator
+            or complete string based on configuration and override
+
+        Example:
+            ```python
+            # Internal usage in run method
+            final_result = self._handle_streaming(step_result, stream=False)
+            ```
+        """
+        should_stream = self._should_stream(stream_override)
+
+        if not should_stream:
+            if isinstance(result, str):
+                return result
+            return "".join(list(result))
+
+        if isinstance(result, str):
+            return iter([result])
+        return result
+
     def add_tool(
         self,
         tool: Union[Callable, Tool],
@@ -313,7 +367,7 @@ class Agent:
 
         config = ToolConfig(
             tool=tool,
-            scopes=tool_scopes,  # Now passing a frozenset of ToolScope
+            scopes=tool_scopes,
             name=name,
             description=description,
         )
@@ -381,33 +435,46 @@ class Agent:
         """
         return self.tool_registry.get_for_scope(scope)
 
-    def run(self, input_data: Any) -> Any:
+    def run(
+        self, input_data: Any, *, stream: Optional[bool] = None
+    ) -> Union[str, Iterator[str]]:
         """
         Execute the agent's workflow with the provided input data.
-
-        This method starts the agent's workflow execution, processing the input
-        through all configured steps and returning the final result.
+        Streaming can be controlled by the stream parameter or
+        step configuration.
 
         Args:
             input_data: The initial input to start the workflow
+            stream: Optional bool to override streaming configuration.
+                    If provided, overrides the last step's stream setting.
 
         Returns:
-            The final result of the workflow execution
+            Union[str, Iterator[str]]: Either a complete response string
+            or a streaming iterator based on streaming configuration
 
         Raises:
             Exception: If workflow execution fails
 
         Example:
             ```python
-            result = agent.run("Analyze this text and calculate statistics")
+            # Force streaming on
+            for chunk in agent.run("Analyze this", stream=True):
+                print(chunk, end="", flush=True)
+
+            # Force streaming off
+            result = agent.run("Analyze this", stream=False)
             print(result)
+
+            # Use step configuration
+            result = agent.run("Analyze this")  # Uses last step's setting
             ```
         """
         self.context.current_input = input_data
         try:
-            return self.workflow_manager.execute(
-                self, input_data, self.execution_engine
+            result = self.workflow_manager.execute(
+                self, input_data, self.execution_engine, stream_override=stream
             )
+            return self._handle_streaming(result, stream)
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
             raise

@@ -121,7 +121,11 @@ class WorkflowManager:
         )
 
     def execute(
-        self, agent: Any, input_data: Any, engine: StepExecutionProtocol
+        self,
+        agent: Any,
+        input_data: Any,
+        engine: StepExecutionProtocol,
+        stream_override: Optional[bool] = None,
     ) -> Any:
         """
         Execute the workflow with the provided input data.
@@ -134,13 +138,11 @@ class WorkflowManager:
             agent: The agent executing the workflow.
             input_data: The initial input data.
             engine: The execution engine for processing steps.
+            stream_override: Optional bool to override step's
+                             stream configuration.
 
         Returns:
             The final result of the workflow execution.
-
-        Example:
-            >>> result = manager.execute(agent, "input data", engine)
-            >>> print(result)
         """
         logger.info(
             f"Starting workflow execution with {len(self._steps)} steps"
@@ -158,6 +160,15 @@ class WorkflowManager:
         for step in self._steps.values():
             logger.info(f"Executing step: {step.name} ({step.step_type})")
 
+            current_stream = (
+                stream_override
+                if stream_override is not None
+                else getattr(step, "stream", False)
+            )
+            logger.debug(
+                f"Using stream setting: {current_stream} for step {step.name}"
+            )
+
             param_count = len(step.func.__code__.co_varnames) - 1
             available_results = len(agent.context.last_results) + 1
 
@@ -169,25 +180,36 @@ class WorkflowManager:
                     f"{', '.join(self._steps.keys())})"
                 )
 
-            if param_count == 0:
-                result = engine.execute_step(step, agent)
-            elif param_count == 1:
-                result = engine.execute_step(step, agent, last_result)
-            else:
-                previous_results = [
-                    agent.context.last_results[s.name]
-                    for s in reversed(list(self._steps.values()))
-                    if s.name in agent.context.last_results
-                ][: param_count - 1]
-                args = [last_result] + previous_results
-                result = engine.execute_step(step, agent, *args)
+            try:
+                if param_count == 0:
+                    result = engine.execute_step(
+                        step, agent, stream=current_stream
+                    )
+                elif param_count == 1:
+                    result = engine.execute_step(
+                        step, agent, last_result, stream=current_stream
+                    )
+                else:
+                    previous_results = [
+                        agent.context.last_results[s.name]
+                        for s in reversed(list(self._steps.values()))
+                        if s.name in agent.context.last_results
+                    ][: param_count - 1]
+                    args = [last_result] + previous_results
+                    result = engine.execute_step(
+                        step, agent, *args, stream=current_stream
+                    )
 
-            if result is not None:
-                agent.context.last_results[step.name] = result
-                if step.config.pass_result:
-                    last_result = result
+                if result is not None:
+                    agent.context.last_results[step.name] = result
+                    if step.config.pass_result:
+                        last_result = result
 
-            logger.debug(f"Context after step: {agent.context.last_results}")
+                logger.debug(f"Step {step.name} completed")
+
+            except Exception as e:
+                logger.error(f"Error executing step {step.name}: {e}")
+                raise
 
         logger.info("Workflow execution completed")
         return last_result

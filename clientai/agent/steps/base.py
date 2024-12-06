@@ -76,6 +76,7 @@ class Step:
         description: A description of the step's purpose.
         llm_config: LLM configuration if the step interacts with an LLM.
         send_to_llm: Whether the step sends its data to an LLM. Default True.
+        stream: Whether to stream the LLM's response
         json_output: Whether the LLM should return a JSON. Default False.
         use_tools: Whether tool selection is enabled for step. Default True.
         tool_selection_config: Configuration for tool selection behavior.
@@ -109,6 +110,7 @@ class Step:
     description: Optional[str] = None
     llm_config: Optional[ModelConfig] = None
     send_to_llm: bool = True
+    stream: bool = False
     json_output: bool = False
     use_tools: bool = True
     tool_selection_config: Optional[ToolSelectionConfig] = None
@@ -288,6 +290,7 @@ class Step:
         description: Optional[str] = None,
         llm_config: Optional[ModelConfig] = None,
         send_to_llm: Optional[bool] = None,
+        stream: bool = False,
         json_output: bool = False,
         use_tools: bool = True,
         tool_selection_config: Optional[ToolSelectionConfig] = None,
@@ -304,6 +307,7 @@ class Step:
             description: A description of the step. Defaults to the docstring.
             llm_config: Model configuration for LLM-based steps.
             send_to_llm: Whether the step sends its prompt to an LLM.
+            stream: Whether to stream the LLM's response
             json_output: Whether the LLM should format its response as JSON.
             use_tools: Whether to enable tool selection for this step.
             tool_selection_config: Configuration for tool selection behavior.
@@ -347,6 +351,7 @@ class Step:
             description=description or func.__doc__,
             llm_config=llm_config,
             send_to_llm=send_to_llm if send_to_llm is not None else True,
+            stream=stream,
             json_output=json_output,
             use_tools=use_tools,
             tool_selection_config=tool_selection_config,

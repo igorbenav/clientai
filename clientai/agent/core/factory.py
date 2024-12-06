@@ -339,7 +339,9 @@ def create_agent(
         """Agent that processes inputs using a single configured step."""
 
         @step_decorator(
-            name=f"{role}_step", description=f"Execute {role} functionality"
+            name=f"{role}_step",
+            description=f"Execute {role} functionality",
+            stream=stream,
         )
         def process(self, input_data: str) -> str:
             """Process input according to the configured behavior."""
