@@ -202,7 +202,9 @@ class Agent:
                 config_params["confidence_threshold"] = tool_confidence
             if max_tools_per_step is not None:
                 config_params["max_tools_per_step"] = max_tools_per_step
-            self._tool_selection_config = ToolSelectionConfig(**config_params)
+            self._tool_selection_config = ToolSelectionConfig.create(
+                **config_params
+            )
 
         self._tool_model = (
             self._create_model_config(tool_model)

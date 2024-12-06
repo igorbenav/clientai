@@ -27,6 +27,12 @@ class StepRegistry:
     """
 
     def __init__(self) -> None:
+        """
+        Initialize an empty step registry.
+
+        Creates empty storage for tools and initializes scope indexing for
+        all available tool scopes.
+        """
         self._steps: Dict[str, Step] = {}
         self._type_index: Dict[StepType, Set[str]] = defaultdict(set)
         self._dependency_graph: Dict[str, Set[str]] = defaultdict(set)
@@ -52,11 +58,19 @@ class StepRegistry:
             raise ValueError(f"Step '{step.name}' already registered")
 
         self._steps[step.name] = step
-        self._type_index[step.type].add(step.name)
+        self._type_index[step.step_type].add(step.name)
         self._update_dependencies(step)
 
     def _update_dependencies(self, step: Step) -> None:
-        """Update step dependencies based on compatibility."""
+        """
+        Update step dependencies based on compatibility.
+
+        Analyzes the new step's compatibility with existing steps and updates
+        the dependency graph accordingly.
+
+        Args:
+            step: The step whose dependencies need to be updated.
+        """
         for existing_step in self._steps.values():
             if step.is_compatible_with(existing_step):
                 self._dependency_graph[step.name].add(existing_step.name)
@@ -121,6 +135,9 @@ class StepRegistry:
         """
         Remove a step from the registry and update indexes.
 
+        Removes the step and updates all related indexes and dependencies.
+        If the step doesn't exist, silently returns.
+
         Args:
             name (str): The name of the step to remove.
 
@@ -136,7 +153,7 @@ class StepRegistry:
 
         step = self._steps[name]
         del self._steps[name]
-        self._type_index[step.type].discard(name)
+        self._type_index[step.step_type].discard(name)
         del self._dependency_graph[name]
         for deps in self._dependency_graph.values():
             deps.discard(name)
@@ -144,6 +161,8 @@ class StepRegistry:
     def clear(self) -> None:
         """
         Clear all registered steps and indexes from the registry.
+
+        Removes all steps and resets the registry to its initial empty state.
 
         Examples:
             Clear the registry:

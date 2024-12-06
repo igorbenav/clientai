@@ -1,7 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional, get_type_hints
-
-from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..config.models import ModelConfig
 from ..config.steps import StepConfig
@@ -16,10 +14,10 @@ class FunctionMetadata:
     docstring, and argument types.
 
     Attributes:
-        name (str): The name of the function.
-        return_type (str): The return type of the function as a string.
-        docstring (Optional[str]): The docstring of the function.
-        arg_types (Dict[str, Any]): A mapping of argument names to their types.
+        name: The name of the function.
+        return_type: The return type of the function as a string.
+        docstring: The docstring of the function.
+        arg_types: A mapping of argument names to their types.
 
     Methods:
         from_function: Class method to extract metadata from a function.
@@ -37,7 +35,7 @@ class FunctionMetadata:
         docstring, and argument types.
 
         Args:
-            func (Callable[..., Any]): The function to analyze.
+            func: The function to analyze.
 
         Returns:
             FunctionMetadata: An instance containing the extracted metadata.
@@ -65,7 +63,8 @@ class FunctionMetadata:
         )
 
 
-class Step(BaseModel):
+@dataclass(frozen=True)
+class Step:
     """
     Represents a step in the agent's workflow, encapsulating its function,
     type, metadata, and configuration.
@@ -114,17 +113,17 @@ class Step(BaseModel):
     use_tools: bool = True
     tool_selection_config: Optional[ToolSelectionConfig] = None
     tool_model: Optional[ModelConfig] = None
-    config: StepConfig = Field(default_factory=StepConfig)
     metadata: Optional[FunctionMetadata] = None
     tool_decisions: Optional[List[ToolCallDecision]] = None
+    config: StepConfig = field(default_factory=StepConfig)
 
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True, validate_assignment=True
-    )
+    def __post_init__(self) -> None:
+        """Validate step values after initialization."""
+        self._validate_function(self.func)
+        self._validate_name(self.name)
 
-    @field_validator("func")
-    @classmethod
-    def validate_function(cls, func: Callable[..., Any]) -> Callable[..., Any]:
+    @staticmethod
+    def _validate_function(func: Callable[..., Any]) -> None:
         """
         Validate the step function's signature and return type.
 
@@ -132,10 +131,7 @@ class Step(BaseModel):
         and that the return type is a string.
 
         Args:
-            func (Callable[..., Any]): The function to validate.
-
-        Returns:
-            Callable[..., Any]: The validated function.
+            func: The function to validate.
 
         Raises:
             ValueError: If the function is not callable, lacks a return type
@@ -165,20 +161,14 @@ class Step(BaseModel):
                 f"Function {func.__name__} must return str (got {return_type})"
             )
 
-        return func
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, name: str) -> str:
+    @staticmethod
+    def _validate_name(name: str) -> None:
         """
         Validate the step's name to ensure it is non-empty
         and a valid Python identifier.
 
         Args:
-            name (str): The name of the step to validate.
-
-        Returns:
-            str: The validated step name.
+            name: The name of the step to validate.
 
         Raises:
             ValueError: If the name is empty or not a valid identifier.
@@ -198,14 +188,13 @@ class Step(BaseModel):
             raise ValueError(
                 f"Step name '{name}' must be a valid Python identifier"
             )
-        return name
 
     def is_compatible_with(self, other: "Step") -> bool:
         """
         Check if this step's input is compatible with another step's output.
 
         Args:
-            other (Step): The step to check compatibility with.
+            other: The step to check compatibility with.
 
         Returns:
             bool: True if compatible, False otherwise.
@@ -236,7 +225,7 @@ class Step(BaseModel):
         Determine if the step can execute with the provided input.
 
         Args:
-            input_data (Any): The input data to test.
+            input_data: The input data to test.
 
         Returns:
             bool: True if the step can execute with the input, False otherwise.

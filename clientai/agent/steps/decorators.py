@@ -9,6 +9,7 @@ from typing import (
     overload,
 )
 
+from ..config import StepConfig
 from ..config.defaults import STEP_TYPE_DEFAULTS
 from ..config.models import ModelConfig
 from ..tools import ToolSelectionConfig
@@ -237,6 +238,7 @@ def create_step_decorator(step_type: StepType):
         tool_confidence: Optional[float] = None,
         tool_model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
         max_tools_per_step: Optional[int] = None,
+        step_config: Optional[StepConfig] = None,
     ) -> Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]:
         """
         Core decorator implementation for workflow steps.
@@ -357,7 +359,7 @@ def create_step_decorator(step_type: StepType):
                     config_params["confidence_threshold"] = tool_confidence
                 if max_tools_per_step is not None:
                     config_params["max_tools_per_step"] = max_tools_per_step
-                final_tool_config = ToolSelectionConfig(**config_params)
+                final_tool_config = ToolSelectionConfig.create(**config_params)
 
             tool_model_config = None
             if tool_model is not None:
@@ -381,6 +383,7 @@ def create_step_decorator(step_type: StepType):
                 use_tools=use_tools,
                 tool_selection_config=final_tool_config,
                 tool_model=tool_model_config,
+                step_config=step_config,
             )
             return wrapped
 

@@ -95,7 +95,7 @@ def _create_tool_config(
         if max_tools_per_step is not None:
             config_params["max_tools_per_step"] = max_tools_per_step
         logger.debug(f"Creating tool config with params: {config_params}")
-        return ToolSelectionConfig(**config_params)
+        return ToolSelectionConfig.create(**config_params)
 
     return None
 

@@ -1,10 +1,35 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+DEFAULT_PROMPT_TEMPLATE = """
+    Given the current task and available tools,
+    determine if and how to use tools to help accomplish the task.
+
+    Task: {task}
+    Current Context: {context}
+
+    Available Tools:
+    {tool_descriptions}
+
+    Analyze the task and determine which tools would be helpful.
+    Respond in JSON format with this structure:
+    {{
+        "tool_calls": [
+            {{
+                "tool_name": "name of the tool to use",
+                "arguments": {{
+                    "param_name": "param_value"
+                }},
+                "confidence": 0.0-1.0,
+                "reasoning": "brief explanation of why this tool is useful"
+            }}
+        ]
+    }}
+"""
 
 
-class ToolSelectionConfig(BaseModel):
+@dataclass(frozen=True, kw_only=True)
+class ToolSelectionConfig:
     """
     Configuration settings for automatic tool selection behavior.
 
@@ -45,42 +70,43 @@ class ToolSelectionConfig(BaseModel):
         - Tool descriptions are automatically formatted in the prompt
     """
 
-    confidence_threshold: float = Field(
-        default=0.7,
-        ge=0.0,
-        le=1.0,
-        description="Minimum confidence level required for tool selection",
-    )
-    max_tools_per_step: int = Field(
-        default=3,
-        ge=1,
-        description="Maximum number of tools that can be used in a step",
-    )
-    prompt_template: str = """
-        Given the current task and available tools,
-        determine if and how to use tools to help accomplish the task.
+    confidence_threshold: float = 0.7
+    max_tools_per_step: int = 3
+    prompt_template: str = field(default=DEFAULT_PROMPT_TEMPLATE)
 
-        Task: {task}
-        Current Context: {context}
+    @classmethod
+    def create(cls, **kwargs: Any) -> "ToolSelectionConfig":
+        """
+        Create a ToolSelectionConfig instance from keyword arguments.
 
-        Available Tools:
-        {tool_descriptions}
+        Args:
+            **kwargs: Configuration parameters.
 
-        Analyze the task and determine which tools would be helpful.
-        Respond in JSON format with this structure:
-        {{
-            "tool_calls": [
-                {{
-                    "tool_name": "name of the tool to use",
-                    "arguments": {{
-                        "param_name": "param_value"
-                    }},
-                    "confidence": 0.0-1.0,
-                    "reasoning": "brief explanation of why this tool is useful"
-                }}
+        Returns:
+            ToolSelectionConfig: A new configuration instance.
+        """
+        filtered_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k
+            in [
+                "confidence_threshold",
+                "max_tools_per_step",
+                "prompt_template",
             ]
-        }}
-    """
+        }
+        return cls(**filtered_kwargs)
+
+    def __post_init__(self) -> None:
+        """Validate configuration values after initialization."""
+        if not 0.0 <= self.confidence_threshold <= 1.0:
+            raise ValueError(
+                "confidence_threshold must be between 0.0 and 1.0"
+            )
+        if self.max_tools_per_step < 1:
+            raise ValueError("max_tools_per_step must be at least 1")
+        if not isinstance(self.prompt_template, str):
+            raise ValueError("prompt_template must be a string")
 
 
 @dataclass
@@ -130,3 +156,14 @@ class ToolCallDecision:
     reasoning: str
     error: Optional[str] = None
     result: Optional[Any] = None
+
+    def __post_init__(self) -> None:
+        """Validate decision values after initialization."""
+        if not isinstance(self.tool_name, str):
+            raise ValueError("tool_name must be a string")
+        if not isinstance(self.arguments, dict):
+            raise ValueError("arguments must be a dictionary")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence must be between 0.0 and 1.0")
+        if not isinstance(self.reasoning, str):
+            raise ValueError("reasoning must be a string")

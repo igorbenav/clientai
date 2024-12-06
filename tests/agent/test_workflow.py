@@ -198,22 +198,21 @@ class TestWorkflowManager:
         mock_engine.reset_mock()
 
         class TestAgent:
-            @think("step1")
+            @think(
+                "step1",
+                step_config=StepConfig(enabled=False, pass_result=False),
+            )
             def disabled_step(self, data: str) -> str:
                 return data
 
-            @act("step2")
+            @act(
+                "step2", step_config=StepConfig(enabled=True, pass_result=True)
+            )
             def enabled_step(self, data: str) -> str:
                 return data
 
         agent = TestAgent()
         workflow_manager.register_class_steps(agent)
-
-        step1 = workflow_manager.get_step("step1")
-        step2 = workflow_manager.get_step("step2")
-
-        step1.config = StepConfig(enabled=False, pass_result=False)
-        step2.config = StepConfig(enabled=True, pass_result=True)
 
         executed_steps = []
 
