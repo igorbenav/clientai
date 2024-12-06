@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Set, TypeGuard
+from typing import Any, Dict, List, Optional, Set
 
 from ..config.tools import ToolConfig
 from .base import Tool
@@ -152,9 +152,9 @@ class ToolRegistry:
         return len(self._tools)
 
 
-def is_tool(obj: Any) -> TypeGuard[Tool]:
+def is_tool(obj: Any) -> bool:
     """
-    Type guard to check if an object is a Tool instance.
+    Check if an object is a Tool instance.
 
     Args:
         obj: The object to check.
@@ -164,6 +164,6 @@ def is_tool(obj: Any) -> TypeGuard[Tool]:
 
     Examples:
         >>> if is_tool(obj):
-        ...     result = obj(5, 3)  # TypeScript knows obj is Tool
+        ...     result = obj(5, 3)  # We know obj is a Tool
     """
     return isinstance(obj, Tool)
