@@ -8,6 +8,7 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    Union,
     get_type_hints,
 )
 
@@ -84,16 +85,33 @@ class ToolSignature:
         )
 
     def format(self) -> str:
+        """Format the signature as a string."""
         if self._str_repr is not None:
             return self._str_repr
 
         params = []
         for name, info in self._parameters:
-            type_str = (
-                info.type_.__name__
-                if hasattr(info.type_, "__name__")
-                else str(info.type_).replace("typing.", "")
-            )
+            if (
+                hasattr(info.type_, "__origin__")
+                and info.type_.__origin__ is Union
+            ):
+                if (
+                    len(info.type_.__args__) == 2
+                    and type(None) in info.type_.__args__
+                ):
+                    inner_type = next(
+                        t for t in info.type_.__args__ if t is not type(None)
+                    )
+                    type_str = f"Optional[{inner_type.__name__}]"
+                else:
+                    type_str = str(info.type_).replace("typing.", "")
+            else:
+                type_str = (
+                    info.type_.__name__
+                    if hasattr(info.type_, "__name__")
+                    else str(info.type_).replace("typing.", "")
+                )
+
             if info.default is None:
                 params.append(f"{name}: {type_str}")
             else:

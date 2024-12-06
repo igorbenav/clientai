@@ -140,7 +140,7 @@ class TestToolRegistry:
         tool = registry.get("custom_printer")
         assert tool is not None
         assert (
-            "custom_printer(message: str, prefix: Optional) -> str"
+            "custom_printer(message: str, prefix: Optional[str]) -> str"
             == tool.signature_str
         )
 
