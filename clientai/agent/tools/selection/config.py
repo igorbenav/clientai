@@ -28,7 +28,7 @@ DEFAULT_PROMPT_TEMPLATE = """
 """
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class ToolSelectionConfig:
     """
     Configuration settings for automatic tool selection behavior.
@@ -70,8 +70,8 @@ class ToolSelectionConfig:
         - Tool descriptions are automatically formatted in the prompt
     """
 
-    confidence_threshold: float = 0.7
-    max_tools_per_step: int = 3
+    confidence_threshold: float = field(default=0.7)
+    max_tools_per_step: int = field(default=3)
     prompt_template: str = field(default=DEFAULT_PROMPT_TEMPLATE)
 
     @classmethod
