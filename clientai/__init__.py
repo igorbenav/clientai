@@ -13,3 +13,4 @@ __all__ = [
     "OLLAMA_INSTALLED",
     "GROQ_INSTALLED",
 ]
+__version__ = "0.3.3"

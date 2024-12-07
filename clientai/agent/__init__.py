@@ -7,8 +7,6 @@ from .tools import tool
 from .tools.selection.config import ToolSelectionConfig
 from .types import ToolScope
 
-__version__ = "0.1.0"
-
 __all__ = [
     # Core
     "Agent",

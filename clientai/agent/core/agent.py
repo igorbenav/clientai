@@ -107,10 +107,10 @@ class Agent:
         ```
 
     Attributes:
-        context (AgentContext): Manages the agent's state and memory
-        tool_registry (ToolRegistry): Registry of available tools
-        execution_engine (StepExecutionEngine): Handles step execution
-        workflow_manager (WorkflowManager): Manages workflow execution order
+        context: Manages the agent's state and memory
+        tool_registry: Registry of available tools
+        execution_engine: Handles step execution
+        workflow_manager: Manages workflow execution order
     """
 
     def __init__(
