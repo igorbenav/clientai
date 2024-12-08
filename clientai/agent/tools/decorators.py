@@ -25,21 +25,27 @@ def tool(
 
     Examples:
         Basic usage with automatic name and description:
-        >>> @tool()
-        ... def calculate(x: int, y: int) -> int:
-        ...     '''Add two numbers together.'''
-        ...     return x + y
+        ```python
+        @tool
+        def calculate(x: int, y: int) -> int:
+            '''Add two numbers together.'''
+            return x + y
+        ```
 
         Custom name and description:
-        >>> @tool(
-        ...     name="Calculator",
-        ...     description="Performs addition of two integers"
-        ... )
-        ... def add_numbers(x: int, y: int) -> int:
-        ...     return x + y
+        ```python
+        @tool(
+            name="Calculator",
+            description="Performs addition of two integers"
+        )
+        def add_numbers(x: int, y: int) -> int:
+            return x + y
+        ```
 
         Using the decorated tool:
-        >>> result = calculate(5, 3)  # Returns 8
+        ```python
+        result = calculate(5, 3)  # Returns 8
+        ```
     """
 
     def decorator(func: Callable[..., T]) -> Tool:

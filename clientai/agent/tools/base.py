@@ -31,28 +31,34 @@ class Tool:
 
     Examples:
         Using the @tool decorator:
-        >>> @tool
-        ... def calculate(x: int, y: int) -> int:
-        ...     '''Add two numbers.'''
-        ...     return x + y
-        >>> result = calculate(5, 3)
-        >>> print(result)  # Output: 8
+        ```python
+        @tool
+        def calculate(x: int, y: int) -> int:
+            '''Add two numbers.'''
+            return x + y
+        result = calculate(5, 3)
+        print(result)  # Output: 8
+        ```
 
         Using @tool with parameters:
-        >>> @tool(name="Calculator", description="Performs basic arithmetic")
-        ... def add(x: int, y: int) -> int:
-        ...     return x + y
+        ```python
+        @tool(name="Calculator", description="Performs basic arithmetic")
+        def add(x: int, y: int) -> int:
+            return x + y
+        ```
 
         Direct creation and registration:
-        >>> def multiply(x: int, y: int) -> int:
-        ...     '''Multiply two numbers.'''
-        ...     return x * y
-        >>> tool = Tool.create(
-        ...     multiply,
-        ...     name="Multiplier",
-        ...     description="Performs multiplication"
-        ... )
-        >>> agent.register_tool(tool)
+        ```python
+        def multiply(x: int, y: int) -> int:
+            '''Multiply two numbers.'''
+            return x * y
+        tool = Tool.create(
+            multiply,
+            name="Multiplier",
+            description="Performs multiplication"
+        )
+        agent.register_tool(tool)
+        ```
     """
 
     func: ToolCallable
@@ -88,26 +94,32 @@ class Tool:
 
         Examples:
             Basic tool creation:
-            >>> def format_text(text: str, uppercase: bool = False) -> str:
-            ...     '''Format input text.'''
-            ...     return text.upper() if uppercase else text
-            >>> tool = Tool.create(format_text)
+            ```python
+            def format_text(text: str, uppercase: bool = False) -> str:
+                '''Format input text.'''
+                return text.upper() if uppercase else text
+            tool = Tool.create(format_text)
+            ```
 
             Custom metadata:
-            >>> tool = Tool.create(
-            ...     format_text,
-            ...     name="Formatter",
-            ...     description="Text formatting utility"
-            ... )
+            ```python
+            tool = Tool.create(
+                format_text,
+                name="Formatter",
+                description="Text formatting utility"
+            )
+            ```
 
             For agent registration:
-            >>> agent.register_tool(
-            ...     Tool.create(
-            ...         format_text,
-            ...         name="Formatter",
-            ...         description="Formats text input"
-            ...     )
-            ... )
+            ```python
+            agent.register_tool(
+                Tool.create(
+                    format_text,
+                    name="Formatter",
+                    description="Formats text input"
+                )
+            )
+            ```
         """
         actual_name = name or func.__name__
         actual_description = (
@@ -134,11 +146,13 @@ class Tool:
             Signature information for the tool.
 
         Examples:
-            >>> @tool
-            ... def my_function(x: int, y: str) -> str:
-            ...     return f"{y}: {x}"
-            >>> sig = my_function.signature
-            >>> print(sig.parameters)  # Shows parameter information
+            ```python
+            @tool
+            def my_function(x: int, y: str) -> str:
+                return f"{y}: {x}"
+            sig = my_function.signature
+            print(sig.parameters)  # Shows parameter information
+            ```
         """
         if self._signature is None:
             sig = ToolSignature.from_callable(self.func, self.name)
@@ -163,13 +177,17 @@ class Tool:
 
         Examples:
             Using a tool with positional arguments:
-            >>> @tool
-            ... def calculate(x: int, y: int) -> int:
-            ...     return x + y
-            >>> result = calculate(5, 3)
+            ```python
+            @tool
+            def calculate(x: int, y: int) -> int:
+                return x + y
+            result = calculate(5, 3)
+            ```
 
             Using a tool with keyword arguments:
-            >>> result = calculate(x=5, y=3)
+            ```python
+            result = calculate(x=5, y=3)
+            ```
         """
         return self.func(*args, **kwargs)
 
@@ -185,11 +203,14 @@ class Tool:
             A formatted string representing the tool's signature.
 
         Examples:
-            >>> @tool
-            ... def calculate(x: int, y: int) -> int:
-            ...     return x + y
-            >>> print(calculate.signature_str)
+            ```python
+            @tool
+            def calculate(x: int, y: int) -> int:
+                return x + y
+            print(calculate.signature_str)
+
             # Output: "calculate(x: int, y: int) -> int"
+            ```
         """
         return self.signature.format()
 
@@ -212,22 +233,28 @@ class Tool:
 
         Examples:
             Basic formatting:
-            >>> @tool(name="Calculator")
-            ... def add(x: int, y: int) -> int:
-            ...     '''Add two numbers together.'''
-            ...     return x + y
-            >>> print(add.format_tool_info())
+            ```python
+            @tool(name="Calculator")
+            def add(x: int, y: int) -> int:
+                '''Add two numbers together.'''
+                return x + y
+            print(add.format_tool_info())
+
             # Output:
             # - Calculator
             #   Signature: add(x: int, y: int) -> int
             #   Description: Add two numbers together
+            ```
 
             With custom indentation:
-            >>> print(add.format_tool_info("  "))
+            ```python
+            print(add.format_tool_info("  "))
+
             # Output:
             #   - Calculator
             #     Signature: add(x: int, y: int) -> int
             #     Description: Add two numbers together
+            ```
 
         Note:
             This format is specifically designed to be:
@@ -255,15 +282,18 @@ class Tool:
             A formatted string containing the tool's complete information.
 
         Example:
-            >>> @tool(name="Calculator")
-            ... def add(x: int, y: int) -> int:
-            ...     '''Add two numbers together.'''
-            ...     return x + y
-            >>> print(str(add))
+            ```python
+            @tool(name="Calculator")
+            def add(x: int, y: int) -> int:
+                '''Add two numbers together.'''
+                return x + y
+            print(str(add))
+
             # Output:
             # - Calculator
             #   Signature: add(x: int, y: int) -> int
             #   Description: Add two numbers together
+            ```
 
         Note:
             This method uses format_tool_info() to ensure consistency between

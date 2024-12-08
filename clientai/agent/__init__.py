@@ -26,6 +26,4 @@ __all__ = [
     # Tools
     "tool",
     "ToolScope",
-    # Version
-    "__version__",
 ]

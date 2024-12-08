@@ -17,15 +17,17 @@ class ToolRegistry:
         _tools: Dictionary mapping tool names to Tool instances.
         _scope_index: Dictionary mapping scopes to sets of tool names.
 
-    Examples:
-        >>> registry = ToolRegistry()
-        >>> config = ToolConfig(
-        ...     tool=calculator_func,
-        ...     scopes=["think", "act"],
-        ...     name="Calculator"
-        ... )
-        >>> registry.register(config)
-        >>> tools = registry.get_for_scope("think")
+    Example:
+        ```python
+        registry = ToolRegistry()
+        config = ToolConfig(
+            tool=calculator_func,
+            scopes=["think", "act"],
+            name="Calculator"
+        )
+        registry.register(config)
+        tools = registry.get_for_scope("think")
+        ```
     """
 
     def __init__(self) -> None:
@@ -54,13 +56,15 @@ class ToolRegistry:
         Raises:
             ValueError: If a tool with the same name is already registered.
 
-        Examples:
-            >>> registry = ToolRegistry()
-            >>> registry.register(ToolConfig(
-            ...     tool=my_tool,
-            ...     scopes=["think"],
-            ...     name="MyTool"
-            ... ))
+        Example:
+            ```python
+            registry = ToolRegistry()
+            registry.register(ToolConfig(
+                tool=my_tool,
+                scopes=["think"],
+                name="MyTool"
+            ))
+            ```
         """
         tool = (
             tool_config.tool
@@ -93,10 +97,12 @@ class ToolRegistry:
         Returns:
             The requested Tool instance, or None if not found.
 
-        Examples:
-            >>> tool = registry.get("Calculator")
-            >>> if tool:
-            ...     result = tool(5, 3)
+        Example:
+            ```python
+            tool = registry.get("Calculator")
+            if tool:
+                result = tool(5, 3)
+            ```
         """
         return self._tools.get(name)
 
@@ -114,8 +120,10 @@ class ToolRegistry:
             ValueError: If the specified scope is invalid.
 
         Examples:
-            >>> think_tools = registry.get_for_scope("think")
-            >>> all_tools = registry.get_for_scope(None)
+            ```python
+            think_tools = registry.get_for_scope("think")
+            all_tools = registry.get_for_scope(None)
+            ```
         """
         if scope is None:
             return list(self._tools.values())
@@ -134,8 +142,10 @@ class ToolRegistry:
             True if the tool is registered, False otherwise.
 
         Examples:
-            >>> if "Calculator" in registry:
-            ...     tool = registry.get("Calculator")
+            ```python
+            if "Calculator" in registry:
+                tool = registry.get("Calculator")
+            ```
         """
         return name in self._tools
 
@@ -147,7 +157,9 @@ class ToolRegistry:
             Number of tools in the registry.
 
         Examples:
-            >>> print(f"Registry contains {len(registry)} tools")
+            ```python
+            print(f"Registry contains {len(registry)} tools")
+            ```
         """
         return len(self._tools)
 
@@ -163,7 +175,9 @@ def is_tool(obj: Any) -> bool:
         True if the object is a Tool instance, False otherwise.
 
     Examples:
-        >>> if is_tool(obj):
-        ...     result = obj(5, 3)  # We know obj is a Tool
+        ```python
+        if is_tool(obj):
+            result = obj(5, 3)  # We know obj is a Tool
+        ```
     """
     return isinstance(obj, Tool)

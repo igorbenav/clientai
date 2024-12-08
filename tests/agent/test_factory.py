@@ -4,6 +4,7 @@ import pytest
 
 from clientai.agent import Agent, ToolConfig, ToolSelectionConfig
 from clientai.agent.core.factory import create_agent
+from clientai.agent.exceptions import AgentError
 from clientai.exceptions import ClientAIError
 
 
@@ -162,10 +163,26 @@ def test_streaming_agent(mock_client):
         },
         {"model": "", "error": "Model must be a non-empty string"},
         {"model": None, "error": "Model must be a non-empty string"},
-        {"temperature": 1.5, "error": "Temperature must be between 0 and 1"},
-        {"temperature": -0.1, "error": "Temperature must be between 0 and 1"},
-        {"top_p": 1.5, "error": "Top_p must be between 0 and 1"},
-        {"top_p": -0.1, "error": "Top_p must be between 0 and 1"},
+        {
+            "temperature": 1.5,
+            "error": "Invalid model configuration: "
+            "Temperature must be between 0.0 and 1.0",
+        },
+        {
+            "temperature": -0.1,
+            "error": "Invalid model configuration: "
+            "Temperature must be between 0.0 and 1.0",
+        },
+        {
+            "top_p": 1.5,
+            "error": "Invalid model configuration: "
+            "Top_p must be between 0.0 and 1.0",
+        },
+        {
+            "top_p": -0.1,
+            "error": "Invalid model configuration: "
+            "Top_p must be between 0.0 and 1.0",
+        },
     ],
 )
 def test_invalid_inputs(mock_client, invalid_input):
@@ -178,15 +195,16 @@ def test_invalid_inputs(mock_client, invalid_input):
         "model": "test-model",
     }
 
-    with pytest.raises(ValueError, match=error_msg):
+    with pytest.raises(AgentError, match=error_msg):
         create_agent(**{**base_args, **invalid_input})
 
 
 def test_conflicting_tool_configs(mock_client):
     """Test that conflicting tool configurations raise an error."""
     with pytest.raises(
-        ValueError,
-        match="Cannot specify both tool_selection_config "
+        AgentError,
+        match="Invalid tool selection configuration: "
+        "Cannot specify both tool_selection_config "
         "and individual tool parameters",
     ):
         create_agent(
@@ -229,7 +247,7 @@ def test_client_error_handling(mock_client):
 
 def test_invalid_step_type(mock_client):
     """Test that invalid step types raise an error."""
-    with pytest.raises(ValueError, match="Step must be one of"):
+    with pytest.raises(AgentError) as exc_info:
         create_agent(
             client=mock_client,
             role="test",
@@ -237,3 +255,12 @@ def test_invalid_step_type(mock_client):
             model="test-model",
             step="invalid_step_type!",
         )
+
+    error_msg = str(exc_info.value)
+
+    assert error_msg.startswith("Step must be one of {")
+    assert error_msg.endswith("} or a valid Python identifier")
+
+    set_portion = error_msg[error_msg.find("{") + 1 : error_msg.find("}")]
+    step_types = {s.strip("'") for s in set_portion.split(", ")}
+    assert step_types == {"think", "act", "observe", "synthesize"}

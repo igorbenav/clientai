@@ -4,6 +4,7 @@ import pytest
 
 from clientai.agent import Agent, ModelConfig, ToolConfig, act, observe, think
 from clientai.agent.core.context import AgentContext
+from clientai.agent.exceptions import ToolError
 from clientai.agent.tools import tool
 from clientai.exceptions import ClientAIError
 
@@ -131,7 +132,7 @@ def test_agent_reset(basic_agent):
 
 
 def test_invalid_tool_execution(basic_agent):
-    with pytest.raises(ValueError, match="Tool 'nonexistent_tool' not found"):
+    with pytest.raises(ToolError, match="Tool 'nonexistent_tool' not found"):
         basic_agent.use_tool("nonexistent_tool")
 
 

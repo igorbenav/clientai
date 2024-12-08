@@ -1,6 +1,7 @@
-from typing import Any, List, Protocol
+from typing import Any, Callable, List, Protocol, Union
 
 from ..steps.base import Step
+from ..tools.base import Tool
 from .common import AgentInput, AgentOutput, StepResult, ToolResult
 
 
@@ -24,10 +25,17 @@ class AgentProtocol(Protocol[AgentInput, AgentOutput]):
     def run(self, input_data: AgentInput) -> AgentOutput:
         ...
 
-    def add_tool(self, tool: ToolProtocol[Any], scopes: List[str]) -> None:
+    def register_tool(
+        self,
+        tool: Union[Callable[..., Any], Tool, ToolProtocol[Any]],
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        scopes: Union[List[str], str] = "all",
+    ) -> Tool:
         ...
 
-    def get_tools(self, scope: str) -> List[ToolProtocol[Any]]:
+    def get_tools(self, scope: str | None = None) -> List[Tool]:
         ...
 
     def reset(self) -> None:
