@@ -210,7 +210,11 @@ class WorkflowManager:
     def _get_step_parameters(self, step: Step) -> int:
         """Get the number of parameters for a step."""
         try:
-            return len(step.func.__code__.co_varnames) - 1
+            params = [
+                param for param in step.func.__code__.co_varnames[:step.func.__code__.co_argcount]
+                if param != 'self'
+            ]
+            return len(params)
         except AttributeError as e:
             raise StepError(f"Invalid step function: {str(e)}")
 
