@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Protocol, Union
+from typing import Any, Callable, List, Optional, Protocol, Union
 
 from ..steps.base import Step
 from ..tools.base import Tool
@@ -29,13 +29,13 @@ class AgentProtocol(Protocol[AgentInput, AgentOutput]):
         self,
         tool: Union[Callable[..., Any], Tool, ToolProtocol[Any]],
         *,
-        name: str | None = None,
-        description: str | None = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
         scopes: Union[List[str], str] = "all",
     ) -> Tool:
         ...
 
-    def get_tools(self, scope: str | None = None) -> List[Tool]:
+    def get_tools(self, scope: Optional[str] = None) -> List[Tool]:
         ...
 
     def reset(self) -> None:
