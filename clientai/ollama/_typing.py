@@ -52,7 +52,13 @@ OllamaGenericResponse = GenericResponse[
 
 class OllamaClientProtocol(Protocol):
     def generate(
-        self, model: str, prompt: str, stream: bool = False, **kwargs: Any
+        self,
+        model: str,
+        prompt: str,
+        stream: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        **kwargs: Any,
     ) -> Union[OllamaResponse, Iterator[OllamaStreamResponse]]:
         ...
 
@@ -61,6 +67,8 @@ class OllamaClientProtocol(Protocol):
         model: str,
         messages: List[Message],
         stream: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> Union[OllamaChatResponse, Iterator[OllamaStreamResponse]]:
         ...

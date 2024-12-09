@@ -32,6 +32,10 @@ class ClientAI(Generic[P, T, S]):
                        ('openai', 'replicate', 'ollama', or 'groq').
         system_prompt: Optional system prompt to guide the model's behavior
                        across all interactions.
+        temperature: Optional default temperature value for all interactions.
+                    Controls randomness in the output (usually 0.0-2.0).
+        top_p: Optional default top-p value for all interactions.
+               Controls diversity via nucleus sampling (usually 0.0-1.0).
         **kwargs (Any): Provider-specific initialization parameters.
 
     Raises:
@@ -44,24 +48,24 @@ class ClientAI(Generic[P, T, S]):
         ai = ClientAI('openai', api_key="your-openai-key")
         ```
 
-        Initialize with Replicate:
+        Initialize with custom generation parameters:
         ```python
-        ai = ClientAI('replicate', api_key="your-replicate-key")
-        ```
-
-        Initialize with Ollama:
-        ```python
-        ai = ClientAI('ollama', host="your-ollama-host")
-        ```
-
-        Initialize with Groq:
-        ```python
-        ai = ClientAI('groq', api_key="your-groq-key")
+        ai = ClientAI(
+            'openai',
+            api_key="your-openai-key",
+            temperature=0.8,
+            top_p=0.9
+        )
         ```
     """
 
     def __init__(
-        self, provider_name: str, system_prompt: Optional[str] = None, **kwargs
+        self,
+        provider_name: str,
+        system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        **kwargs,
     ):
         prov_name = provider_name
         if prov_name not in ["openai", "replicate", "ollama", "groq"]:
@@ -83,6 +87,8 @@ class ClientAI(Generic[P, T, S]):
             )
 
         self.system_prompt = system_prompt
+        self.temperature = temperature
+        self.top_p = top_p
 
         try:
             provider_module = import_module(
@@ -107,6 +113,8 @@ class ClientAI(Generic[P, T, S]):
         prompt: str,
         model: str,
         system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
@@ -120,8 +128,13 @@ class ClientAI(Generic[P, T, S]):
             model: The name or identifier of the AI model to use.
             system_prompt: Optional system prompt to override the default one.
                            If None, uses the one specified in initialization.
-            return_full_response: If True, returns the full structured response
-                                  If False, returns only the generated text.
+            temperature: Optional temperature value to override the default.
+                        Controls randomness (usually 0.0-2.0).
+            top_p: Optional top-p value to override the default.
+                  Controls diversity via nucleus sampling (usually 0.0-1.0).
+            return_full_response: If True, returns the full structured
+                                  response. If False, returns only the
+                                  generated text.
             stream: If True, returns an iterator for streaming responses.
             **kwargs: Additional keyword arguments specific to
                       the chosen provider's API.
@@ -132,7 +145,7 @@ class ClientAI(Generic[P, T, S]):
                 or an iterator for streaming responses.
 
         Examples:
-            Generate text using OpenAI (text only):
+            Generate text with default settings:
             ```python
             response = ai.generate_text(
                 "Tell me a joke",
@@ -140,54 +153,28 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
 
-            Generate text using OpenAI (full response):
+            Generate creative text with high temperature:
             ```python
             response = ai.generate_text(
-                "Tell me a joke",
+                "Write a story about space",
                 model="gpt-3.5-turbo",
-                return_full_response=True
-            )
-            ```
-
-            Generate text using OpenAI (streaming):
-            ```python
-            for chunk in ai.generate_text(
-                "Tell me a joke",
-                model="gpt-3.5-turbo",
-                stream=True
-            ):
-                print(chunk, end="", flush=True)
-            ```
-
-            Generate text using Replicate:
-            ```python
-            response = ai.generate_text(
-                "Explain quantum computing",
-                model="meta/llama-2-70b-chat:latest",
-            )
-            ```
-
-            Generate text using Ollama:
-            ```python
-            response = ai.generate_text(
-                "What is the capital of France?",
-                model="llama2",
-            )
-            ```
-
-            Generate text using Groq:
-            ```python
-            response = ai.generate_text(
-                "Explain quantum computing",
-                model="llama3-8b-8192",
+                temperature=0.8,
+                top_p=0.9
             )
             ```
         """
         effective_system_prompt = system_prompt or self.system_prompt
+        effective_temperature = (
+            temperature if temperature is not None else self.temperature
+        )
+        effective_top_p = top_p if top_p is not None else self.top_p
+
         return self.provider.generate_text(
             prompt,
             model,
             system_prompt=effective_system_prompt,
+            temperature=effective_temperature,
+            top_p=effective_top_p,
             return_full_response=return_full_response,
             stream=stream,
             **kwargs,
@@ -198,6 +185,8 @@ class ClientAI(Generic[P, T, S]):
         messages: List[Message],
         model: str,
         system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
@@ -212,8 +201,13 @@ class ClientAI(Generic[P, T, S]):
             model: The name or identifier of the AI model to use.
             system_prompt: Optional system prompt to override the default one.
                            If None, uses the one specified in initialization.
-            return_full_response: If True, returns the full structured response
-                                  If False, returns the assistant's message.
+            temperature: Optional temperature value to override the default.
+                        Controls randomness (usually 0.0-2.0).
+            top_p: Optional top-p value to override the default.
+                  Controls diversity via nucleus sampling (usually 0.0-1.0).
+            return_full_response: If True, returns the full structured
+                                  response. If False, returns the
+                                  assistant's message.
             stream: If True, returns an iterator for streaming responses.
             **kwargs: Additional keyword arguments specific to
                       the chosen provider's API.
@@ -224,12 +218,10 @@ class ClientAI(Generic[P, T, S]):
                 or an iterator for streaming responses.
 
         Examples:
-            Chat using OpenAI (message content only):
+            Chat with default settings:
             ```python
             messages = [
-                {"role": "user", "content": "What is the capital of France?"},
-                {"role": "assistant", "content": "Paris."},
-                {"role": "user", "content": "What is its population?"}
+                {"role": "user", "content": "What is AI?"}
             ]
             response = ai.chat(
                 messages,
@@ -237,60 +229,28 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
 
-            Chat using OpenAI (full response):
+            Creative chat with custom temperature:
             ```python
             response = ai.chat(
                 messages,
                 model="gpt-3.5-turbo",
-                return_full_response=True
-            )
-            ```
-
-            Chat using OpenAI (streaming):
-            ```python
-            for chunk in ai.chat(
-                messages,
-                model="gpt-3.5-turbo",
-                stream=True
-            ):
-                print(chunk, end="", flush=True)
-            ```
-
-            Chat using Replicate:
-            ```python
-            messages = [
-                {"role": "user", "content": "Explain the concept of AI."}
-            ]
-            response = ai.chat(
-                messages,
-                model="meta/llama-2-70b-chat:latest",
-            )
-            ```
-
-            Chat using Ollama:
-            ```python
-            messages = [
-                {"role": "user", "content": "What are the laws of robotics?"}
-            ]
-            response = ai.chat(messages, model="llama2")
-            ```
-
-            Chat using Groq:
-            ```python
-            messages = [
-                {"role": "user", "content": "What is quantum computing?"}
-            ]
-            response = ai.chat(
-                messages,
-                model="llama3-8b-8192",
+                temperature=0.8,
+                top_p=0.9
             )
             ```
         """
         effective_system_prompt = system_prompt or self.system_prompt
+        effective_temperature = (
+            temperature if temperature is not None else self.temperature
+        )
+        effective_top_p = top_p if top_p is not None else self.top_p
+
         return self.provider.chat(
             messages,
             model,
             system_prompt=effective_system_prompt,
+            temperature=effective_temperature,
+            top_p=effective_top_p,
             return_full_response=return_full_response,
             stream=stream,
             **kwargs,

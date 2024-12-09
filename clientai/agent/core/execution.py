@@ -109,8 +109,11 @@ class StepExecutionEngine:
             self._default_tool_selection_config = (
                 tool_selection_config or ToolSelectionConfig()
             )
-            self._default_tool_model = tool_model or default_model
-            self._tool_selector = ToolSelector()
+
+            self._default_tool_model = self._create_tool_model_config(
+                tool_model if tool_model is not None else default_model
+            )
+
             logger.debug(
                 f"Initialized StepExecutionEngine with model: {default_model}"
             )
@@ -123,6 +126,68 @@ class StepExecutionEngine:
             raise StepError(
                 f"Unexpected initialization error: {str(e)}"
             ) from e
+
+        except ValueError as e:
+            logger.error(f"Initialization error: {e}")
+            raise StepError(str(e)) from e
+        except Exception as e:
+            logger.error(f"Unexpected initialization error: {e}")
+            raise StepError(
+                f"Unexpected initialization error: {str(e)}"
+            ) from e
+
+    def _create_tool_model_config(
+        self, model: Union[str, ModelConfig]
+    ) -> ModelConfig:
+        """Create a ModelConfig instance for tool selection."""
+        try:
+            if isinstance(model, str):
+                return ModelConfig(
+                    name=model,
+                    temperature=0.0,
+                    json_output=True,
+                )
+            elif isinstance(model, ModelConfig):
+                return model.merge(
+                    temperature=0.0,
+                    json_output=True,
+                )
+            else:
+                raise ValueError(
+                    f"Invalid model type: {type(model)}. "
+                    "Must be string or ModelConfig"
+                )
+        except Exception as e:
+            logger.error(f"Error creating tool model config: {e}")
+            raise StepError(f"Invalid tool model configuration: {str(e)}")
+
+    def _get_effective_tool_model(self, step: Step) -> ModelConfig:
+        """
+        Get the model to use for tool selection based on priority order.
+
+        Priority:
+        1. Step-specific tool model
+        2. Default tool model
+        3. Default model (as fallback)
+
+        Args:
+            step: The step being executed
+
+        Returns:
+            ModelConfig: The model configuration to use for tool selection
+
+        Raises:
+            StepError: If model configuration fails
+        """
+        try:
+            if step.tool_model is not None:
+                return self._create_tool_model_config(step.tool_model)
+
+            return self._default_tool_model
+
+        except Exception as e:
+            logger.error(f"Error determining tool model: {e}")
+            raise StepError(f"Failed to determine tool model: {str(e)}")
 
     def _get_tool_selection_config(self, step: Step) -> ToolSelectionConfig:
         """
@@ -276,7 +341,15 @@ class StepExecutionEngine:
             return base_prompt
 
         try:
-            decisions = self._tool_selector.select_tools(
+            tool_model = self._get_effective_tool_model(step)
+            logger.debug(f"Using tool model: {tool_model.name}")
+
+            tool_selector = ToolSelector(
+                model_config=tool_model,
+                config=self._get_tool_selection_config(step),
+            )
+
+            decisions = tool_selector.select_tools(
                 task=base_prompt,
                 tools=available_tools,
                 context=agent.context.state,
@@ -289,7 +362,7 @@ class StepExecutionEngine:
                 return base_prompt
 
             tools_by_name = {t.name: t for t in available_tools}
-            updated_decisions = self._tool_selector.execute_tool_decisions(
+            updated_decisions = tool_selector.execute_tool_decisions(
                 decisions=decisions, tools=tools_by_name
             )
 

@@ -77,6 +77,30 @@ class Provider(AIProvider):
             GroqClientProtocol, Client(api_key=api_key)
         )
 
+    def _validate_temperature(self, temperature: Optional[float]) -> None:
+        """Validate the temperature parameter."""
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Temperature must be a number between 0 and 2"
+                )
+            if temperature < 0 or temperature > 2:
+                raise InvalidRequestError(
+                    f"Temperature must be between 0 and 2, got {temperature}"
+                )
+
+    def _validate_top_p(self, top_p: Optional[float]) -> None:
+        """Validate the top_p parameter."""
+        if top_p is not None:
+            if not isinstance(top_p, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Top-p must be a number between 0 and 1"
+                )
+            if top_p < 0 or top_p > 1:
+                raise InvalidRequestError(
+                    f"Top-p must be between 0 and 1, got {top_p}"
+                )
+
     def _stream_response(
         self,
         stream: Iterator[GroqStreamResponse],
@@ -163,6 +187,8 @@ class Provider(AIProvider):
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -183,6 +209,14 @@ class Provider(AIProvider):
                 with streaming and stop sequences. Will return a 400 error with
                 code "json_validate_failed" if JSON generation fails. Defaults
                 to False.
+            temperature: Optional temperature value (0.0-2.0).
+                         Controls randomness in generation.
+                         Lower values make the output more focused
+                         and deterministic, higher values make it
+                         more creative.
+            top_p: Optional nucleus sampling parameter (0.0-1.0).
+                   Controls diversity by limiting cumulative probability
+                   in token selection.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
@@ -229,6 +263,9 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
             messages: List[Optional[Message]] = []
             if system_prompt:
                 messages.append({"role": "system", "content": system_prompt})
@@ -241,6 +278,10 @@ class Provider(AIProvider):
             }
             if json_output:
                 completion_kwargs["response_format"] = {"type": "json_object"}
+            if temperature is not None:
+                completion_kwargs["temperature"] = temperature
+            if top_p is not None:
+                completion_kwargs["top_p"] = top_p
             completion_kwargs.update(kwargs)
 
             response = self.client.chat.completions.create(**completion_kwargs)
@@ -271,6 +312,8 @@ class Provider(AIProvider):
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -291,6 +334,14 @@ class Provider(AIProvider):
                 with streaming and stop sequences. Will return a 400 error with
                 code "json_validate_failed" if JSON generation fails.
                 Defaults to False.
+            temperature: Optional temperature value (0.0-2.0).
+                         Controls randomness in generation.
+                         Lower values make the output more focused
+                         and deterministic, higher values make it
+                         more creative.
+            top_p: Optional nucleus sampling parameter (0.0-1.0).
+                   Controls diversity by limiting cumulative probability
+                   in token selection.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
@@ -345,6 +396,9 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
             chat_messages = messages.copy()
             if system_prompt:
                 chat_messages.insert(
@@ -358,6 +412,10 @@ class Provider(AIProvider):
             }
             if json_output:
                 completion_kwargs["response_format"] = {"type": "json_object"}
+            if temperature is not None:
+                completion_kwargs["temperature"] = temperature
+            if top_p is not None:
+                completion_kwargs["top_p"] = top_p
             completion_kwargs.update(kwargs)
 
             response = self.client.chat.completions.create(**completion_kwargs)

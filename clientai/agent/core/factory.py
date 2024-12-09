@@ -313,6 +313,14 @@ def _create_model_config(
         ) from e
 
 
+def _sanitize_identifier(name: str) -> str:
+    """Convert a string into a valid Python identifier."""
+    sanitized = "".join(c for c in name if c.isalnum() or c == "_")
+    if sanitized and sanitized[0].isdigit():
+        sanitized = "_" + sanitized
+    return sanitized
+
+
 def create_agent(
     client: ClientAI[AIProviderProtocol, Any, Any],
     role: str,
@@ -528,7 +536,7 @@ def create_agent(
             """
 
             @step_decorator(
-                name=f"{role}_step",
+                name=f"{_sanitize_identifier(role)}_step",
                 description=f"Execute {role} functionality",
                 stream=stream,
             )

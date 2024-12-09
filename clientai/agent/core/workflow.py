@@ -211,8 +211,11 @@ class WorkflowManager:
         """Get the number of parameters for a step."""
         try:
             params = [
-                param for param in step.func.__code__.co_varnames[:step.func.__code__.co_argcount]
-                if param != 'self'
+                param
+                for param in step.func.__code__.co_varnames[
+                    : step.func.__code__.co_argcount
+                ]
+                if param != "self"
             ]
             return len(params)
         except AttributeError as e:

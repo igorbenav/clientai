@@ -63,6 +63,24 @@ class Provider(AIProvider):
             )
         self.client: ReplicateClientProtocol = Client(api_token=api_key)
 
+    def _validate_temperature(self, temperature: Optional[float]) -> None:
+        """Validate the temperature parameter."""
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)):  # noqa: UP038
+                raise InvalidRequestError("Temperature must be a number")
+
+    def _validate_top_p(self, top_p: Optional[float]) -> None:
+        """Validate the top_p parameter."""
+        if top_p is not None:
+            if not isinstance(top_p, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Top-p must be a number between 0 and 1"
+                )
+            if top_p < 0 or top_p > 1:
+                raise InvalidRequestError(
+                    f"Top-p must be between 0 and 1, got {top_p}"
+                )
+
     def _process_output(self, output: Any) -> str:
         """
         Process the output from Replicate API into a string format.
@@ -185,6 +203,8 @@ class Provider(AIProvider):
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -256,6 +276,9 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
             formatted_prompt = ""
             if system_prompt:
                 formatted_prompt = f"<system>{system_prompt}</system>\n"
@@ -264,6 +287,10 @@ class Provider(AIProvider):
             input_params = {"prompt": formatted_prompt}
             if json_output:
                 input_params["output"] = "json"
+            if temperature is not None:
+                input_params["temperature"] = temperature  # type: ignore
+            if top_p is not None:
+                input_params["top_p"] = top_p  # type: ignore
 
             prediction = self.client.predictions.create(
                 model=model,
@@ -298,6 +325,8 @@ class Provider(AIProvider):
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -367,6 +396,9 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
             chat_messages = messages.copy()
             if system_prompt:
                 chat_messages.insert(
@@ -384,6 +416,10 @@ class Provider(AIProvider):
             input_params = {"prompt": prompt}
             if json_output:
                 input_params["output"] = "json"
+            if temperature is not None:
+                input_params["temperature"] = temperature  # type: ignore
+            if top_p is not None:
+                input_params["top_p"] = top_p  # type: ignore
 
             prediction = self.client.predictions.create(
                 model=model,

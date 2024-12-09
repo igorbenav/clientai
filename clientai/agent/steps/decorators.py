@@ -188,7 +188,11 @@ class RunFunction:
         return self.func(*args, **kwargs)
 
 
-def create_step_decorator(step_type: StepType):
+def create_step_decorator(
+    step_type: StepType,
+) -> Callable[
+    ..., Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]
+]:
     """
     Generate a decorator for defining workflow steps of a specific type.
 

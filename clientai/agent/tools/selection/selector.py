@@ -80,8 +80,8 @@ class ToolSelector:
 
     def __init__(
         self,
+        model_config: ModelConfig,
         config: Optional[ToolSelectionConfig] = None,
-        model_config: Optional[ModelConfig] = None,
     ) -> None:
         """
         Initialize the ToolSelector with the specified configurations.
@@ -90,12 +90,10 @@ class ToolSelector:
         Initializes logging and validates configuration parameters.
 
         Args:
+            model_config: Configuration for the LLM used in selection.
             config: Configuration for tool selection behavior. If None,
                    uses default configuration with standard thresholds
                    and limits.
-            model_config: Configuration for the LLM used in selection.
-                        If None, uses default model configuration optimized
-                        for tool selection.
 
         Raises:
             ValueError: If provided configurations contain invalid values.
@@ -113,9 +111,9 @@ class ToolSelector:
             ```
         """
         self.config = config or ToolSelectionConfig()
-        self.model_config = model_config or ModelConfig(
-            name="llama-3.2-3b-preview", temperature=0.0, json_output=True
-        )
+
+        self.model_config = model_config.merge(stream=False, json_output=True)
+
         logger.debug("Initialized ToolSelector")
         logger.debug(f"Using model: {self.model_config.name}")
         logger.debug(
@@ -277,28 +275,37 @@ class ToolSelector:
             return []
 
         prompt = f"""
-            You are a helpful AI that uses tools to solve problems.
+        You are a helpful AI that uses tools to solve problems.
 
-            Task: {task}
+        Task: {task}
 
-            {self._format_context(context)}
+        {self._format_context(context)}
 
-            Available Tools:
-            {self._format_tools(tools)}
+        Available Tools:
+        {self._format_tools(tools)}
 
-            Respond ONLY with a JSON object in this format:
-            {{
-                "tool_calls": [
-                    {{
-                        "tool_name": "<name of tool>",
-                        "arguments": {{
-                            "param_name": "param_value"
-                        }},
-                        "confidence": <0.0-1.0>,
-                        "reasoning": "<why you chose this tool>"
-                    }}
-                ]
-            }}
+        Respond ONLY with a valid JSON object.
+        Do not include any comments or placeholders.
+        The JSON must follow this exact structure:
+        {{
+            "tool_calls": [
+                {{
+                    "tool_name": "name_of_tool",
+                    "arguments": {{
+                        "param1": "value1",
+                        "param2": "value2"
+                    }},
+                    "confidence": 0.0,
+                    "reasoning": "Clear explanation of why the tool was chosen"
+                }}
+            ]
+        }}
+
+        All values must be concrete and complete.
+        Do not use placeholders or temporary values.
+        Each tool_name must exactly match one of the available tools.
+        All required parameters for the chosen tool must be provided.
+        Confidence must be a number between 0.0 and 1.0.
         """
 
         logger.debug(f"Generated tool selection prompt:\n{prompt}")
