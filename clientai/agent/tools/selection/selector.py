@@ -213,58 +213,41 @@ class ToolSelector:
         context: Dict[str, Any],
         client: Any,
     ) -> List[ToolCallDecision]:
-        """
-        Use LLM to select appropriate tools for
-        a given task, considering context.
+        """Use LLM to select appropriate tools for a given task.
 
-        Analyzes the task description, available tools, and current
-        context to determine which tools would be most appropriate
-        to use. Makes selections based on confidence thresholds,
-        validates arguments, and provides reasoning for each selection.
+        Analyzes the task description, available tools, and current context
+        to determine which tools would be most appropriate to use.
+        Makes selections based on confidence thresholds,
+        validates arguments, and provides reasoning.
 
         Args:
-            task: Description of the task to accomplish. Should be clear and
-                 specific about what needs to be done.
-            tools: List of available tools to choose from. Each tool should
-                  have complete metadata including name, signature, and
-                  description.
-            context: Current execution context and state information that
-                    might be relevant for tool selection.
-            client: LLM client for making selection decisions. Must provide
-                   a generate_text method compatible with the configuration.
+            task: Description of the task to accomplish.
+            tools: List of available tools to choose from.
+            context: Current execution context and state information.
+            client: LLM client for making selection decisions.
 
         Returns:
-            List of ToolCallDecision objects containing:
-            - Selected tool names
-            - Validated arguments for each tool
-            - Confidence levels in the selections
-            - Reasoning for each selection
+            List of ToolCallDecision objects containing selected tools,
+            arguments, confidence levels, and reasoning.
+
+        Raises:
+            StepError: If LLM interaction fails.
+            ToolError: If tool validation fails.
 
         Example:
             ```python
             decisions = selector.select_tools(
                 task="Calculate average daily sales increase",
                 tools=[calculator, aggregator],
-                context={
-                    "sales_data": [100, 200, 300],
-                    "timeframe": "daily"
-                },
+                context={"sales_data": [100, 200, 300]},
                 client=llm_client
             )
 
-            # Process decisions
             for decision in decisions:
                 print(f"Selected: {decision.tool_name}")
                 print(f"Arguments: {decision.arguments}")
                 print(f"Confidence: {decision.confidence}")
-                print(f"Reasoning: {decision.reasoning}")
             ```
-
-        Note:
-            - Tools must have confidence above the configured threshold
-            - Arguments are validated against tool signatures
-            - Errors in individual tool decisions don't stop the process
-            - Context is used to make more informed selections
         """
         logger.debug(f"Selecting tools for task: {task}")
         logger.debug(f"Available tools: {[t.name for t in tools]}")

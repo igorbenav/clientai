@@ -42,7 +42,7 @@ class ClientAI(Generic[P, T, S]):
         ValueError: If an unsupported provider name is given.
         ImportError: If the specified provider is not installed.
 
-    Examples:
+    Example:
         Initialize with OpenAI:
         ```python
         ai = ClientAI('openai', api_key="your-openai-key")
@@ -144,7 +144,7 @@ class ClientAI(Generic[P, T, S]):
                 The generated text response, full response structure,
                 or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Generate text with default settings:
             ```python
             response = ai.generate_text(
@@ -217,7 +217,7 @@ class ClientAI(Generic[P, T, S]):
                 The chat response, full response structure,
                 or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Chat with default settings:
             ```python
             messages = [

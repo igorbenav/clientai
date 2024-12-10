@@ -58,7 +58,7 @@ class PlatformInfo:
         _gpu_vendor: The detected GPU vendor and capabilities.
         _cpu_count: The number of available CPU cores/threads.
 
-    Examples:
+    Example:
         Basic usage:
         ```python
         platform_info = PlatformInfo()
@@ -178,7 +178,7 @@ class PlatformInfo:
         Returns:
             Platform: The detected platform enumeration value.
 
-        Examples:
+        Example:
             ```python
             platform_info = PlatformInfo()
             if platform_info.platform == Platform.LINUX:
@@ -195,7 +195,7 @@ class PlatformInfo:
         Returns:
             GPUVendor: The detected GPU vendor enumeration value.
 
-        Examples:
+        Example:
             ```python
             platform_info = PlatformInfo()
             if platform_info.gpu_vendor == GPUVendor.NVIDIA:
@@ -212,7 +212,7 @@ class PlatformInfo:
         Returns:
             int: The number of available CPU cores/threads.
 
-        Examples:
+        Example:
             ```python
             platform_info = PlatformInfo()
             print(f"Available CPU cores: {platform_info.cpu_count}")
@@ -233,7 +233,7 @@ class PlatformInfo:
         Returns:
             Dict[str, str]: Dictionary of environment variables.
 
-        Examples:
+        Example:
             Configure for NVIDIA GPU:
             ```python
             config = OllamaServerConfig(
@@ -308,7 +308,7 @@ class PlatformInfo:
         Returns:
             List[str]: Command list suitable for subprocess execution.
 
-        Examples:
+        Example:
             Default configuration:
             ```python
             cmd = platform_info.get_server_command(OllamaServerConfig())

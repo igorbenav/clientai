@@ -40,8 +40,8 @@ def test_generate_text_full_response(reset_mocks, provider):
 
     assert result == mock_response
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", 
-        prompt="Test prompt", 
+        model="test-model",
+        prompt="Test prompt",
         stream=False,
         options={},
     )
@@ -70,8 +70,8 @@ def test_generate_text_content_only(reset_mocks, provider):
 
     assert result == "This is a test response"
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", 
-        prompt="Test prompt", 
+        model="test-model",
+        prompt="Test prompt",
         stream=False,
         options={},
     )
@@ -90,8 +90,8 @@ def test_generate_text_stream(reset_mocks, provider):
 
     assert list(result) == ["This ", "is ", "a ", "test"]
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", 
-        prompt="Test prompt", 
+        model="test-model",
+        prompt="Test prompt",
         stream=True,
         options={},
     )
@@ -117,8 +117,8 @@ def test_chat_full_response(reset_mocks, provider):
 
     assert result == mock_response
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", 
-        messages=messages, 
+        model="test-model",
+        messages=messages,
         stream=False,
         options={},
     )
@@ -144,8 +144,8 @@ def test_chat_content_only(reset_mocks, provider):
 
     assert result == "This is a test response"
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", 
-        messages=messages, 
+        model="test-model",
+        messages=messages,
         stream=False,
         options={},
     )
@@ -165,8 +165,8 @@ def test_chat_stream(reset_mocks, provider):
 
     assert list(result) == ["This ", "is ", "a ", "test"]
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", 
-        messages=messages, 
+        model="test-model",
+        messages=messages,
         stream=True,
         options={},
     )

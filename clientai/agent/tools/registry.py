@@ -6,12 +6,12 @@ from .types import ToolScope
 
 
 class ToolRegistry:
-    """
-    Registry for managing and organizing tools by name and scope.
+    """Registry for managing and organizing tools by name and scope.
 
-    Maintains a collection of tools with efficient lookup by name and scope.
-    Ensures unique tool names and proper scope indexing for quick access to
-    tools available in different execution contexts.
+    A centralized registry that maintains a collection of tools with
+    efficient lookup by name and scope. It ensures unique tool names
+    and proper scope indexing for quick access to tools available in
+    different execution contexts.
 
     Attributes:
         _tools: Dictionary mapping tool names to Tool instances.
@@ -20,13 +20,21 @@ class ToolRegistry:
     Example:
         ```python
         registry = ToolRegistry()
+
+        # Register a tool with configuration
         config = ToolConfig(
             tool=calculator_func,
             scopes=["think", "act"],
             name="Calculator"
         )
         registry.register(config)
-        tools = registry.get_for_scope("think")
+
+        # Get tools for a scope
+        think_tools = registry.get_for_scope("think")
+
+        # Check if tool exists
+        if "Calculator" in registry:
+            tool = registry.get("Calculator")
         ```
     """
 
@@ -43,8 +51,7 @@ class ToolRegistry:
         }
 
     def register(self, tool_config: ToolConfig) -> None:
-        """
-        Register a new tool with the registry.
+        """Register a new tool with the registry.
 
         Creates a Tool instance if needed and adds it to the registry with
         proper scope indexing. Handles scope inheritance for tools marked
@@ -88,8 +95,7 @@ class ToolRegistry:
                     self._scope_index[s].add(tool.name)
 
     def get(self, name: str) -> Optional[Tool]:
-        """
-        Retrieve a tool by its name.
+        """Retrieve a tool by its name.
 
         Args:
             name: The name of the tool to retrieve.
@@ -107,8 +113,7 @@ class ToolRegistry:
         return self._tools.get(name)
 
     def get_for_scope(self, scope: Optional[str] = None) -> List[Tool]:
-        """
-        Get all tools available in a specific scope.
+        """Get all tools available in a specific scope.
 
         Args:
             scope: The scope to filter tools by. If None, returns all tools.
@@ -119,7 +124,7 @@ class ToolRegistry:
         Raises:
             ValueError: If the specified scope is invalid.
 
-        Examples:
+        Example:
             ```python
             think_tools = registry.get_for_scope("think")
             all_tools = registry.get_for_scope(None)
@@ -141,7 +146,7 @@ class ToolRegistry:
         Returns:
             True if the tool is registered, False otherwise.
 
-        Examples:
+        Example:
             ```python
             if "Calculator" in registry:
                 tool = registry.get("Calculator")
@@ -156,7 +161,7 @@ class ToolRegistry:
         Returns:
             Number of tools in the registry.
 
-        Examples:
+        Example:
             ```python
             print(f"Registry contains {len(registry)} tools")
             ```
@@ -165,8 +170,7 @@ class ToolRegistry:
 
 
 def is_tool(obj: Any) -> bool:
-    """
-    Check if an object is a Tool instance.
+    """Check if an object is a Tool instance.
 
     Args:
         obj: The object to check.
@@ -174,7 +178,7 @@ def is_tool(obj: Any) -> bool:
     Returns:
         True if the object is a Tool instance, False otherwise.
 
-    Examples:
+    Example:
         ```python
         if is_tool(obj):
             result = obj(5, 3)  # We know obj is a Tool

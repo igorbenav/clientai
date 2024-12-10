@@ -19,87 +19,76 @@ logger = logging.getLogger(__name__)
 
 
 class Agent:
-    """
-    A framework for creating and managing LLM-powered agents
-    with automated tool selection.
+    """A framework for creating and managing LLM-powered
+    agents with automated tool selection.
 
-    The Agent class provides a flexible framework for building AI agents that:
-
+    The Agent class provides a flexible system for building AI agents that can:
     - Execute multi-step workflows with LLM integration
-    - Register and manage tools through decorators or direct registration
     - Automatically select and use appropriate tools
     - Maintain context and state across steps
-    - Interact with language models for decision making
-
-    Key Features:
-        - Simple tool registration through decorators or direct methods
-        - Automated tool selection with configurable confidence thresholds
-        - Support for different models in main workflow vs tool selection
-        - Flexible step configuration with decorators
-        - Built-in context management
-        - Comprehensive workflow control
-
-    Tool Registration:
-        Tools can be registered in two ways:
-        1. Using the agent's register_tool decorator:
-           ```python
-           @agent.register_tool(
-               name="TextProcessor",
-               description="Formats text"
-            )
-           def process_text(text: str) -> str:
-               return text.upper()
-           ```
-
-        2. Direct registration with register_tool():
-           ```python
-           def multiply(x: int, y: int) -> int:
-               return x * y
-
-           agent.register_tool(
-               multiply,
-               name="Multiplier",
-               description="Multiplies numbers"
-           )
-           ```
-
-    Example:
-        Creating an agent with tools and steps:
-        ```python
-        class MyAgent(Agent):
-            # Workflow step
-            @think("analyze", use_tools=True)
-            def analyze_data(self, input_data: str) -> str:
-                return f"Analyze this data: {input_data}"
-
-            @act("process")
-            def process_analysis(self, analysis: str) -> str:
-                return f"Process analysis results: {analysis}"
-
-        # Initialize the agent
-        agent = MyAgent(
-            client=my_client,
-            model="gpt-4",
-            tool_confidence=0.7,
-            tool_model="llama-2"
-        )
-
-        # Direct tool registration
-        agent.register_tool(
-            utility_function,
-            name="Utility",
-            description="Utility function"
-        )
-
-        # Run the agent
-        result = agent.run("Input data")
-        ```
+    - Handle streaming responses
+    - Manage tool registration and scoping
 
     Attributes:
         context: Manages the agent's state and memory
         tool_registry: Registry of available tools
         execution_engine: Handles step execution
         workflow_manager: Manages workflow execution order
+
+    Example:
+        Create a simple agent with tools:
+        ```python
+        class AnalysisAgent(Agent):
+            @think("analyze")
+            def analyze_data(self, input_data: str) -> str:
+                return f"Please analyze this data: {input_data}"
+
+            @act("process")
+            def process_results(self, analysis: str) -> str:
+                return f"Process these results: {analysis}"
+
+        # Initialize with tools
+        agent = AnalysisAgent(
+            client=client,
+            default_model="gpt-4",
+            tools=[calculator, text_processor],
+            tool_confidence=0.8
+        )
+
+        # Run the agent
+        result = agent.run("Analyze data: [1, 2, 3]")
+        ```
+
+        Using tools with custom registration:
+        ```python
+        class UtilityAgent(Agent):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                # Register tools directly
+                self.register_tool(
+                    utility_function,
+                    name="Utility",
+                    description="Utility function",
+                    scopes=["think", "act"]
+                )
+
+            # Or use decorator
+            @register_tool(
+                name="Calculator",
+                description="Performs calculations",
+                scopes=["think"]
+            )
+            def calculate(self, x: int, y: int) -> int:
+                return x + y
+        ```
+
+    Notes:
+        - Tools can be registered via decorator or direct registration
+        - Steps are executed in order of definition
+        - Context maintains state across workflow execution
+        - Tool selection is automatic based on confidence thresholds
+        - Streaming can be controlled at step or run level
     """
 
     def __init__(
@@ -113,17 +102,11 @@ class Agent:
         max_tools_per_step: Optional[int] = None,
         **default_model_kwargs: Any,
     ) -> None:
-        """
-        Initialize an Agent instance with specified configurations.
-
-        This constructor sets up the agent with its core components
-        and configurations. It allows for either detailed configuration
-        via ToolSelectionConfig or simplified configuration via
-        individual parameters.
+        """Initialize an Agent instance with specified configurations.
 
         Args:
             client: The AI client for model interactions
-            default_model: The primary model config for the agent. Can be:
+            default_model: Primary model config for the agent. Can be:
                 - A string (model name)
                 - A dict with model parameters
                 - A ModelConfig instance
@@ -131,25 +114,27 @@ class Agent:
             tool_selection_config: Complete tool selection configuration
             tool_confidence: Confidence threshold for tool selection (0.0-1.0)
             tool_model: Model to use for tool selection decisions
-            max_tools_per_step: Maximum number of tools to use in a single step
-            **default_model_kwargs: Additional kwargs for the default model
+            max_tools_per_step: Maximum tools allowed per step
+            **default_model_kwargs: Additional kwargs for default model
 
         Raises:
-            ValueError: If default_model is not specified or if both
-                        tool_selection_config and individual tool
-                        parameters are provided
+            AgentError: If initialization fails due to:
+                - Invalid model configuration
+                - Incompatible tool configurations
+                - Component initialization failure
 
         Example:
+            Basic initialization:
             ```python
-            # Simple initialization
             agent = MyAgent(
                 client=client,
-                model="gpt-4",
-                tool_confidence=0.8,
-                tool_model="llama-2"
+                default_model="gpt-4",
+                tool_confidence=0.8
             )
+            ```
 
-            # Detailed initialization
+            Detailed configuration:
+            ```python
             agent = MyAgent(
                 client=client,
                 default_model=ModelConfig(
@@ -160,11 +145,15 @@ class Agent:
                     confidence_threshold=0.8,
                     max_tools_per_step=3
                 ),
-                tools=[
-                    ToolConfig(my_tool, ["think", "act"])
-                ]
+                tool_model="llama-2"
             )
             ```
+
+        Notes:
+            - Cannot specify both tool_selection_config and
+              individual tool parameters
+            - Model can be specified as string, dict, or ModelConfig
+            - Tools can be pre-configured or added after initialization
         """
         try:
             if not default_model:
@@ -227,20 +216,16 @@ class Agent:
     def _create_model_config(
         self, model: Union[str, Dict[str, Any], ModelConfig]
     ) -> ModelConfig:
-        """
-        Create a ModelConfig instance from various input types.
+        """Create a ModelConfig instance from various input types.
 
         Args:
-            model: Model specification in one of three formats:
-                - String: Model name
-                - Dict: Model configuration parameters
-                - ModelConfig: Existing configuration instance
+            model: Model specification (string, dict, or ModelConfig)
 
         Returns:
-            ModelConfig: A validated model configuration
+            ModelConfig: Validated model configuration
 
         Raises:
-            ValueError: If model specification is invalid
+            AgentError: If model specification is invalid
         """
         try:
             if isinstance(model, str):
@@ -276,15 +261,16 @@ class Agent:
             ) from e
 
     def _should_stream(self, stream_override: Optional[bool] = None) -> bool:
-        """
-        Determine if the workflow should return a streaming response.
-        Can be overridden by explicit stream parameter.
+        """Determine if workflow should return streaming response.
 
         Args:
             stream_override: Optional bool to override step configuration
 
         Returns:
-            bool: True if streaming should be enabled
+            bool: Whether to enable streaming
+
+        Raises:
+            AgentError: If stream configuration cannot be determined
         """
         try:
             if stream_override is not None:
@@ -324,22 +310,17 @@ class Agent:
         result: Union[str, Iterator[str]],
         stream_override: Optional[bool] = None,
     ) -> Union[str, Iterator[str]]:
-        """
-        Process the workflow result based on streaming configuration.
+        """Process workflow result based on streaming configuration.
 
         Args:
             result: Raw result from workflow execution
-            stream_override: Optional bool to override streaming configuration
+            stream_override: Optional streaming configuration override
 
         Returns:
-            Union[str, Iterator[str]]: Either a streaming iterator
-            or complete string based on configuration and override
+            Processed result based on streaming settings
 
-        Example:
-            ```python
-            # Internal usage in run method
-            final_result = self._handle_streaming(step_result, stream=False)
-            ```
+        Raises:
+            AgentError: If stream handling fails
         """
         try:
             try:
@@ -379,31 +360,42 @@ class Agent:
             ) from e
 
     def use_tool(self, name: str, *args: Any, **kwargs: Any) -> Any:
-        """
-        Execute a registered tool by its name.
+        """Execute a registered tool by its name.
 
-        Allows direct execution of a registered tool with provided arguments.
-        This method is useful when you need to use a specific tool directly
-        rather than relying on automated tool selection.
+        Allows direct tool execution with provided arguments, bypassing
+        automatic tool selection.
 
         Args:
             name: Name of the tool to execute
-            *args: Positional arguments to pass to the tool
-            **kwargs: Keyword arguments to pass to the tool
+            *args: Positional arguments for the tool
+            **kwargs: Keyword arguments for the tool
 
         Returns:
-            The result of the tool execution
+            Any: Result of the tool execution
 
         Raises:
-            ValueError: If the tool is not found
-            ClientAIError: If tool execution fails
+            ToolError: If tool execution fails or tool isn't found
 
         Example:
+            Direct tool execution:
             ```python
-            # Execute a tool directly
+            # Execute a calculator tool
             result = agent.use_tool("calculator", x=5, y=3)
             print(result)  # Output: 8
+
+            # Execute a text processor
+            result = agent.use_tool(
+                "text_processor",
+                text="hello",
+                uppercase=True
+            )
+            print(result)  # Output: "HELLO"
             ```
+
+        Notes:
+            - Tool must be registered before use
+            - Arguments must match tool's signature
+            - Does not affect agent's tool usage history
         """
         try:
             tool = self.tool_registry.get(name)
@@ -429,23 +421,34 @@ class Agent:
             ) from e
 
     def get_tools(self, scope: Optional[str] = None) -> List[Tool]:
-        """
-        Retrieve tools available to the agent, optionally filtered by scope.
+        """Retrieve tools available to the agent, optionally filtered by scope.
 
         Args:
-            scope: Optional scope to filter tools by.
-                   If None, returns all tools.
+            scope: Optional scope to filter tools by. Valid scopes:
+                - "think": Analysis and reasoning tools
+                - "act": Action and execution tools
+                - "observe": Data gathering tools
+                - "synthesize": Summary and integration tools
+                - None: Return all tools
 
         Returns:
             List[Tool]: List of available tools matching the criteria
 
         Example:
+            Get tools by scope:
             ```python
             # Get all tools
             all_tools = agent.get_tools()
+            print(f"Total tools: {len(all_tools)}")
 
-            # Get tools for thinking steps
+            # Get thinking tools
             think_tools = agent.get_tools("think")
+            for tool in think_tools:
+                print(f"- {tool.name}: {tool.description}")
+
+            # Get action tools
+            act_tools = agent.get_tools("act")
+            print(f"Action tools: {[t.name for t in act_tools]}")
             ```
         """
         return self.tool_registry.get_for_scope(scope)
@@ -453,36 +456,43 @@ class Agent:
     def run(
         self, input_data: Any, *, stream: Optional[bool] = None
     ) -> Union[str, Iterator[str]]:
-        """
-        Execute the agent's workflow with the provided input data.
-        Streaming can be controlled by the stream parameter or
-        step configuration.
+        """Execute the agent's workflow with the provided input data.
 
         Args:
-            input_data: The initial input to start the workflow
+            input_data: The initial input to process
             stream: Optional bool to override streaming configuration.
-                    If provided, overrides the last step's stream setting.
+                If provided, overrides the last step's stream setting.
 
         Returns:
-            Union[str, Iterator[str]]: Either a complete response string
-            or a streaming iterator based on streaming configuration
+            Union[str, Iterator[str]]: Either:
+                - Complete response string (streaming disabled)
+                - Iterator of response chunks (streaming enabled)
 
         Raises:
-            Exception: If workflow execution fails
+            WorkflowError: If workflow execution fails
+            StepError: If a required step fails
+            ClientAIError: If LLM interaction fails
 
         Example:
+            Basic execution:
             ```python
-            # Force streaming on
-            for chunk in agent.run("Analyze this", stream=True):
-                print(chunk, end="", flush=True)
-
-            # Force streaming off
-            result = agent.run("Analyze this", stream=False)
+            # Without streaming
+            result = agent.run("Analyze this data")
             print(result)
+
+            # With streaming
+            for chunk in agent.run("Process this", stream=True):
+                print(chunk, end="", flush=True)
 
             # Use step configuration
             result = agent.run("Analyze this")  # Uses last step's setting
             ```
+
+        Notes:
+            - Streaming can be controlled by parameter or step configuration
+            - Workflow executes steps in defined order
+            - Context is updated after each step
+            - Tool selection occurs automatically if enabled
         """
         try:
             self.context.current_input = input_data
@@ -511,28 +521,45 @@ class Agent:
             ) from e
 
     def reset_context(self) -> None:
-        """
-        Reset the agent's context, clearing all memory and state.
+        """Reset the agent's context, clearing all memory and state.
 
         Example:
             ```python
+            # After processing
+            print(len(agent.context.memory))  # Output: 5
+
+            # Reset context
             agent.reset_context()
             print(len(agent.context.memory))  # Output: 0
+            print(agent.context.state)  # Output: {}
             ```
+
+        Notes:
+            - Clears memory, state, and results
+            - Does not affect workflow or tool registration
+            - Resets iteration counter
         """
         self.context.clear()
 
     def reset(self) -> None:
-        """
-        Perform a complete reset of the agent.
+        """Perform a complete reset of the agent.
 
-        Clears context, memory, and workflow state, essentially
-        returning the agent to its initial state.
+        Resets all state including context,
+        workflow state, and iteration counters.
 
         Example:
             ```python
+            # Complete reset
             agent.reset()
+            print(len(agent.context.memory))  # Output: 0
+            print(len(agent.workflow_manager.get_steps()))  # Output: 0
             ```
+
+        Notes:
+            - More comprehensive than reset_context
+            - Clears workflow state
+            - Maintains tool registration
+            - Returns agent to initial state
         """
         self.context.clear()
         self.workflow_manager.reset()
@@ -574,7 +601,7 @@ class Agent:
             ToolError: If tool validation or registration fails
             ValueError: If scopes are invalid or tool is already registered
 
-        Examples:
+        Example:
             Direct function registration:
             ```python
             def add(x: int, y: int) -> int:
@@ -669,43 +696,62 @@ class Agent:
         description: Optional[str] = None,
         scopes: Union[List[str], str] = "all",
     ) -> Callable[[Callable[..., Any]], Tool]:
-        """
-        Create a decorator for registering tools with the agent.
+        """Create a decorator for registering tools with the agent.
 
-        This method provides a decorator-based way to register tools,
-        allowing for clean integration of tool registration with function
-        definitions. It supports all the same functionality as direct
-        registration, including scope control.
+        A decorator-based approach for registering tools,
+        providing a clean way to integrate tool registration
+        with method definitions.
 
         Args:
             name: Optional custom name for the tool
             description: Optional description of the tool's functionality
-            scopes: List of scopes or single scope string where the tool
-                    can be used. Defaults to "all"
+            scopes: List of scopes or single scope where tool can be used.
+                Valid scopes: "think", "act", "observe", "synthesize", "all"
 
         Returns:
-            Callable: A decorator function that registers the decorated
-                      function as a tool
+            Callable: A decorator function that registers
+                      the decorated method as a tool
 
-        Examples:
-            Basic usage with scopes:
+        Example:
+            Basic tool registration with scopes:
             ```python
             class MyAgent(Agent):
                 @register_tool_decorator(
                     name="Calculator",
+                    description="Adds two numbers",
                     scopes=["think", "act"]
                 )
-                def add(x: int, y: int) -> int:
+                def add_numbers(self, x: int, y: int) -> int:
                     return x + y
 
-                @register_tool_decorator(
-                    name="TextProcessor",
-                    description="Processes text input",
-                    scopes="synthesize"
-                )
-                def process_text(text: str) -> str:
-                    return text.upper()
+                @register_tool_decorator(scopes="observe")
+                def get_data(self, query: str) -> List[int]:
+                    return [1, 2, 3]  # Example data
             ```
+
+            Multiple tools with different scopes:
+            ```python
+            class AnalysisAgent(Agent):
+                @register_tool_decorator(
+                    name="TextAnalyzer",
+                    scopes=["think"]
+                )
+                def analyze_text(self, text: str) -> dict:
+                    return {"words": len(text.split())}
+
+                @register_tool_decorator(
+                    name="DataFormatter",
+                    scopes=["synthesize"]
+                )
+                def format_data(self, data: dict) -> str:
+                    return json.dumps(data, indent=2)
+            ```
+
+        Notes:
+            - Decorated methods become available tools
+            - Tool name defaults to method name if not provided
+            - Description defaults to method docstring
+            - Tools are registered during agent initialization
         """
 
         def decorator(func: Callable[..., Any]) -> Tool:
@@ -716,15 +762,10 @@ class Agent:
         return decorator
 
     def _register_class_tools(self) -> None:
-        """
-        Register any tools defined as class methods using decorators.
+        """Register tools defined as class methods using decorators.
 
-        This internal method scans the class for methods decorated with
-        @register_tool_decorator and registers them with the agent.
-        It supports both standalone tools and class-bound tool methods.
-
-        The method is called during agent initialization to ensure all
-        decorated tools are properly registered.
+        Raises:
+            ToolError: If tool registration fails
         """
         try:
             logger.debug("Registering class-level tools")
@@ -749,15 +790,28 @@ class Agent:
             raise ToolError(f"Failed to register class tools: {str(e)}") from e
 
     def __str__(self) -> str:
-        """
-        Provide a formatted string representation of the agent.
+        """Provide a formatted string representation of the agent.
 
         Returns:
             str: A human-readable description of the agent's configuration
 
         Example:
             ```python
-            print(agent)  # Displays detailed agent configuration
+            agent = MyAgent(client=client, model="gpt-4")
+            print(agent)
+            # Output example:
+            # ╭─ MyAgent (openai provider)
+            # │
+            # │ Configuration:
+            # │ ├─ Model: gpt-4
+            # │ └─ Parameters: temperature=0.7
+            # │
+            # │ Workflow:
+            # │ ├─ 1. analyze
+            # │ │  ├─ Type: think
+            # │ │  ├─ Model: gpt-4
+            # │ │  └─ Description: Analyzes input data
+            # ...
             ```
         """
         formatter = AgentFormatter()

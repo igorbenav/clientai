@@ -60,7 +60,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Groq package is not installed.
 
-    Examples:
+    Example:
         Initialize the Groq provider:
         ```python
         provider = Provider(api_key="your-groq-api-key")
@@ -227,7 +227,7 @@ class Provider(AIProvider):
             InvalidRequestError: If json_output and stream are both True.
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -352,7 +352,7 @@ class Provider(AIProvider):
             InvalidRequestError: If json_output and stream are both True.
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Chat (message content only):
             ```python
             messages = [

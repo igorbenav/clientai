@@ -35,7 +35,7 @@ class OllamaManager:
     Raises:
         ImportError: If required system dependencies are not installed.
 
-    Examples:
+    Example:
         Basic usage with defaults:
         ```python
         with OllamaManager() as manager:
@@ -81,7 +81,7 @@ class OllamaManager:
             ExecutableNotFoundError: If the Ollama executable is not found
             ResourceError: If there are insufficient system resources
 
-        Examples:
+        Example:
             Start with default configuration:
             ```python
             manager = OllamaManager()
@@ -149,7 +149,7 @@ class OllamaManager:
         This method terminates the Ollama server process if it's running.
         It will wait for the process to complete before returning.
 
-        Examples:
+        Example:
             Stop a running server:
             ```python
             manager = OllamaManager()

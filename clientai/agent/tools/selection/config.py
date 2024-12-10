@@ -30,8 +30,7 @@ DEFAULT_PROMPT_TEMPLATE = """
 
 @dataclass(frozen=True)
 class ToolSelectionConfig:
-    """
-    Configuration settings for automatic tool selection behavior.
+    """Configuration settings for automatic tool selection behavior.
 
     This class defines parameters that control how tools are automatically
     selected and used during workflow execution. It includes settings for
@@ -39,11 +38,11 @@ class ToolSelectionConfig:
 
     Attributes:
         confidence_threshold: Minimum confidence level (0.0-1.0) required
-                              for a tool to be selected. Higher values
-                              mean more selective tool usage.
-        max_tools_per_step: Maximum number of tools that can be used in
-                            a single workflow step. Prevents excessive
-                            tool usage.
+                              for a tool to be selected. Higher values mean
+                              more selective tool usage.
+        max_tools_per_step: Maximum number of tools that can be used in a
+                            single workflow step. Prevents excessive tool
+                            usage.
         prompt_template: Template string for generating tool selection prompts.
             Uses {task}, {context}, and {tool_descriptions} placeholders.
 
@@ -63,10 +62,13 @@ class ToolSelectionConfig:
         )
         ```
 
-    Note:
-        - The confidence threshold should be tuned based on your use case:
-          higher values for more precision, lower values for more tool usage
-        - The prompt template should maintain the required JSON response format
+    Raises:
+        ValueError: If configuration values are invalid (e.g., confidence
+                    threshold outside 0-1 range).
+
+    Notes:
+        - The confidence threshold should be tuned based on your use case
+        - The prompt template must maintain the required response format
         - Tool descriptions are automatically formatted in the prompt
     """
 
@@ -76,14 +78,22 @@ class ToolSelectionConfig:
 
     @classmethod
     def create(cls, **kwargs: Any) -> "ToolSelectionConfig":
-        """
-        Create a ToolSelectionConfig instance from keyword arguments.
+        """Create a ToolSelectionConfig instance from keyword arguments.
 
         Args:
-            **kwargs: Configuration parameters.
+            **kwargs: Configuration parameters (confidence_threshold,
+                max_tools_per_step, prompt_template).
 
         Returns:
             ToolSelectionConfig: A new configuration instance.
+
+        Example:
+            ```python
+            config = ToolSelectionConfig.create(
+                confidence_threshold=0.8,
+                max_tools_per_step=3
+            )
+            ```
         """
         filtered_kwargs = {
             k: v
@@ -111,22 +121,20 @@ class ToolSelectionConfig:
 
 @dataclass
 class ToolCallDecision:
-    """
-    Represents a decision about calling a specific tool,
-    including the execution results.
+    """Represents a decision about calling a specific tool,
+    including execution results.
 
-    This class tracks both the decision to use a tool
-    (including confidence and reasoning) and the results
-    of executing that decision. It provides a complete
-    record of a tool's selection and usage.
+    This class tracks both the decision to use a tool (including confidence and
+    reasoning) and the results of executing that decision. It provides a
+    complete record of a tool's selection and usage.
 
     Attributes:
-        tool_name: Name of the selected tool
-        arguments: Dictionary of arguments to pass to the tool
-        confidence: Confidence level (0.0-1.0) in this tool selection
-        reasoning: Explanation of why this tool was selected
-        error: Error message if tool execution failed, None otherwise
-        result: Result from tool execution if successful, None otherwise
+        tool_name: Name of the selected tool.
+        arguments: Dictionary of arguments to pass to the tool.
+        confidence: Confidence level (0.0-1.0) in this tool selection.
+        reasoning: Explanation of why this tool was selected.
+        error: Error message if tool execution failed, None otherwise.
+        result: Result from tool execution if successful, None otherwise.
 
     Example:
         ```python
@@ -144,7 +152,7 @@ class ToolCallDecision:
         decision.error = "Invalid arguments"  # Failed execution
         ```
 
-    Note:
+    Notes:
         - Error and result are mutually exclusive - only one should be set
         - Confidence should match the ToolSelectionConfig requirements
         - Arguments should match the tool's expected signature

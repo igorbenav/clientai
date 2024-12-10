@@ -46,7 +46,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Ollama package is not installed.
 
-    Examples:
+    Example:
         Initialize the Ollama provider:
         ```python
         provider = Provider(host="http://localhost:11434")
@@ -238,7 +238,7 @@ class Provider(AIProvider):
             OllamaGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -349,7 +349,7 @@ class Provider(AIProvider):
             OllamaGenericResponse: The chat response, full response object,
             or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Chat with default settings:
             ```python
             messages = [

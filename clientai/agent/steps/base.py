@@ -40,7 +40,7 @@ class FunctionMetadata:
         Returns:
             FunctionMetadata: An instance containing the extracted metadata.
 
-        Examples:
+        Example:
             Analyze a function:
             ```python
             def example_function(arg1: int, arg2: str) -> str:
@@ -85,7 +85,7 @@ class Step:
         metadata: Metadata extracted from the step function.
         tool_decisions: Records of tool selection and execution decisions.
 
-    Examples:
+    Example:
         Create a step with tool configuration:
         ```python
         step = Step.create(
@@ -139,7 +139,7 @@ class Step:
             ValueError: If the function is not callable, lacks a return type
                         annotation, or does not return a string.
 
-        Examples:
+        Example:
             Validate a function:
             ```python
             def example_function(input_data: str) -> str:
@@ -175,7 +175,7 @@ class Step:
         Raises:
             ValueError: If the name is empty or not a valid identifier.
 
-        Examples:
+        Example:
             Validate a step name:
             ```python
             valid_name = Step.validate_name("valid_step_name")
@@ -192,25 +192,33 @@ class Step:
             )
 
     def is_compatible_with(self, other: "Step") -> bool:
-        """
-        Check if this step's input is compatible with another step's output.
+        """Check if this step's input is compatible with another step's output.
+
+        Determines if steps can be connected in a workflow by comparing their
+        input/output types.
 
         Args:
-            other: The step to check compatibility with.
+            other: The step to check compatibility with
 
         Returns:
-            bool: True if compatible, False otherwise.
+            bool: True if this step can accept the other step's output type
 
-        Examples:
+        Example:
             Check step compatibility:
             ```python
             step1 = Step.create(
-                func=func1, step_type=StepType.THINK, name="step1"
+                func=process_text,  # returns str
+                step_type=StepType.THINK,
+                name="process"
             )
             step2 = Step.create(
-                func=func2, step_type=StepType.ACT, name="step2"
+                func=analyze_text,  # takes str input
+                step_type=StepType.ACT,
+                name="analyze"
             )
-            print(step1.is_compatible_with(step2))  # Output: True or False
+
+            if step2.is_compatible_with(step1):
+                print("Can connect process -> analyze")
             ```
         """
         if not other.metadata or not self.metadata:
@@ -223,24 +231,26 @@ class Step:
         return str(arg_types[0]) == other.metadata.return_type
 
     def can_execute_with(self, input_data: Any) -> bool:
-        """
-        Determine if the step can execute with the provided input.
+        """Check if the step can execute with the provided input.
 
         Args:
-            input_data: The input data to test.
+            input_data: The input data to validate
 
         Returns:
-            bool: True if the step can execute with the input, False otherwise.
+            bool: True if the input matches the step's expected input type
 
-        Examples:
-            Check if a step can execute with given input:
+        Example:
+            Validate input data:
             ```python
             step = Step.create(
-                func=example_function,
+                func=process_numbers,  # takes List[int]
                 step_type=StepType.ACT,
-                name="example_step"
+                name="process"
             )
-            print(step.can_execute_with("test input"))  # Output: True or False
+
+            data = [1, 2, 3]
+            if step.can_execute_with(data):
+                print("Input data is valid")
             ```
         """
         if not self.metadata or not self.metadata.arg_types:
@@ -257,7 +267,7 @@ class Step:
             str: A description of the step, including its name, type,
                  and optional details.
 
-        Examples:
+        Example:
             Print a step's string representation:
             ```python
             step = Step.create(
@@ -297,32 +307,40 @@ class Step:
         tool_model: Optional[ModelConfig] = None,
         step_config: Optional[StepConfig] = None,
     ) -> "Step":
-        """
-        Factory method to create and validate a step.
+        """Create and validate a new step.
+
+        Factory method for creating steps with
+        comprehensive configuration options.
 
         Args:
-            func: The function representing the step logic.
-            step_type: The type of step (THINK, ACT, etc.).
-            name: A custom name for the step. Defaults to the function's name.
-            description: A description of the step. Defaults to the docstring.
-            llm_config: Model configuration for LLM-based steps.
-            send_to_llm: Whether the step sends its prompt to an LLM.
-            stream: Whether to stream the LLM's response
-            json_output: Whether the LLM should format its response as JSON.
-            use_tools: Whether to enable tool selection for this step.
-            tool_selection_config: Configuration for tool selection behavior.
-            tool_model: Specific model to use for tool selection.
-            step_config: Additional step-specific configuration.
+            func: Function implementing the step logic
+            step_type: Type classification for the step
+            name: Optional custom name (defaults to function name)
+            description: Optional step description
+            llm_config: Optional LLM configuration
+            send_to_llm: Whether to send step output to LLM
+            stream: Whether to stream LLM responses
+            json_output: Whether LLM should return JSON
+            use_tools: Whether to enable tool selection
+            tool_selection_config: Optional tool selection configuration
+            tool_model: Optional specific model for tool selection
+            step_config: Optional step-specific configuration
 
         Returns:
-            Step: A validated Step instance.
+            Step: Validated step instance
 
-        Examples:
-            Basic step with tool selection:
+        Raises:
+            ValueError: If step name is invalid or function
+                        lacks required annotations
+
+        Example:
+            Create step with tool selection:
             ```python
             step = Step.create(
                 func=analyze_data,
                 step_type=StepType.THINK,
+                name="analyze",
+                description="Analyzes input data",
                 use_tools=True,
                 tool_selection_config=ToolSelectionConfig(
                     confidence_threshold=0.8
@@ -330,16 +348,16 @@ class Step:
             )
             ```
 
-            Step with custom tool selection model:
+            Create step with custom model:
             ```python
             step = Step.create(
                 func=process_data,
                 step_type=StepType.ACT,
-                use_tools=True,
-                tool_model=ModelConfig(
-                    name="llama-2",
-                    temperature=0.0
-                )
+                llm_config=ModelConfig(
+                    name="gpt-4",
+                    temperature=0.7
+                ),
+                stream=True
             )
             ```
         """

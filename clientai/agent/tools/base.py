@@ -11,17 +11,12 @@ ToolCallable = Callable[..., Any]
 
 @dataclass(frozen=True)
 class Tool:
-    """
-    A callable tool with metadata for use in agent workflows.
+    """A callable tool with metadata for use in agent workflows.
 
-    Represents a function with associated metadata (name, description,
-    signature) that can be used as a tool by an agent. Tools are immutable
-    and can be called like regular functions.
-
-    Tools can be created in three ways:
-    1. Using the @tool decorator
-    2. Using the @agent.register_tool decorator
-    3. Direct registration with agent.register_tool()
+    Represents a function with associated metadata
+    (name, description, signature) that can be used
+    as a tool by an agent. Tools are immutable and
+    can be called like regular functions.
 
     Attributes:
         func: The underlying function that implements the tool's logic.
@@ -29,7 +24,7 @@ class Tool:
         description: Human-readable description of the tool's purpose.
         _signature: Internal cached signature information.
 
-    Examples:
+    Example:
         Using the @tool decorator:
         ```python
         @tool
@@ -59,6 +54,12 @@ class Tool:
         )
         agent.register_tool(tool)
         ```
+
+    Notes:
+        - Tools are immutable (frozen=True dataclass)
+        - Tool signatures are cached for performance
+        - Tools can be used directly as functions
+        - Tool metadata is available for agent introspection
     """
 
     func: ToolCallable
@@ -76,8 +77,7 @@ class Tool:
         name: Optional[str] = None,
         description: Optional[str] = None,
     ) -> "Tool":
-        """
-        Create a new Tool instance from a callable.
+        """Create a new Tool instance from a callable.
 
         Factory method that creates a Tool with proper signature analysis and
         metadata extraction. Uses function's docstring as description if none
@@ -86,13 +86,16 @@ class Tool:
         Args:
             func: The function to convert into a tool.
             name: Optional custom name for the tool. Defaults to function name.
-            description: Optional custom description. Defaults to function
-                docstring.
+            description: Optional custom description. Defaults to docstring.
 
         Returns:
             A new Tool instance.
 
-        Examples:
+        Raises:
+            ValueError: If function lacks required type hints
+                        or has invalid signature.
+
+        Example:
             Basic tool creation:
             ```python
             def format_text(text: str, uppercase: bool = False) -> str:
@@ -107,17 +110,6 @@ class Tool:
                 format_text,
                 name="Formatter",
                 description="Text formatting utility"
-            )
-            ```
-
-            For agent registration:
-            ```python
-            agent.register_tool(
-                Tool.create(
-                    format_text,
-                    name="Formatter",
-                    description="Formats text input"
-                )
             )
             ```
         """
@@ -145,7 +137,7 @@ class Tool:
         Returns:
             Signature information for the tool.
 
-        Examples:
+        Example:
             ```python
             @tool
             def my_function(x: int, y: str) -> str:
@@ -175,7 +167,7 @@ class Tool:
         Returns:
             The result of the tool's function execution.
 
-        Examples:
+        Example:
             Using a tool with positional arguments:
             ```python
             @tool
@@ -202,7 +194,7 @@ class Tool:
         Returns:
             A formatted string representing the tool's signature.
 
-        Examples:
+        Example:
             ```python
             @tool
             def calculate(x: int, y: int) -> int:
@@ -215,23 +207,20 @@ class Tool:
         return self.signature.format()
 
     def format_tool_info(self, indent: str = "") -> str:
-        """
-        Format the tool's information in a standardized way for LLM prompts.
+        """Format the tool's information in a standardized way for LLM prompts.
 
         Creates a consistently formatted string representation of the tool
         that includes its name, signature, and description in a hierarchical
-        format. This format is designed to be clear for both human readers
-        and LLM processing.
+        format.
 
         Args:
             indent: Optional indentation prefix for each line.
                    Useful for nested formatting. Defaults to no indentation.
 
         Returns:
-            A formatted string containing the tool's complete information in
-            a standardized format.
+            A formatted string containing the tool's complete information.
 
-        Examples:
+        Example:
             Basic formatting:
             ```python
             @tool(name="Calculator")
@@ -239,7 +228,6 @@ class Tool:
                 '''Add two numbers together.'''
                 return x + y
             print(add.format_tool_info())
-
             # Output:
             # - Calculator
             #   Signature: add(x: int, y: int) -> int
@@ -249,19 +237,11 @@ class Tool:
             With custom indentation:
             ```python
             print(add.format_tool_info("  "))
-
             # Output:
             #   - Calculator
             #     Signature: add(x: int, y: int) -> int
             #     Description: Add two numbers together
             ```
-
-        Note:
-            This format is specifically designed to be:
-            1. Hierarchical with clear indentation
-            2. Consistent across all tools
-            3. Easy to parse in LLM prompts
-            4. Human-readable for debugging
         """
         return (
             f"{indent}- {self.name}\n"

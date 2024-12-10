@@ -14,17 +14,25 @@ class WorkflowManager:
     """Manages the workflow of steps for an agent.
 
     This class registers steps, organizes them into a sequence,
-    and executes them in the defined order. It supports two methods
-    of passing data between steps:
+    and executes them in the defined order. It supports two
+    methods of passing data between steps:
 
     1. Automatic Parameter Binding
+        - Steps receive previous results through their parameters
+        - Parameters filled in reverse chronological order (most recent first)
+        - Number of parameters determines how many previous results are passed
 
-        Steps can receive previous results through their parameters.
-        Parameters are filled in reverse chronological order
-        (most recent first). The number of parameters determines how
-        many previous results are passed.
+    2. Context Access
+        - Steps can access any previous result through the agent's context
+        - Useful for complex workflows or accessing results out of order
+
+    Attributes:
+        _steps: Ordered dictionary of registered steps
+        _custom_run: Optional custom workflow execution function
+        _results_history: History of step execution results
 
     Example:
+        Define an agent with different step parameter patterns:
         ```python
         class MyAgent(Agent):
             @think
@@ -43,13 +51,7 @@ class WorkflowManager:
                 return "Final result"
         ```
 
-    2. Context Access
-
-        Steps can access any previous result through the agent's context.
-        This is useful for more complex workflows or when steps need to
-        access results out of order.
-
-    Example:
+        Using context access pattern:
         ```python
         class MyAgent(Agent):
             @think
@@ -63,26 +65,11 @@ class WorkflowManager:
                 return "Second result"
         ```
 
-    Both methods can be used in the same agent, choosing the most appropriate
-    approach for each step based on its needs.
-
-    Parameter Validation:
+    Notes:
         - Steps cannot declare more parameters than available results
         - Available results include the initial input and all previous results
+        - Both parameter binding and context access can be used in an agent
         - A ValueError is raised if a step requests more results than available
-
-    Attributes:
-        _steps: Steps registered for execution.
-        _custom_run: Custom workflow execution function.
-        _results_history: History of step execution results.
-
-    Methods:
-        register_class_steps: Register steps from an agent class.
-        execute: Execute the workflow starting with the provided input.
-        get_step: Retrieve a step by its name.
-        get_steps: Retrieve all registered steps in execution order.
-        reset: Reset the workflow manager.
-        get_steps_by_type: Get all steps of a specific type.
     """
 
     def __init__(self) -> None:
@@ -107,7 +94,17 @@ class WorkflowManager:
             ) from e
 
     def _validate_agent_instance(self, agent_instance: Any) -> Dict[str, Any]:
-        """Validate and get the agent class dictionary."""
+        """Validate and retrieve the agent class dictionary.
+
+        Args:
+            agent_instance: The agent instance to validate
+
+        Returns:
+            Dict[str, Any]: The validated agent class dictionary
+
+        Raises:
+            WorkflowError: If agent instance is invalid
+        """
         try:
             return agent_instance.__class__.__dict__  # type: ignore
         except AttributeError as e:
@@ -116,7 +113,18 @@ class WorkflowManager:
     def _process_step_info(
         self, name: str, func: Any
     ) -> Optional[Tuple[str, Step]]:
-        """Process a single step or run method from the class."""
+        """Process a single step or run method from the class.
+
+        Args:
+            name: Name of the step/method
+            func: Function to process
+
+        Returns:
+            Optional tuple of (step name, Step instance) if valid step
+
+        Raises:
+            StepError: If step info is invalid
+        """
         try:
             if not callable(func):
                 return None
@@ -138,7 +146,16 @@ class WorkflowManager:
     def _process_run_method(
         self, name: str, func: Any, agent_instance: Any
     ) -> None:
-        """Process a custom run method if found."""
+        """Process a custom run method if found.
+
+        Args:
+            name: Name of the method
+            func: Function to process
+            agent_instance: Agent instance owning the method
+
+        Raises:
+            StepError: If run method binding fails
+        """
         try:
             if callable(func) and hasattr(func, "_is_run"):
                 logger.debug(f"Found custom run method: {name}")
@@ -147,19 +164,40 @@ class WorkflowManager:
             raise StepError(f"Failed to bind custom run method: {str(e)}")
 
     def register_class_steps(self, agent_instance: Any) -> None:
-        """
-        Register steps defined in an agent class.
+        """Register steps defined in an agent class.
 
-        Scans the agent class for methods decorated as steps and registers them
-        for execution. Also identifies any custom run method if present.
+        Scans the agent class for methods decorated as steps
+        and registers them for execution. Also identifies
+        any custom run method if present.
 
         Args:
-            agent_instance: The agent containing the step definitions.
+            agent_instance: The agent instance containing step definitions
+
+        Raises:
+            StepError: If step registration fails
+            WorkflowError: If class scanning fails
 
         Example:
+            Register steps in an agent class:
             ```python
-            manager.register_class_steps(agent)
+            class MyAgent(Agent):
+                @think("analyze")
+                def analyze_step(self, data: str) -> str:
+                    return f"Analyzing: {data}"
+
+                @act("process")
+                def process_step(self, analysis: str) -> str:
+                    return f"Processing: {analysis}"
+
+            agent = MyAgent(...)
+            workflow = WorkflowManager()
+            workflow.register_class_steps(agent)
             ```
+
+        Notes:
+            - Steps must be decorated with appropriate step decorators
+            - Steps are registered in the order they're defined
+            - Custom run methods are detected and stored separately
         """
         try:
             class_dict = self._validate_agent_instance(agent_instance)
@@ -195,7 +233,16 @@ class WorkflowManager:
             raise WorkflowError(f"Custom run method failed: {str(e)}")
 
     def _initialize_execution(self, agent: Any, input_data: Any) -> None:
-        """Initialize the execution context."""
+        """Process a custom run method if found.
+
+        Args:
+            name: Name of the method
+            func: Function to process
+            agent_instance: Agent instance owning the method
+
+        Raises:
+            StepError: If run method binding fails
+        """
         try:
             if not self._steps and not self._custom_run:
                 raise WorkflowError(
@@ -208,7 +255,17 @@ class WorkflowManager:
             raise WorkflowError(f"Failed to initialize execution: {str(e)}")
 
     def _get_step_parameters(self, step: Step) -> int:
-        """Get the number of parameters for a step."""
+        """Get number of parameters for a step.
+
+        Args:
+            step: Step to analyze
+
+        Returns:
+            Number of non-self parameters
+
+        Raises:
+            StepError: If step function is invalid
+        """
         try:
             params = [
                 param
@@ -224,7 +281,16 @@ class WorkflowManager:
     def _validate_parameter_count(
         self, step: Step, param_count: int, available_results: int
     ) -> None:
-        """Validate the parameter count against available results."""
+        """Validate parameter count against available results.
+
+        Args:
+            step: Step to validate
+            param_count: Number of parameters required
+            available_results: Number of results available
+
+        Raises:
+            ValueError: If step requires more parameters than available results
+        """
         if param_count > available_results:
             raise ValueError(
                 f"Step '{step.name}' declares {param_count} parameters, "
@@ -234,7 +300,18 @@ class WorkflowManager:
             )
 
     def _get_previous_results(self, agent: Any, param_count: int) -> List[Any]:
-        """Gather results from previous steps."""
+        """Gather results from previous steps.
+
+        Args:
+            agent: Agent instance
+            param_count: Number of results needed
+
+        Returns:
+            List of previous results in reverse chronological order
+
+        Raises:
+            StepError: If result gathering fails
+        """
         try:
             return [
                 agent.context.last_results[s.name]
@@ -253,7 +330,22 @@ class WorkflowManager:
         current_stream: bool,
         engine: StepExecutionProtocol,
     ) -> Any:
-        """Execute a single step with proper parameter handling."""
+        """Execute a single step with proper parameter handling.
+
+        Args:
+            step: Step to execute
+            agent: Agent instance
+            last_result: Most recent result
+            param_count: Number of parameters needed
+            current_stream: Whether to stream output
+            engine: Execution engine to use
+
+        Returns:
+            Step execution result
+
+        Raises:
+            StepError: If step execution fails
+        """
         try:
             if param_count == 0:
                 return engine.execute_step(step, agent, stream=current_stream)
@@ -277,7 +369,16 @@ class WorkflowManager:
     def _handle_step_result(
         self, step: Step, result: Any, agent: Any
     ) -> Optional[Any]:
-        """Handle the result of a step execution."""
+        """Handle the result of a step execution.
+
+        Args:
+            step: Executed step
+            result: Step execution result
+            agent: Agent instance
+
+        Returns:
+            Result to pass to next step if step.config.pass_result is True
+        """
         if result is not None:
             agent.context.last_results[step.name] = result
             if step.config.pass_result:
@@ -291,22 +392,50 @@ class WorkflowManager:
         engine: StepExecutionProtocol,
         stream_override: Optional[bool] = None,
     ) -> Any:
-        """
-        Execute the workflow with the provided input data.
+        """Execute the workflow with provided input data.
 
         Processes each step in sequence, passing results between steps
-        as configured. Uses either the default sequential execution or
-        a custom run method if defined.
+        as configured. Uses either default sequential execution or
+        custom run method if defined.
 
         Args:
-            agent: The agent executing the workflow.
-            input_data: The initial input data.
-            engine: The execution engine for processing steps.
-            stream_override: Optional bool to override step's
-                             stream configuration.
+            agent: The agent executing the workflow
+            input_data: The initial input data to process
+            engine: The execution engine for processing steps
+            stream_override: Optional bool to override steps'
+                             stream configuration
 
         Returns:
-            The final result of the workflow execution.
+            Any: The final result of workflow execution
+
+        Raises:
+            StepError: If a required step fails
+            WorkflowError: If workflow execution fails
+            ValueError: If step parameter validation fails
+
+        Example:
+            Execute a workflow:
+            ```python
+            workflow = WorkflowManager()
+            engine = StepExecutionEngine(...)
+
+            # Basic execution
+            result = workflow.execute(agent, "input data", engine)
+
+            # With streaming override
+            result = workflow.execute(
+                agent,
+                "input data",
+                engine,
+                stream_override=True
+            )
+            ```
+
+        Notes:
+            - Steps are executed in registration order
+            - Results are passed between steps based on parameter binding
+            - Failed non-required steps are skipped
+            - stream_override affects all steps when provided
         """
         try:
             logger.info(
@@ -389,20 +518,22 @@ class WorkflowManager:
             ) from e
 
     def get_step(self, name: str) -> Optional[Step]:
-        """
-        Retrieve a registered step by its name.
+        """Retrieve a registered step by its name.
 
         Args:
-            name: The name of the step to retrieve.
+            name: The name of the step to retrieve
 
         Returns:
-            The requested step if found, None otherwise.
+            Optional[Step]: The requested step if found, None otherwise
 
         Example:
+            Retrieve and check a step:
             ```python
-            step = manager.get_step("analyze")
+            workflow = WorkflowManager()
+            step = workflow.get_step("analyze")
             if step:
                 print(f"Found step: {step.name}")
+                print(f"Step type: {step.step_type}")
             ```
         """
         try:
@@ -414,17 +545,22 @@ class WorkflowManager:
             ) from e
 
     def get_steps(self) -> OrderedDict[str, Step]:
-        """
-        Retrieve all registered steps in execution order.
+        """Retrieve all registered steps in execution order.
 
         Returns:
-            An ordered dictionary of step names mapped to their instances.
+            OrderedDict[str, Step]: Dictionary mapping step names
+                                    to their instances
 
         Example:
+            Get and inspect all steps:
             ```python
-            steps = manager.get_steps()
+            workflow = WorkflowManager()
+            steps = workflow.get_steps()
+
             for name, step in steps.items():
-                print(f"{name}: {step.step_type}")
+                print(f"Step: {name}")
+                print(f"Type: {step.step_type}")
+                print(f"Uses tools: {step.use_tools}")
             ```
         """
         try:
@@ -434,18 +570,24 @@ class WorkflowManager:
             raise WorkflowError(f"Failed to retrieve steps: {str(e)}") from e
 
     def reset(self) -> None:
-        """
-        Reset the workflow manager to its initial state.
+        """Reset the workflow manager to its initial state.
 
         Clears all registered steps and custom run method.
 
         Example:
+            Reset workflow state:
             ```python
-            manager.reset()
-            print(len(manager.get_steps()))
+            workflow = WorkflowManager()
+            # ... register steps and execute ...
 
-            # Output: 0
+            workflow.reset()
+            print(len(workflow.get_steps()))  # Output: 0
             ```
+
+        Notes:
+            - Removes all registered steps
+            - Clears custom run method if set
+            - Does not affect step configurations
         """
         try:
             self._steps.clear()
@@ -458,21 +600,34 @@ class WorkflowManager:
             ) from e
 
     def get_steps_by_type(self, step_type: StepType) -> Dict[str, Step]:
-        """
-        Retrieve all steps of a specific type.
+        """Retrieve all steps of a specific type.
 
         Args:
-            step_type: The type of steps to retrieve.
+            step_type: The type of steps to retrieve
 
         Returns:
-            A dictionary of step names mapped to
-            their instances for the given type.
+            Dict[str, Step]: Dictionary mapping step names to their instances
+                for the given type
+
+        Raises:
+            ValueError: If step_type is invalid
+            WorkflowError: If step retrieval fails
 
         Example:
+            Get steps by type:
             ```python
-            think_steps = manager.get_steps_by_type(StepType.THINK)
-            print(f"Found {len(think_steps)} thinking steps")
+            workflow = WorkflowManager()
+            think_steps = workflow.get_steps_by_type(StepType.THINK)
+
+            print(f"Found {len(think_steps)} thinking steps:")
+            for name, step in think_steps.items():
+                print(f"- {name}: {step.description}")
             ```
+
+        Notes:
+            - Returns empty dict if no steps of the type exist
+            - Maintains original step order within type
+            - Steps are returned by reference
         """
         try:
             if not isinstance(step_type, StepType):

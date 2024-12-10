@@ -13,24 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 class StepExecutionEngine:
-    """
-    Handles the execution of workflow steps with integrated tool
-    selection and LLM interaction.
+    """Handles the execution of workflow steps with
+    integrated tool selection and LLM interaction.
 
-    The StepExecutionEngine is responsible for executing individual
-    workflow steps, managing tool selection, and coordinating LLM
-    interactions. It handles:
-    - Step execution with proper configuration
-    - Automated tool selection and execution
-    - LLM interaction with retry logic
-    - Prompt building and result processing
-
-    Key Features:
-        - Configurable tool selection with confidence thresholds
-        - Separate models for main workflow and tool selection
-        - Built-in retry logic for LLM calls
-        - Comprehensive error handling
-        - Flexible prompt building
+    Manages all aspects of step execution including tool selection,
+    LLM interaction, and error handling. Provides configurable retry
+    logic and streaming support.
 
     Attributes:
         _client: The AI client for model interactions
@@ -41,25 +29,37 @@ class StepExecutionEngine:
         _tool_selector: Instance handling tool selection logic
 
     Example:
+        Basic execution engine setup:
         ```python
         engine = StepExecutionEngine(
             client=client,
             default_model=ModelConfig(name="gpt-4"),
-            default_kwargs={"temperature": 0.7},
+            default_kwargs={"temperature": 0.7}
+        )
+
+        result = engine.execute_step(step, agent, "input data")
+        ```
+
+        Configure tool selection:
+        ```python
+        engine = StepExecutionEngine(
+            client=client,
+            default_model="gpt-4",
+            default_kwargs={},
             tool_selection_config=ToolSelectionConfig(
                 confidence_threshold=0.8,
                 max_tools_per_step=3
             ),
             tool_model=ModelConfig(name="llama-2")
         )
-
-        result = engine.execute_step(step, agent, "input data")
         ```
 
-    Raises:
-        StepError: When there's an error in step execution or configuration
-        ToolError: When there's an error in tool execution or selection
-        ClientAIError: When there's an error in LLM API interaction
+    Notes:
+        - Manages automatic tool selection with confidence thresholds
+        - Supports separate models for workflow and tool selection
+        - Implements retry logic for LLM calls
+        - Handles streaming configurations
+        - Provides comprehensive error handling
     """
 
     def __init__(
@@ -139,7 +139,17 @@ class StepExecutionEngine:
     def _create_tool_model_config(
         self, model: Union[str, ModelConfig]
     ) -> ModelConfig:
-        """Create a ModelConfig instance for tool selection."""
+        """Create a ModelConfig instance for tool selection.
+
+        Args:
+            model: Model name or configuration
+
+        Returns:
+            Configured ModelConfig for tool selection
+
+        Raises:
+            StepError: If configuration is invalid
+        """
         try:
             if isinstance(model, str):
                 return ModelConfig(
@@ -162,19 +172,13 @@ class StepExecutionEngine:
             raise StepError(f"Invalid tool model configuration: {str(e)}")
 
     def _get_effective_tool_model(self, step: Step) -> ModelConfig:
-        """
-        Get the model to use for tool selection based on priority order.
-
-        Priority:
-        1. Step-specific tool model
-        2. Default tool model
-        3. Default model (as fallback)
+        """Get the model to use for tool selection based on priority order.
 
         Args:
-            step: The step being executed
+            step: Step being executed
 
         Returns:
-            ModelConfig: The model configuration to use for tool selection
+            ModelConfig for tool selection
 
         Raises:
             StepError: If model configuration fails
@@ -260,30 +264,20 @@ class StepExecutionEngine:
     def _build_prompt(
         self, step: Step, agent: Any, *args: Any, **kwargs: Any
     ) -> str:
-        """
-        Build the prompt for a step, including tool selection if enabled.
-
-        Creates a comprehensive prompt by executing the step's function and
-        incorporating tool selection results if tools are enabled for the step.
+        """Build the prompt for a step, including tool selection if enabled.
 
         Args:
-            step: The step being executed
-            agent: The agent instance
-            *args: Additional positional arguments for the step
-            **kwargs: Additional keyword arguments for the step
+            step: Step being executed
+            agent: Agent instance
+            *args: Step arguments
+            **kwargs: Step keyword arguments
 
         Returns:
-            The complete prompt string to send to the LLM
+            Complete prompt string
 
         Raises:
             StepError: If prompt building fails
             ToolError: If tool execution fails
-
-        Example:
-            ```python
-            prompt = engine._build_prompt(step, agent, "input data")
-            print(prompt)  # Shows complete prompt with tool results if any
-            ```
         """
         logger.debug(f"Building prompt for step '{step.name}'")
         logger.debug(f"Step use_tools setting: {step.use_tools}")
@@ -315,22 +309,28 @@ class StepExecutionEngine:
     def _handle_tool_execution(
         self, step: Step, agent: Any, base_prompt: str
     ) -> str:
-        """
-        Handle tool selection and execution for a step.
-
-        Coordinates tool selection, execution, and result formatting
-        for inclusion in the step's prompt.
+        """Handle tool selection and execution for a step.
 
         Args:
             step: The step being executed
             agent: The agent instance
-            base_prompt: The initial prompt before tool execution
+            base_prompt: Initial prompt before tool execution
 
         Returns:
-            The updated prompt including tool execution results
+            Updated prompt including tool execution results
 
         Raises:
             ToolError: If tool selection or execution fails
+
+        Example:
+            ```python
+            prompt = engine._handle_tool_execution(
+                step=analyze_step,
+                agent=agent,
+                base_prompt="Analyze the following data..."
+            )
+            # Returns prompt enhanced with tool execution results
+            ```
         """
         logger.debug("Tool usage is enabled for this step")
         available_tools = agent.get_tools(step.step_type.name.lower())
@@ -383,7 +383,24 @@ class StepExecutionEngine:
             raise ToolError(f"Tool execution failed: {str(e)}") from e
 
     def _format_tool_result(self, decision: Any) -> str:
-        """Format a single tool execution decision into a string."""
+        """Format a single tool execution decision into a string.
+
+        Args:
+            decision: Tool execution decision with results
+
+        Returns:
+            Formatted string representing the tool execution result
+
+        Example:
+            ```python
+            formatted = engine._format_tool_result(decision)
+            # Output format:
+            # CalculatorTool:
+            # Result: 42
+            # Confidence: 0.95
+            # Reasoning: Used for precise calculation
+            ```
+        """
         if decision.error:
             result_line = f"Error: {decision.error}"
         else:
@@ -397,7 +414,28 @@ class StepExecutionEngine:
         )
 
     def _create_decision_dict(self, decision: Any) -> Dict[str, Any]:
-        """Create a dictionary representation of a tool execution decision."""
+        """Create a dictionary representation of a tool execution decision.
+
+        Args:
+            decision: Tool execution decision to convert
+
+        Returns:
+            Dictionary containing all decision information
+
+        Example:
+            ```python
+            decision_dict = engine._create_decision_dict(decision)
+            # Output structure:
+            # {
+            #     "tool_name": "calculator",
+            #     "arguments": {"x": 5, "y": 3},
+            #     "result": 8,
+            #     "error": None,
+            #     "confidence": 0.95,
+            #     "reasoning": "Required for calculation"
+            # }
+            ```
+        """
         return {
             "tool_name": decision.tool_name,
             "arguments": decision.arguments,
@@ -413,8 +451,7 @@ class StepExecutionEngine:
         prompt: str,
         api_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[str, Iterator[str]]:
-        """
-        Execute a single LLM API call with proper configuration.
+        """Execute a single LLM API call with proper configuration.
 
         Args:
             step: The step being executed
@@ -444,7 +481,6 @@ class StepExecutionEngine:
             return cast(Union[str, Iterator[str]], result)
 
         except ClientAIError:
-            # Preserve the original ClientAIError
             raise
         except Exception as e:
             logger.error(f"Unexpected error during LLM call: {e}")
@@ -455,14 +491,13 @@ class StepExecutionEngine:
     def _prepare_api_kwargs(
         self, model_config: Union[str, ModelConfig]
     ) -> Dict[str, Any]:
-        """
-        Prepare keyword arguments for the LLM API call.
+        """Prepare keyword arguments for the LLM API call.
 
         Args:
             model_config: The model configuration to use
 
         Returns:
-            A dictionary of API keyword arguments
+            Dictionary of API keyword arguments
 
         Raises:
             StepError: If API argument preparation fails
@@ -488,8 +523,7 @@ class StepExecutionEngine:
         prompt: str,
         api_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[str, Iterator[str]]:
-        """
-        Execute an LLM call with configurable retry logic.
+        """Execute an LLM call with appropriate retry handling.
 
         Args:
             step: The step being executed
@@ -500,7 +534,7 @@ class StepExecutionEngine:
             Either a string or an iterator of strings for streaming responses
 
         Raises:
-            ClientAIError: If all retry attempts fail
+            ClientAIError: If the LLM call fails
         """
         for attempt in range(step.config.retry_count + 1):
             try:
@@ -552,8 +586,7 @@ class StepExecutionEngine:
     def _get_model_name(
         self, model_config: Union[str, ModelConfig, None]
     ) -> str:
-        """
-        Extract the model name from various configuration formats.
+        """Extract the model name from various configuration formats.
 
         Args:
             model_config: The model configuration to process
@@ -592,51 +625,56 @@ class StepExecutionEngine:
         stream: Optional[bool] = None,
         **kwargs: Any,
     ) -> Optional[Union[str, Iterator[str]]]:
-        """
-        Execute a single workflow step with full configuration.
+        """Execute a single workflow step with full configuration.
 
-        This is the main entry point for step execution. It handles:
-        - Tool selection and execution if enabled
-        - LLM interaction if required
-        - Error handling and retries
-        - Result storage in context
-        - Stream override handling
+        Main entry point for step execution, handling tool selection,
+        LLM interaction, error handling, and result management.
 
         Args:
             step: The step to execute
             agent: The agent instance
             *args: Additional positional arguments for the step
-            stream: Optional bool to override step's stream configuration.
-                If provided, overrides any step-level streaming settings.
+            stream: Optional bool to override step's stream configuration
             **kwargs: Additional keyword arguments for the step
 
         Returns:
-            Optional[Union[str, Iterator[str]]]: The step execution result,
-                which can be:
+            Optional[Union[str, Iterator[str]]]: The step execution result:
                 - None if step is disabled or failed
-                - A complete string if streaming is disabled
-                - An iterator of string chunks if streaming is enabled
+                - Complete string if streaming is disabled
+                - Iterator of string chunks if streaming is enabled
 
         Raises:
-            StepError: If step execution fails and the step is required
+            StepError: If step execution fails and step is required
             ToolError: If tool execution fails
             ClientAIError: If LLM interaction fails
 
         Example:
+            Basic step execution:
             ```python
-            # Execute with default stream setting from step
+            # Execute with default stream setting
             result = engine.execute_step(step, agent, "input data")
 
-            # Force streaming on for this execution
+            # Force streaming on
             result = engine.execute_step(
-                step, agent, "input data", stream=True
+                step,
+                agent,
+                "input data",
+                stream=True
             )
 
-            # Force streaming off for this execution
-            result = engine.execute_step(
-                step, agent, "input data", stream=False
-            )
+            # Handle streaming results
+            if isinstance(result, Iterator):
+                for chunk in result:
+                    print(chunk, end="")
+            else:
+                print(result)
             ```
+
+        Notes:
+            - Handles both streaming and non-streaming responses
+            - Manages tool selection if enabled for step
+            - Updates agent context with results
+            - Supports retry logic for failed steps
         """
         logger.info(f"Executing step '{step.name}'")
         logger.debug(
@@ -696,8 +734,7 @@ class StepExecutionEngine:
         args: Any,
         kwargs: Any,
     ) -> Union[str, Iterator[str]]:
-        """
-        Handle execution of a step that involves LLM interaction.
+        """Handle execution of a step that involves LLM interaction.
 
         Args:
             step: The step being executed
@@ -724,8 +761,7 @@ class StepExecutionEngine:
     def _handle_non_llm_step(
         self, step: Step, agent: Any, args: Any, kwargs: Any
     ) -> Union[str, Iterator[str]]:
-        """
-        Handle execution of a step that doesn't involve LLM interaction.
+        """Handle execution of a step that doesn't involve LLM interaction.
 
         Args:
             step: The step being executed
@@ -750,8 +786,7 @@ class StepExecutionEngine:
     def _prepare_model_config(
         self, step: Step, stream: Optional[bool]
     ) -> Union[str, ModelConfig]:
-        """
-        Prepare the model configuration for a step execution.
+        """Prepare the model configuration for a step execution.
 
         Args:
             step: The step being executed
@@ -787,13 +822,12 @@ class StepExecutionEngine:
         agent: Any,
         result: Optional[Union[str, Iterator[str]]],
     ) -> None:
-        """
-        Update the agent's context with step execution results.
+        """Update the agent's context with step execution results.
 
         Args:
-            step: The executed step
-            agent: The agent instance
-            result: The step execution result
+            step: Executed step
+            agent: Agent instance
+            result: Step execution result
 
         Raises:
             StepError: If context update fails

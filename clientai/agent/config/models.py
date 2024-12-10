@@ -2,6 +2,39 @@ from typing import Any, ClassVar, Dict
 
 
 class ModelConfig:
+    """Configuration class for language model parameters and settings.
+
+    Manages both core model parameters (name, streaming, etc.)
+    and additional model-specific parameters. Provides methods
+    for parameter merging and serialization.
+
+    Attributes:
+        CORE_ATTRS: Class-level set of core attribute names
+                    that are handled specially
+        name: Name of the language model
+        return_full_response: Whether to return complete API response
+        stream: Whether to enable response streaming
+        json_output: Whether responses should be formatted as JSON
+
+    Example:
+        Create and use model configuration:
+        ```python
+        # Basic configuration
+        config = ModelConfig(
+            name="gpt-4",
+            temperature=0.7,
+            stream=True
+        )
+
+        # Get parameters for API call
+        params = config.get_parameters()
+        print(params)  # Output: {"temperature": 0.7, "stream": True}
+
+        # Merge with new parameters
+        new_config = config.merge(temperature=0.5, top_p=0.9)
+        ```
+    """
+
     CORE_ATTRS: ClassVar[set] = {
         "name",
         "return_full_response",
@@ -24,6 +57,23 @@ class ModelConfig:
         self._extra_kwargs = kwargs
 
     def get_parameters(self) -> Dict[str, Any]:
+        """Get all non-None parameters as a dictionary.
+
+        Returns:
+            Dict[str, Any]: Dictionary of parameter names to values.
+
+        Example:
+            Get parameters for API call:
+            ```python
+            config = ModelConfig(
+                name="gpt-4",
+                temperature=0.7,
+                top_p=None
+            )
+            params = config.get_parameters()
+            print(params)  # Output: {"temperature": 0.7}
+            ```
+        """
         params = {
             "return_full_response": self.return_full_response,
             "stream": self.stream,
@@ -33,6 +83,25 @@ class ModelConfig:
         return {k: v for k, v in params.items() if v is not None}
 
     def merge(self, **kwargs: Any) -> "ModelConfig":
+        """Create new configuration by merging current with new parameters.
+
+        Args:
+            **kwargs: New parameter values to merge with existing ones.
+
+        Returns:
+            ModelConfig: New configuration instance with merged parameters.
+
+        Example:
+            Merge configurations:
+            ```python
+            base_config = ModelConfig(name="gpt-4", temperature=0.7)
+            new_config = base_config.merge(
+                temperature=0.5,
+                top_p=0.9,
+                stream=True
+            )
+            ```
+        """
         core_kwargs = {k: kwargs[k] for k in self.CORE_ATTRS if k in kwargs}
         extra_kwargs = {
             k: v for k, v in kwargs.items() if k not in self.CORE_ATTRS
@@ -50,6 +119,28 @@ class ModelConfig:
 
     @classmethod
     def from_dict(cls, config: Dict[str, Any]) -> "ModelConfig":
+        """Create configuration instance from a dictionary.
+
+        Args:
+            config: Dictionary containing configuration parameters.
+                Must include 'name' key.
+
+        Returns:
+            ModelConfig: New configuration instance.
+
+        Raises:
+            ValueError: If 'name' is missing from config dictionary.
+
+        Example:
+            Create from dictionary:
+            ```python
+            config = ModelConfig.from_dict({
+                "name": "gpt-4",
+                "temperature": 0.7,
+                "stream": True
+            })
+            ```
+        """
         if "name" not in config:
             raise ValueError(
                 "Model name is required in configuration dictionary"
@@ -63,6 +154,19 @@ class ModelConfig:
         return cls(**core_params, **extra_params)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary format.
+
+        Returns:
+            Dict[str, Any]: Dictionary containing all configuration parameters.
+
+        Example:
+            Convert to dictionary:
+            ```python
+            config = ModelConfig(name="gpt-4", temperature=0.7)
+            data = config.to_dict()
+            print(data)  # Output: {"name": "gpt-4", "temperature": 0.7, ...}
+            ```
+        """
         return {
             "name": self.name,
             "return_full_response": self.return_full_response,

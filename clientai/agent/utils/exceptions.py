@@ -1,10 +1,22 @@
 class AgentError(Exception):
-    """Base exception for agent-related errors."""
+    """Base exception class for agent-related errors.
+
+    This exception serves as the base class for agent-specific errors
+    in the utils module. All other agent utility exceptions inherit from this.
+    """
 
 
 class StepError(AgentError):
-    """Raised when there's an error in step execution."""
+    """Exception raised for errors in step validation and execution.
+
+    This exception is raised during step validation or execution in utility
+    functions, such as when validating step signatures or handling step data.
+    """
 
 
 class ToolError(AgentError):
-    """Raised when there's an error in tool execution."""
+    """Exception raised for errors in tool validation and execution.
+
+    This exception is raised during tool validation or execution in utility
+    functions, such as when validating tool signatures or processing tool data.
+    """

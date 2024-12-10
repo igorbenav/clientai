@@ -6,24 +6,37 @@ from .types import StepType
 
 
 class StepRegistry:
-    """
-    A registry to manage and organize workflow steps.
+    """Registry for managing and organizing workflow steps.
 
-    The registry stores steps by name, indexes them by type, and tracks
-    dependencies between steps.
+    Maintains a registry of workflow steps with support for dependency
+    tracking, type indexing, and step validation. Ensures steps are
+    properly organized and can be executed in the correct order.
 
     Attributes:
-        _steps: A dictionary of registered steps by their names.
-        _type_index: An index mapping step types to step names.
-        _dependency_graph: A graph tracking step dependencies.
+        _steps: Dictionary mapping step names to their Step instances
+        _type_index: Index mapping step types to sets of step names
+        _dependency_graph: Graph tracking dependencies between steps
 
-    Methods:
-        register: Add a step to the registry.
-        get: Retrieve a step by its name.
-        get_by_type: Retrieve all steps of a specific type.
-        get_dependencies: Get names of steps that a step depends on.
-        remove: Remove a step from the registry.
-        clear: Clear all registered steps and indexes.
+    Example:
+        Basic registry usage:
+        ```python
+        registry = StepRegistry()
+
+        # Register a step
+        registry.register(analyze_step)
+
+        # Get steps by type
+        think_steps = registry.get_by_type(StepType.THINK)
+
+        # Get step dependencies
+        deps = registry.get_dependencies("process_step")
+        print(deps)  # Output: {"analyze_step"}
+        ```
+
+    Notes:
+        - Steps are stored with their dependencies for workflow ordering
+        - Type indexing enables efficient step retrieval by type
+        - Steps must have unique names within the registry
     """
 
     def __init__(self) -> None:
@@ -38,20 +51,23 @@ class StepRegistry:
         self._dependency_graph: Dict[str, Set[str]] = defaultdict(set)
 
     def register(self, step: Step) -> None:
-        """
-        Register a step in the registry.
+        """Register a step in the registry.
 
         Args:
-            step (Step): The step to register.
+            step: The step instance to register
 
         Raises:
-            ValueError: If the step name is already registered.
+            ValueError: If a step with the same name is already registered
 
-        Examples:
+        Example:
             Register a step:
             ```python
             registry = StepRegistry()
-            registry.register(step)
+            try:
+                registry.register(analyze_step)
+                print("Step registered successfully")
+            except ValueError as e:
+                print(f"Registration failed: {e}")
             ```
         """
         if step.name in self._steps:
@@ -76,76 +92,76 @@ class StepRegistry:
                 self._dependency_graph[step.name].add(existing_step.name)
 
     def get(self, name: str) -> Optional[Step]:
-        """
-        Retrieve a step by its name.
+        """Retrieve a step by its name.
 
         Args:
-            name (str): The name of the step to retrieve.
+            name: The name of the step to retrieve
 
         Returns:
-            Optional[Step]: The step if found, otherwise None.
+            Optional[Step]: The requested step if found, None otherwise
 
-        Examples:
+        Example:
+            Retrieve a step:
             ```python
-            step = registry.get("step_name")
-            print(step)
+            step = registry.get("analyze_step")
+            if step:
+                print(f"Found step: {step.name}")
+            else:
+                print("Step not found")
             ```
         """
         return self._steps.get(name)
 
     def get_by_type(self, step_type: StepType) -> List[Step]:
-        """
-        Retrieve all steps of a specific type.
+        """Retrieve all steps of a specific type.
 
         Args:
-            step_type (StepType): The type of steps to retrieve.
+            step_type: The type of steps to retrieve
 
         Returns:
-            List[Step]: A list of steps of the specified type.
+            List[Step]: List of steps matching the specified type
 
-        Examples:
-            Get THINK steps:
+        Example:
+            Get steps by type:
             ```python
             think_steps = registry.get_by_type(StepType.THINK)
-            print(think_steps)
+            print(f"Found {len(think_steps)} thinking steps:")
+            for step in think_steps:
+                print(f"- {step.name}")
             ```
         """
         step_names = self._type_index[step_type]
         return [self._steps[name] for name in step_names]
 
     def get_dependencies(self, step_name: str) -> Set[str]:
-        """
-        Retrieve the names of steps that the specified step depends on.
+        """Get names of steps that a step depends on.
 
         Args:
-            step_name (str): The name of the step.
+            step_name: The name of the step
 
         Returns:
-            Set[str]: A set of step names this step depends on.
+            Set[str]: Set of step names this step depends on
 
-        Examples:
+        Example:
+            Check dependencies:
             ```python
-            dependencies = registry.get_dependencies("step_name")
-            print(dependencies)  # Output: {"step_a", "step_b"}
+            deps = registry.get_dependencies("final_step")
+            print(f"Dependencies: {', '.join(deps)}")  # Output: "step1, step2"
             ```
         """
         return self._dependency_graph.get(step_name, set())
 
     def remove(self, name: str) -> None:
-        """
-        Remove a step from the registry and update indexes.
-
-        Removes the step and updates all related indexes and dependencies.
-        If the step doesn't exist, silently returns.
+        """Remove a step from the registry.
 
         Args:
-            name (str): The name of the step to remove.
+            name: The name of the step to remove
 
-        Examples:
+        Example:
             Remove a step:
             ```python
-            registry.remove("step_name")
-            print(registry.get("step_name"))  # Output: None
+            registry.remove("old_step")
+            print(registry.get("old_step"))  # Output: None
             ```
         """
         if name not in self._steps:
@@ -159,16 +175,13 @@ class StepRegistry:
             deps.discard(name)
 
     def clear(self) -> None:
-        """
-        Clear all registered steps and indexes from the registry.
+        """Clear all registered steps and indexes.
 
-        Removes all steps and resets the registry to its initial empty state.
-
-        Examples:
-            Clear the registry:
+        Example:
+            Clear registry:
             ```python
             registry.clear()
-            print(registry.get("step_name"))  # Output: None
+            print(len(registry.get_by_type(StepType.THINK)))  # Output: 0
             ```
         """
         self._steps.clear()

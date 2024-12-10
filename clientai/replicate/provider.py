@@ -48,7 +48,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Replicate package is not installed.
 
-    Examples:
+    Example:
         Initialize the Replicate provider:
         ```python
         provider = Provider(api_key="your-replicate-api-key")
@@ -230,7 +230,7 @@ class Provider(AIProvider):
             ReplicateGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(

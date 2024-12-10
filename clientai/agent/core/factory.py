@@ -24,54 +24,16 @@ logger = logging.getLogger(__name__)
 def _process_tools(
     tools: Optional[List[Union[Callable[..., Any], ToolConfig]]] = None,
 ) -> Optional[List[ToolConfig]]:
-    """
-    Convert a list of tools into ToolConfig objects.
-
-    This helper function processes a list of tools, which can be either
-    callable functions or pre-configured ToolConfig objects, and ensures
-    they are all properly configured as ToolConfig instances. It performs
-    validation on each tool and provides detailed error messages if
-    problems are found.
+    """Process and validate a list of tools into ToolConfig objects.
 
     Args:
-        tools: List of tools to process. Each tool can be either:
-            - A callable function with proper type hints and docstring
-            - A pre-configured ToolConfig object
+        tools: List of tools to process (callables or ToolConfig objects)
 
     Returns:
-        Optional[List[ToolConfig]]: List of validated ToolConfig objects,
-        or None if no tools were provided
+        List of validated ToolConfig objects or None
 
     Raises:
-        ToolError: If any of the following occur:
-            - A tool cannot be converted to ToolConfig
-            - A tool lacks required type hints
-            - A tool's configuration is invalid
-            - Any unexpected error during tool processing
-
-    Examples:
-        Process simple function tools:
-        ```python
-        def add(x: int, y: int) -> int:
-            '''Add two numbers.'''
-            return x + y
-
-        def multiply(x: int, y: int) -> int:
-            '''Multiply two numbers.'''
-            return x * y
-
-        configs = _process_tools([add, multiply])
-        ```
-
-        Process mixed tools:
-        ```python
-        existing_config = ToolConfig(
-            tool=divide,
-            name="Divider",
-            description="Divides numbers"
-        )
-        configs = _process_tools([add, existing_config])
-        ```
+        ToolError: If tool processing or validation fails
     """
     if not tools:
         return None
@@ -106,55 +68,18 @@ def _create_tool_config(
     tool_confidence: Optional[float],
     max_tools_per_step: Optional[int],
 ) -> Optional[ToolSelectionConfig]:
-    """
-    Create and validate tool selection configuration
-    from provided parameters.
-
-    This helper function creates a ToolSelectionConfig instance from either a
-    complete configuration object or individual parameters. It ensures all
-    parameters are valid and provides appropriate defaults when needed.
+    """Create and validate tool selection configuration.
 
     Args:
-        tool_selection_config: Complete configuration object, if provided.
-            If this is provided, individual parameters must be None.
-        tool_confidence: Confidence threshold for tool selection (0.0-1.0).
-            Higher values mean tools must be more confidently selected.
-        max_tools_per_step: Maximum number of tools that can be used in
-            a single step. Must be at least 1 if specified.
+        tool_selection_config: Complete configuration object
+        tool_confidence: Confidence threshold (0.0-1.0)
+        max_tools_per_step: Maximum tools per step
 
     Returns:
-        Optional[ToolSelectionConfig]: A validated configuration object,
-        or None if no configuration is needed
+        Validated ToolSelectionConfig or None
 
     Raises:
-        ValueError: If any of the following occur:
-            - Both tool_selection_config and individual parameters are provided
-            - tool_confidence is outside the valid range (0.0-1.0)
-            - max_tools_per_step is less than 1
-            - Configuration parameters are otherwise invalid
-            - Any unexpected error during configuration creation
-
-    Examples:
-        Create config from complete object:
-        ```python
-        config = _create_tool_config(
-            tool_selection_config=ToolSelectionConfig(
-                confidence_threshold=0.8,
-                max_tools_per_step=3
-            ),
-            tool_confidence=None,
-            max_tools_per_step=None
-        )
-        ```
-
-        Create config from individual parameters:
-        ```python
-        config = _create_tool_config(
-            tool_selection_config=None,
-            tool_confidence=0.7,
-            max_tools_per_step=2
-        )
-        ```
+        ValueError: If configuration parameters are invalid
     """
     try:
         if tool_selection_config:
@@ -208,64 +133,22 @@ def _create_model_config(
     stream: bool,
     model_kwargs: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """
-    Create and validate model configuration
-    with appropriate defaults and overrides.
-
-    This helper function creates a complete model configuration dictionary,
-    applying defaults from step configuration and validating all parameters.
-    It ensures that core parameters cannot be overridden through model_kwargs
-    and that all parameters are within valid ranges.
+    """Create and validate model configuration with defaults.
 
     Args:
-        model: Name of the model to use (e.g., "gpt-4")
-        system_prompt: System prompt defining the model's behavior
-        temperature: Optional temperature setting (0.0-1.0) for
-            controlling randomness
-        top_p: Optional top_p setting (0.0-1.0) for nucleus sampling
-        step_config: Default configuration for the step type
-        stream: Whether to enable response streaming
-        model_kwargs: Additional model parameters to include
+        model: Model name
+        system_prompt: System prompt
+        temperature: Optional temperature setting
+        top_p: Optional top_p setting
+        step_config: Step type defaults
+        stream: Stream setting
+        model_kwargs: Additional parameters
 
     Returns:
-        Dict[str, Any]: Complete model configuration dictionary
+        Complete model configuration dictionary
 
     Raises:
-        ValueError: If any of the following occur:
-            - Core parameters are attempted to be overridden in model_kwargs
-            - Temperature or top_p are outside valid ranges
-            - Configuration parameters are otherwise invalid
-            - Any unexpected error during configuration creation
-
-    Examples:
-        Basic configuration:
-        ```python
-        config = _create_model_config(
-            model="gpt-4",
-            system_prompt="You are a helpful assistant",
-            temperature=0.7,
-            top_p=None,
-            step_config=DEFAULT_STEP_CONFIGS["think"],
-            stream=False,
-            model_kwargs={}
-        )
-        ```
-
-        Configuration with custom parameters:
-        ```python
-        config = _create_model_config(
-            model="gpt-4",
-            system_prompt="You are a helpful assistant",
-            temperature=0.4,
-            top_p=0.9,
-            step_config={},
-            stream=True,
-            model_kwargs={
-                "presence_penalty": 0.6,
-                "frequency_penalty": 0.3
-            }
-        )
-        ```
+        ValueError: If configuration parameters are invalid
     """
     try:
         config = {
@@ -274,7 +157,6 @@ def _create_model_config(
             "stream": stream,
         }
 
-        # Validate model kwargs
         invalid_kwargs = [
             k for k in model_kwargs if k in ["name", "system_prompt", "stream"]
         ]
@@ -314,7 +196,14 @@ def _create_model_config(
 
 
 def _sanitize_identifier(name: str) -> str:
-    """Convert a string into a valid Python identifier."""
+    """Convert a string into a valid Python identifier.
+
+    Args:
+        name: String to convert
+
+    Returns:
+        Valid Python identifier
+    """
     sanitized = "".join(c for c in name if c.isalnum() or c == "_")
     if sanitized and sanitized[0].isdigit():
         sanitized = "_" + sanitized
@@ -337,31 +226,26 @@ def create_agent(
     max_tools_per_step: Optional[int] = None,
     **model_kwargs: Any,
 ) -> Agent:
-    """
-    Create a single-step agent with minimal configuration.
+    """Create a single-step agent with minimal configuration.
 
-    This factory function simplifies the creation of specialized agents that
-    perform a single task. It handles configuration of the model, step type,
-    and tools while providing sensible defaults based on the intended use case.
-
-    The function supports both simple configurations for basic use cases and
-    detailed configurations for more complex requirements.
+    Simplifies agent creation for specialized tasks by handling model,
+    step type, and tool configuration with sensible defaults.
 
     Args:
         client: The AI client for model interactions
         role: The role of the agent (e.g., "translator", "analyzer")
-        system_prompt: The system prompt that defines the agent's behavior
+        system_prompt: System prompt defining the agent's behavior
         model: Name of the model to use (e.g., "gpt-4")
-        step: Type of step to create. Can be:
+        step: Type of step to create. Options:
             - "think": For analysis and reasoning (default temp=0.7)
             - "act": For decisive actions (default temp=0.2)
             - "observe": For data gathering (default temp=0.1)
             - "synthesize": For summarizing (default temp=0.4)
-            - Any custom string for custom step types with no defaults
+            - Any custom string for custom step types
         temperature: Optional temperature override for the model (0.0-1.0)
         top_p: Optional top_p override for the model (0.0-1.0)
         stream: Whether to stream the model's response
-        tools: Optional list of tools to use. Can be either:
+        tools: Optional list of tools to use, either as:
             - Functions with proper type hints and docstrings
             - ToolConfig objects for more control
         tool_selection_config: Complete tool selection configuration
@@ -374,14 +258,12 @@ def create_agent(
         Agent: A configured agent instance ready to process inputs
 
     Raises:
-        AgentError: If any of the following occur:
-            - Required parameters are missing or invalid
-            - Configuration validation fails
-            - Tool processing fails
-            - Agent initialization fails
-            - Any unexpected error during agent creation
+        AgentError: If agent creation fails due to:
+            - Invalid configuration parameters
+            - Tool processing failure
+            - Agent initialization failure
 
-    Examples:
+    Example:
         Basic translation agent:
         ```python
         translator = create_agent(
@@ -396,7 +278,7 @@ def create_agent(
         print(result)  # Output: "Bonjour le monde!"
         ```
 
-        Analysis agent with specific configuration:
+        Analysis agent with tools:
         ```python
         analyzer = create_agent(
             client=client,
@@ -412,29 +294,6 @@ def create_agent(
         result = analyzer.run("Analyze sales data: [1000, 1200, 950]")
         ```
 
-        Agent with tool configuration:
-        ```python
-        def add(x: int, y: int) -> int:
-            '''Add two numbers.'''
-            return x + y
-
-        def multiply(x: int, y: int) -> int:
-            '''Multiply two numbers.'''
-            return x * y
-
-        calculator = create_agent(
-            client=client,
-            role="calculator",
-            system_prompt="You are an assistant. Use tools for calculations.",
-            model="gpt-4",
-            tools=[add, multiply]  # Just pass functions directly
-        )
-
-        result = calculator.run(
-            "What is 5 plus 3, then multiplied by 2?"
-        )
-        ```
-
         Streaming agent with custom settings:
         ```python
         validator = create_agent(
@@ -446,9 +305,12 @@ def create_agent(
             top_p=0.95,
             stream=True
         )
+
+        for chunk in validator.run("Check this data"):
+            print(chunk, end="", flush=True)
         ```
 
-    Note:
+    Notes:
         - Temperature and top_p have step defaults that can be overridden
         - Custom step types default to ACT behavior without default parameters
         - Functions passed as tools should have type hints and docstrings

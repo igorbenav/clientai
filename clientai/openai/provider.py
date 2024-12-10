@@ -46,7 +46,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the OpenAI package is not installed.
 
-    Examples:
+    Example:
         Initialize the OpenAI provider:
         ```python
         provider = Provider(api_key="your-openai-api-key")
@@ -209,7 +209,7 @@ class Provider(AIProvider):
         Raises:
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -342,7 +342,7 @@ class Provider(AIProvider):
         Raises:
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Chat (message content only):
             ```python
             messages = [

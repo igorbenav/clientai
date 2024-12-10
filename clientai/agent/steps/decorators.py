@@ -20,19 +20,18 @@ T = TypeVar("T")
 
 
 class StepFunction:
-    """
-    A wrapper class for step functions that allows setting metadata attributes.
+    """A wrapper class for step functions that maintains
+    metadata and execution context.
 
-    This class wraps agent step functions and provides a way to attach
-    additional information like step configuration while maintaining
-    proper type checking.
+    Wraps agent step functions while preserving their metadata and allowing
+    attachment of additional step information through the _step_info attribute.
 
     Attributes:
-        func: The original step function being wrapped.
-        _step_info: Metadata about the step, including its type,
-                                   configuration, and other properties.
+        func: The original step function being wrapped
+        _step_info: Optional Step instance containing step metadata
 
     Example:
+        Create a wrapped step function:
         ```python
         def example_step(self, input: str) -> str:
             return f"Processing: {input}"
@@ -72,19 +71,23 @@ class StepFunction:
 
 
 class BoundRunFunction:
-    """
-    Represents a run function bound to a specific instance.
+    """Run function bound to a specific agent instance.
 
-    This class maintains the binding between a run function and its instance,
-    preserving method attributes and proper execution context. It ensures that
-    when the bound function is called, it receives the correct instance as
-    its first argument.
+    Maintains the binding between a run function and its agent instance while
+    preserving method attributes and proper execution context.
 
     Attributes:
-        func: The original function to be bound.
-        instance: The instance to bind the function to.
-        _is_run: Flag indicating this is a run method.
-        _run_description: Optional description of the run behavior.
+        func: The original function to be bound
+        instance: The agent instance to bind to
+        _is_run: Flag indicating this is a run method
+        _run_description: Optional description of the run behavior
+
+    Example:
+        Create bound function:
+        ```python
+        bound = BoundRunFunction(run_method, agent_instance)
+        result = bound("input data")  # Executes with proper agent binding
+        ```
     """
 
     def __init__(self, func: Callable[..., Any], instance: Any) -> None:
@@ -193,25 +196,21 @@ def create_step_decorator(
 ) -> Callable[
     ..., Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]
 ]:
-    """
-    Generate a decorator for defining workflow steps of a specific type.
+    """Generate a decorator for defining workflow steps of a specific type.
 
-    This factory function creates decorators (like @think, @act, etc.)
-    that mark methods as specific types of workflow steps. The generated
-    decorators handle both tool selection and LLM interaction configuration.
+    Creates specialized decorators (like @think, @act) that mark methods as
+    workflow steps with specific configurations and types.
 
     Args:
         step_type: The type of step (THINK, ACT, OBSERVE, SYNTHESIZE)
-                   this decorator will create
+                   this decorator creates
 
     Returns:
         A decorator function that can be used to mark methods as workflow steps
 
     Example:
-        Creating a custom step decorator:
+        Create custom step decorator:
         ```python
-        from steps.types import StepType
-
         analyze_step = create_step_decorator(StepType.THINK)
 
         class CustomAgent(Agent):
@@ -224,10 +223,10 @@ def create_step_decorator(
                 return f"Please analyze: {data}"
         ```
 
-    Note:
-        The generated decorator can be used in two ways:
-        1. With parameters
-        2. As a bare decorator
+    Notes:
+        - Generated decorators support both parameterized and bare usage
+        - Decorators handle both tool selection and LLM configuration
+        - Step type influences default configuration values
     """
 
     def decorator(
@@ -425,7 +424,7 @@ def _create_model_config(
         ValueError: If the model configuration is invalid or
                     missing required fields.
 
-    Examples:
+    Example:
         ```python
         # From string
         config = _create_model_config("gpt-4", StepType.THINK)
@@ -486,9 +485,48 @@ def _create_model_config(
 
 
 think = create_step_decorator(StepType.THINK)
+"""Decorator for creating thinking/analysis steps.
+
+Example:
+    ```python
+    @think("analyze", description="Analyzes input data")
+    def analyze_data(self, data: str) -> str:
+        return f"Analysis task: {data}"
+    ```
+"""
+
 act = create_step_decorator(StepType.ACT)
+"""Decorator for creating action/execution steps.
+
+Example:
+    ```python
+    @act("process", description="Processes analyzed data")
+    def process_data(self, analysis: str) -> str:
+        return f"Processing results: {analysis}"
+    ```
+"""
+
 observe = create_step_decorator(StepType.OBSERVE)
+"""Decorator for creating observation/data gathering steps.
+
+Example:
+    ```python
+    @observe("gather", description="Gathers input data")
+    def gather_data(self, query: str) -> str:
+        return f"Gathering data for: {query}"
+    ```
+"""
+
 synthesize = create_step_decorator(StepType.SYNTHESIZE)
+"""Decorator for creating synthesis/summary steps.
+
+Example:
+    ```python
+    @synthesize("summarize", description="Summarizes results")
+    def summarize_data(self, data: str) -> str:
+        return f"Summary of: {data}"
+    ```
+"""
 
 
 @overload
@@ -508,26 +546,23 @@ def run(
     *,
     description: Optional[str] = None,
 ) -> Union[Callable[[Callable[..., T]], RunFunction], RunFunction]:
-    """
-    Decorator for defining a custom `run` method in an agent class.
+    """Decorator for defining a custom `run` method in an agent class.
 
-    This decorator marks a method as the custom run implementation for
-    an agent, optionally providing a description of its behavior. The
-    decorated method will properly handle instance binding and maintain
-    its metadata through Python's descriptor protocol.
+    Marks a method as the custom run implementation for an agent,
+    optionally with a description of its behavior.
 
     Args:
-        func: The function to decorate (when used without parameters).
-        description: A description of the custom run behavior.
+        func: The function to decorate (when used without parameters)
+        description: Optional description of the custom run behavior
 
     Returns:
-        Union[Callable[[Callable[..., T]], RunFunction], RunFunction]:
-            Either a decorator function or the decorated function.
+        Either a decorator function or the decorated function
 
-    Examples:
+    Example:
+        Define custom run methods:
         ```python
         class CustomAgent(Agent):
-            @run(description="Custom workflow execution.")
+            @run(description="Custom workflow execution")
             def custom_run(self, input_data: Any) -> Any:
                 # Custom implementation
                 return f"Custom execution for {input_data}"
@@ -535,7 +570,6 @@ def run(
             # Or without parameters
             @run
             def another_run(self, data: str) -> str:
-                # Another implementation
                 return f"Processing: {data}"
         ```
     """

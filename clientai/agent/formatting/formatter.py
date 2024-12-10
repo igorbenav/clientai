@@ -8,19 +8,66 @@ from .options import FormatOptions
 
 
 class AgentFormatter:
-    """Handles formatting of Agent string representations."""
+    """Formats agent information into structured string representations.
+
+    Creates human-readable string representations of
+    agent configurations, workflows, tools, and state
+    using consistent formatting and tree structures.
+
+    Args:
+        options: Optional FormatOptions to control formatting behavior
+
+    Example:
+        Basic formatting:
+        ```python
+        formatter = AgentFormatter()
+        formatted_str = formatter.format_agent(my_agent)
+        print(formatted_str)
+        # Output:
+        # ╭─ MyAgent (openai provider)
+        # │
+        # │ Configuration:
+        # │ ├─ Model: gpt-4
+        # │ └─ Parameters: temperature=0.7
+        # ...
+        ```
+
+        Custom formatting options:
+        ```python
+        options = FormatOptions(
+            max_description_length=80,
+            tree_chars={"vertical": "|", "horizontal": "-"}
+        )
+        formatter = AgentFormatter(options)
+        print(formatter.format_agent(my_agent))
+        ```
+    """
 
     def __init__(self, options: Optional[FormatOptions] = None):
         self.options = options or FormatOptions()
 
     def _format_type(self, t: Any) -> str:
-        """Format type hints cleanly."""
+        """Format type hints into clean string representations.
+
+        Args:
+            t: Type annotation to format
+
+        Returns:
+            str: Formatted type string
+        """
         if hasattr(t, "__name__"):
             return str(t.__name__)
         return str(t).replace("typing.", "")
 
     def _format_description(self, desc: str) -> str:
-        """Format description with proper line handling."""
+        """Format and truncate description text according to options.
+
+        Args:
+            desc: Description text to format
+
+        Returns:
+            str: Formatted description text
+        """
         if not desc:
             return "No description"
         desc = cleandoc(desc).split("\n")[0].strip()
@@ -28,7 +75,14 @@ class AgentFormatter:
         return f"{desc[:max_len-3]}..." if len(desc) > max_len else desc
 
     def _format_model_config(self, config: ModelConfig) -> List[str]:
-        """Format model configuration parameters."""
+        """Format model configuration parameters into string list.
+
+        Args:
+            config: Model configuration to format
+
+        Returns:
+            List[str]: Formatted parameter strings
+        """
         params = []
         for k, v in config.to_dict().items():
             if k != "name" and v is not None:
@@ -36,7 +90,14 @@ class AgentFormatter:
         return params
 
     def _format_step_signature(self, step: Step) -> tuple[str, str]:
-        """Format step input/output signature."""
+        """Format step input/output signature.
+
+        Args:
+            step: Step to format signature for
+
+        Returns:
+            tuple[str, str]: Input type and return type strings
+        """
         hints = get_type_hints(step.func)
         params = list(hints.items())
         input_type = (
@@ -46,7 +107,14 @@ class AgentFormatter:
         return input_type, return_type
 
     def _format_tools(self, tools: List[Tool]) -> List[str]:
-        """Format tools with proper tree structure."""
+        """Format tool information into tree structure.
+
+        Args:
+            tools: List of tools to format
+
+        Returns:
+            List[str]: Formatted tool information strings
+        """
         if not tools:
             return [f"{self.options.indent}└─ No tools available"]
 
@@ -76,7 +144,14 @@ class AgentFormatter:
         return lines
 
     def _format_header(self, agent: Any) -> List[str]:
-        """Format agent header section."""
+        """Format agent header section.
+
+        Args:
+            agent: Agent instance to format header for
+
+        Returns:
+            List[str]: Formatted header strings
+        """
         provider_name = agent._client.provider.__class__.__module__.split(".")[
             -2
         ]
@@ -105,7 +180,14 @@ class AgentFormatter:
         return lines
 
     def _format_workflow(self, agent: Any) -> List[str]:
-        """Format workflow section."""
+        """Format agent workflow section.
+
+        Args:
+            agent: Agent instance to format workflow for
+
+        Returns:
+            List[str]: Formatted workflow strings
+        """
         steps = agent.workflow_manager.get_steps()
         if not steps:
             return []
@@ -159,7 +241,14 @@ class AgentFormatter:
         return lines
 
     def _format_custom_run(self, agent: Any) -> List[str]:
-        """Format custom run method section."""
+        """Format custom run method section.
+
+        Args:
+            agent: Agent instance to check for custom run method
+
+        Returns:
+            List[str]: Formatted custom run information strings
+        """
         if not hasattr(agent, "_custom_run") or not agent._custom_run:
             return []
 
@@ -179,7 +268,14 @@ class AgentFormatter:
         ]
 
     def _format_context(self, agent: Any) -> List[str]:
-        """Format context state section."""
+        """Format agent context state section.
+
+        Args:
+            agent: Agent instance to format context for
+
+        Returns:
+            List[str]: Formatted context information strings
+        """
         tree_chars = self.options.tree_chars or {}
         v = tree_chars.get("vertical", "│")
         keys = agent.context.state.keys()
@@ -194,7 +290,37 @@ class AgentFormatter:
         ]
 
     def format_agent(self, agent: Any) -> str:
-        """Format complete agent string representation."""
+        """Format complete agent information into a string representation.
+
+        Creates a comprehensive view of the agent including its configuration,
+        workflow steps, tools, and current state.
+
+        Args:
+            agent: The agent instance to format
+
+        Returns:
+            str: Formatted string representation of the agent
+
+        Example:
+            Format agent information:
+            ```python
+            formatter = AgentFormatter()
+            print(formatter.format_agent(my_agent))
+            # Output:
+            # ╭─ MyAgent (openai provider)
+            # │
+            # │ Configuration:
+            # │ ├─ Model: gpt-4
+            # │ └─ Parameters: temperature=0.7, top_p=0.9
+            # │
+            # │ Workflow:
+            # │ ├─ 1. analyze
+            # │ │  ├─ Type: think
+            # │ │  ├─ I/O: str → str
+            # │ │  └─ Description: Analyzes input data
+            # ...
+            ```
+        """
         tree_chars = self.options.tree_chars or {}
         sections = [
             self._format_header(agent),
