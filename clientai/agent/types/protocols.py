@@ -156,14 +156,11 @@ class StepExecutionProtocol(Protocol):
     including handling arguments and results.
     """
 
-    def execute_step(
-        self, step: Step, agent: Any, *args: Any, **kwargs: Any
-    ) -> Any:
+    def execute_step(self, step: Step, *args: Any, **kwargs: Any) -> Any:
         """Execute a workflow step.
 
         Args:
             step: The step to execute.
-            agent: The agent instance.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 

@@ -85,7 +85,7 @@ class WorkflowManager:
         """
         try:
             self._steps: OrderedDict[str, Step] = OrderedDict()
-            self._custom_run: Optional[Callable[[Any, Any], Any]] = None
+            self._custom_run: Optional[Callable[[Any], Any]] = None
             logger.debug("Initialized WorkflowManager")
         except Exception as e:
             logger.error(f"Failed to initialize WorkflowManager: {e}")
@@ -314,13 +314,13 @@ class WorkflowManager:
         """
         try:
             results = []
-            
+
             step_results = [
                 agent.context.last_results[step.name]
                 for step in self._steps.values()
                 if step.name in agent.context.last_results
-            ][:param_count-1]
-            
+            ][: param_count - 1]
+
             if len(step_results) < param_count:
                 results = step_results + [agent.context.original_input]
             else:
@@ -361,12 +361,18 @@ class WorkflowManager:
             if param_count == 0:
                 return engine.execute_step(step, agent, stream=current_stream)
             elif param_count == 1:
-                input_data = agent.context.original_input if len(agent.context.last_results) == 0 else last_result
+                input_data = (
+                    agent.context.original_input
+                    if len(agent.context.last_results) == 0
+                    else last_result
+                )
                 return engine.execute_step(
                     step, agent, input_data, stream=current_stream
                 )
             else:
-                previous_results = self._get_previous_results(agent, param_count)
+                previous_results = self._get_previous_results(
+                    agent, param_count
+                )
                 return engine.execute_step(
                     step, agent, *previous_results, stream=current_stream
                 )
@@ -424,68 +430,71 @@ class WorkflowManager:
             ValueError: If step parameter validation fails
         """
         try:
-            logger.info(f"Starting workflow execution with {len(self._steps)} steps")
+            logger.info(
+                f"Starting workflow execution with {len(self._steps)} steps"
+            )
             logger.debug(f"Input data: {input_data}")
 
             self._initialize_execution(agent, input_data)
             agent.context.set_input(input_data)
             agent.context.increment_iteration()
 
-            if self._custom_run:
-                return self._execute_custom_run(input_data)
+            engine._current_agent = agent  # type: ignore
 
-            last_result = input_data
+            try:
+                if self._custom_run:
+                    return self._execute_custom_run(input_data)
 
-            for step in self._steps.values():
-                try:
-                    logger.info(
-                        f"Executing step: {step.name} ({step.step_type})"
-                    )
+                last_result = input_data
 
-                    current_stream = (
-                        stream_override
-                        if stream_override is not None
-                        else getattr(step, "stream", False)
-                    )
-                    logger.debug(
-                        f"Using stream setting: {current_stream} "
-                        f"for step {step.name}"
-                    )
+                for step in self._steps.values():
+                    try:
+                        logger.info(
+                            f"Executing step: {step.name} ({step.step_type})"
+                        )
 
-                    param_count = self._get_step_parameters(step)
-                    available_results = len(agent.context.last_results) + 1
+                        current_stream = (
+                            stream_override
+                            if stream_override is not None
+                            else getattr(step, "stream", False)
+                        )
 
-                    self._validate_parameter_count(
-                        step, param_count, available_results
-                    )
+                        param_count = self._get_step_parameters(step)
+                        available_results = len(agent.context.last_results) + 1
 
-                    result = self._execute_step(
-                        step,
-                        agent,
-                        last_result,
-                        param_count,
-                        current_stream,
-                        engine,
-                    )
+                        self._validate_parameter_count(
+                            step, param_count, available_results
+                        )
 
-                    step_result = self._handle_step_result(step, result, agent)
-                    if step_result is not None:
-                        last_result = step_result
+                        result = engine.execute_step(
+                            step,
+                            last_result,
+                            stream=current_stream,
+                        )
 
-                    logger.debug(f"Step {step.name} completed")
+                        step_result = self._handle_step_result(
+                            step, result, agent
+                        )
+                        if step_result is not None:
+                            last_result = step_result
 
-                except (StepError, ValueError) as e:
-                    logger.error(f"Error in step '{step.name}': {e}")
-                    if step.config.required:
-                        raise
-                    logger.warning(
-                        f"Continuing workflow after non-required "
-                        f"step failure: {step.name}"
-                    )
-                    continue
+                        logger.debug(f"Step {step.name} completed")
 
-            logger.info("Workflow execution completed")
-            return last_result
+                    except (StepError, ValueError) as e:
+                        logger.error(f"Error in step '{step.name}': {e}")
+                        if step.config.required:
+                            raise
+                        logger.warning(
+                            f"Continuing workflow after non-required "
+                            f"step failure: {step.name}"
+                        )
+                        continue
+
+                logger.info("Workflow execution completed")
+                return last_result
+
+            finally:
+                engine._current_agent = None  # type: ignore
 
         except (StepError, WorkflowError, ValueError):
             raise

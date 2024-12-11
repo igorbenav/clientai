@@ -57,7 +57,7 @@ class FunctionMetadata:
             hints = get_type_hints(func)
         except Exception:
             hints = {}
-        
+
         return_type = hints.pop("return", Any)
         return cls(
             name=func.__name__,

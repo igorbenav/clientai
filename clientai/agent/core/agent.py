@@ -195,7 +195,9 @@ class Agent:
             )
 
             self.context = AgentContext(
-                max_history_size=max_history_size if max_history_size is not None else 10
+                max_history_size=max_history_size
+                if max_history_size is not None
+                else 10
             )
             self.tool_registry = ToolRegistry()
             self.execution_engine = StepExecutionEngine(
@@ -501,12 +503,12 @@ class Agent:
         """
         try:
             self.context.set_input(input_data)
-            
+
             try:
                 result = self.workflow_manager.execute(
-                    self,
-                    input_data,
-                    self.execution_engine,
+                    agent=self,
+                    input_data=input_data,
+                    engine=self.execution_engine,
                     stream_override=stream,
                 )
             except Exception as e:

@@ -106,6 +106,7 @@ class StepExecutionEngine:
             self._client = client
             self._default_model = default_model
             self._default_kwargs = default_kwargs
+            self._current_agent: Optional[Any] = None
             self._default_tool_selection_config = (
                 tool_selection_config or ToolSelectionConfig()
             )
@@ -620,7 +621,6 @@ class StepExecutionEngine:
     def execute_step(
         self,
         step: Step,
-        agent: Any,
         *args: Any,
         stream: Optional[bool] = None,
         **kwargs: Any,
@@ -632,7 +632,6 @@ class StepExecutionEngine:
 
         Args:
             step: The step to execute
-            agent: The agent instance
             *args: Additional positional arguments for the step
             stream: Optional bool to override step's stream configuration
             **kwargs: Additional keyword arguments for the step
@@ -676,6 +675,9 @@ class StepExecutionEngine:
             - Updates agent context with results
             - Supports retry logic for failed steps
         """
+        if self._current_agent is None:
+            raise StepError("No agent context available for step execution")
+
         logger.info(f"Executing step '{step.name}'")
         logger.debug(
             f"Step configuration: use_tools={step.use_tools}, "
@@ -693,7 +695,7 @@ class StepExecutionEngine:
             if step.send_to_llm:
                 try:
                     result = self._handle_llm_step(
-                        step, agent, stream, args, kwargs
+                        step, self._current_agent, stream, args, kwargs
                     )
                 except (ClientAIError, StepError, ToolError):
                     raise
@@ -704,7 +706,7 @@ class StepExecutionEngine:
             else:
                 try:
                     result = self._handle_non_llm_step(
-                        step, agent, args, kwargs
+                        step, self._current_agent, args, kwargs
                     )
                 except (ValueError, TimeoutError):
                     raise
@@ -713,7 +715,7 @@ class StepExecutionEngine:
                         f"Non-LLM step execution failed: {str(e)}"
                     ) from e
 
-            self._update_context(step, agent, result)
+            self._update_context(step, self._current_agent, result)
             return result
 
         except (ClientAIError, StepError, ToolError, ValueError, TimeoutError):
@@ -835,7 +837,7 @@ class StepExecutionEngine:
         try:
             if result is not None and not isinstance(result, Iterator):
                 agent.context.set_step_result(step.name, result)
-                
+
                 if step.config.pass_result:
                     agent.context.current_input = result
 
