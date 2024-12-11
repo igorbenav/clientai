@@ -100,6 +100,7 @@ class Agent:
         tool_confidence: Optional[float] = None,
         tool_model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
         max_tools_per_step: Optional[int] = None,
+        max_history_size: Optional[int] = None,
         **default_model_kwargs: Any,
     ) -> None:
         """Initialize an Agent instance with specified configurations.
@@ -115,6 +116,8 @@ class Agent:
             tool_confidence: Confidence threshold for tool selection (0.0-1.0)
             tool_model: Model to use for tool selection decisions
             max_tools_per_step: Maximum tools allowed per step
+            max_history_size: Maximum number of previous interactions to
+                              maintain in context history (defaults to 10)
             **default_model_kwargs: Additional kwargs for default model
 
         Raises:
@@ -191,7 +194,9 @@ class Agent:
                 else self._default_model
             )
 
-            self.context = AgentContext()
+            self.context = AgentContext(
+                max_history_size=max_history_size if max_history_size is not None else 10
+            )
             self.tool_registry = ToolRegistry()
             self.execution_engine = StepExecutionEngine(
                 client=self._client,
@@ -495,7 +500,8 @@ class Agent:
             - Tool selection occurs automatically if enabled
         """
         try:
-            self.context.current_input = input_data
+            self.context.set_input(input_data)
+            
             try:
                 result = self.workflow_manager.execute(
                     self,
@@ -644,17 +650,14 @@ class Agent:
             ```
         """
         try:
-            # Convert single scope to list
             if isinstance(scopes, str):
                 scopes = [scopes]
 
-            # Validate and convert scopes
             try:
                 tool_scopes = frozenset(ToolScope.from_str(s) for s in scopes)
             except ValueError as e:
                 raise ValueError(f"Invalid tool scope: {str(e)}")
 
-            # Create or validate tool instance
             if isinstance(tool, Tool):
                 tool_instance = tool
             else:
@@ -667,7 +670,6 @@ class Agent:
                 except ValueError as e:
                     raise ValueError(f"Invalid tool function: {str(e)}")
 
-            # Create and register tool configuration
             tool_config = ToolConfig(
                 tool=tool_instance,
                 scopes=tool_scopes,

@@ -69,6 +69,34 @@ class StepFunction:
         """
         return self.func(*args, **kwargs)
 
+    def __get__(
+        self, instance: Optional[object], owner: Optional[type]
+    ) -> Union["StepFunction", Callable[..., str]]:
+        """
+        Support instance method binding via the descriptor protocol.
+
+        Implementing __get__ transforms the wrapped function into a bound
+        method when accessed through an instance. This ensures that the
+        'self' argument is correctly provided to the function during calls.
+
+        Args:
+            instance: The instance of the class where the method
+                      is being accessed. If accessed directly from
+                      the class, this will be None.
+            owner: The class on which the descriptor is defined.
+
+        Returns:
+            Union[StepFunction, Callable[..., str]]:
+                - If accessed via the class (instance is None),
+                  returns the StepFunction itself.
+                - If accessed via an instance, returns a callable that,
+                  when invoked, automatically prepends the instance as
+                  the first argument to the wrapped function.
+        """
+        if instance is None:
+            return self
+        return lambda *args, **kwargs: self.func(instance, *args, **kwargs)
+
 
 class BoundRunFunction:
     """Run function bound to a specific agent instance.
@@ -120,7 +148,7 @@ class BoundRunFunction:
         Returns:
             Any: The result of executing the bound function.
         """
-        return self.func(*args, **kwargs)
+        return self.func(self.instance, *args, **kwargs)
 
 
 class RunFunction:

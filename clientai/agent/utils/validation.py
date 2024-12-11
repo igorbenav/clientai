@@ -68,11 +68,5 @@ def validate_callable(func: Callable) -> None:
         validate_callable(invalid_func)  # Raises ValueError
         ```
     """
-    try:
-        annotations = func.__annotations__
-        if "return" not in annotations:
-            raise ValueError(
-                f"Function {func.__name__} missing return type annotation"
-            )
-    except AttributeError:
-        raise ValueError(f"Function {func.__name__} has no type annotations")
+    if not callable(func):
+        raise ValueError(f"Object {func} is not callable")

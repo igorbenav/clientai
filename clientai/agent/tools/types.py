@@ -165,7 +165,11 @@ class ToolSignature:
             print(sig.name)  # Output: "custom_name"
             ```
         """
-        hints = get_type_hints(func)
+        try:
+            hints = get_type_hints(func)
+        except Exception:
+            hints = {}
+
         sig = signature(func)
 
         parameters: List[Tuple[str, ParameterInfo]] = []
@@ -203,7 +207,9 @@ class ToolSignature:
 
         params = []
         for name, info in self._parameters:
-            if (
+            if info.type_ == Any:
+                type_str = "Any"
+            elif (
                 hasattr(info.type_, "__origin__")
                 and info.type_.__origin__ is Union
             ):
@@ -234,11 +240,14 @@ class ToolSignature:
                 )
                 params.append(f"{name}: {type_str} = {default_str}")
 
-        return_str = (
-            self._return_type.__name__
-            if hasattr(self._return_type, "__name__")
-            else str(self._return_type).replace("typing.", "")
-        )
+        if self._return_type == Any:
+            return_str = "Any"
+        else:
+            return_str = (
+                self._return_type.__name__
+                if hasattr(self._return_type, "__name__")
+                else str(self._return_type).replace("typing.", "")
+            )
 
         self._str_repr = f"{self._name}({', '.join(params)}) -> {return_str}"
         return self._str_repr

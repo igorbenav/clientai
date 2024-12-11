@@ -834,9 +834,11 @@ class StepExecutionEngine:
         """
         try:
             if result is not None and not isinstance(result, Iterator):
-                agent.context.last_results[step.name] = result
+                agent.context.set_step_result(step.name, result)
+                
                 if step.config.pass_result:
                     agent.context.current_input = result
+
         except Exception as e:
             logger.error(f"Error updating context: {e}")
             raise StepError(f"Failed to update context: {str(e)}") from e

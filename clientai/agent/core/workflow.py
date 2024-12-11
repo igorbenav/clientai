@@ -222,13 +222,13 @@ class WorkflowManager:
                 f"Failed to register class steps: {str(e)}"
             ) from e
 
-    def _execute_custom_run(self, agent: Any, input_data: Any) -> Any:
+    def _execute_custom_run(self, input_data: Any) -> Any:
         """Execute the custom run method if defined."""
         try:
             logger.info("Using custom run method")
             if self._custom_run is None:
                 raise WorkflowError("Custom run method is None")
-            return self._custom_run(agent, input_data)
+            return self._custom_run(input_data)
         except Exception as e:
             raise WorkflowError(f"Custom run method failed: {str(e)}")
 
@@ -313,12 +313,23 @@ class WorkflowManager:
             StepError: If result gathering fails
         """
         try:
-            return [
-                agent.context.last_results[s.name]
-                for s in reversed(list(self._steps.values()))
-                if s.name in agent.context.last_results
-            ][: param_count - 1]
+            results = []
+            
+            step_results = [
+                agent.context.last_results[step.name]
+                for step in self._steps.values()
+                if step.name in agent.context.last_results
+            ][:param_count-1]
+            
+            if len(step_results) < param_count:
+                results = step_results + [agent.context.original_input]
+            else:
+                results = step_results
+
+            return results
+
         except Exception as e:
+            logger.error(f"Failed to gather previous results: {e}")
             raise StepError(f"Failed to gather previous results: {str(e)}")
 
     def _execute_step(
@@ -350,16 +361,14 @@ class WorkflowManager:
             if param_count == 0:
                 return engine.execute_step(step, agent, stream=current_stream)
             elif param_count == 1:
+                input_data = agent.context.original_input if len(agent.context.last_results) == 0 else last_result
                 return engine.execute_step(
-                    step, agent, last_result, stream=current_stream
+                    step, agent, input_data, stream=current_stream
                 )
             else:
-                previous_results = self._get_previous_results(
-                    agent, param_count
-                )
-                args = [last_result] + previous_results
+                previous_results = self._get_previous_results(agent, param_count)
                 return engine.execute_step(
-                    step, agent, *args, stream=current_stream
+                    step, agent, *previous_results, stream=current_stream
                 )
         except Exception as e:
             raise StepError(
@@ -382,6 +391,7 @@ class WorkflowManager:
         if result is not None:
             agent.context.last_results[step.name] = result
             if step.config.pass_result:
+                agent.context.current_input = result
                 return result
         return None
 
@@ -400,10 +410,10 @@ class WorkflowManager:
 
         Args:
             agent: The agent executing the workflow
-            input_data: The initial input data to process
+            input_data: The initial input data
             engine: The execution engine for processing steps
             stream_override: Optional bool to override steps'
-                             stream configuration
+                            stream configuration
 
         Returns:
             Any: The final result of workflow execution
@@ -412,41 +422,17 @@ class WorkflowManager:
             StepError: If a required step fails
             WorkflowError: If workflow execution fails
             ValueError: If step parameter validation fails
-
-        Example:
-            Execute a workflow:
-            ```python
-            workflow = WorkflowManager()
-            engine = StepExecutionEngine(...)
-
-            # Basic execution
-            result = workflow.execute(agent, "input data", engine)
-
-            # With streaming override
-            result = workflow.execute(
-                agent,
-                "input data",
-                engine,
-                stream_override=True
-            )
-            ```
-
-        Notes:
-            - Steps are executed in registration order
-            - Results are passed between steps based on parameter binding
-            - Failed non-required steps are skipped
-            - stream_override affects all steps when provided
         """
         try:
-            logger.info(
-                f"Starting workflow execution with {len(self._steps)} steps"
-            )
+            logger.info(f"Starting workflow execution with {len(self._steps)} steps")
             logger.debug(f"Input data: {input_data}")
 
             self._initialize_execution(agent, input_data)
+            agent.context.set_input(input_data)
+            agent.context.increment_iteration()
 
             if self._custom_run:
-                return self._execute_custom_run(agent, input_data)
+                return self._execute_custom_run(input_data)
 
             last_result = input_data
 
@@ -500,14 +486,6 @@ class WorkflowManager:
 
             logger.info("Workflow execution completed")
             return last_result
-
-        except (StepError, WorkflowError, ValueError):
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected workflow execution error: {e}")
-            raise WorkflowError(
-                f"Unexpected workflow execution error: {str(e)}"
-            ) from e
 
         except (StepError, WorkflowError, ValueError):
             raise

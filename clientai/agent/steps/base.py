@@ -53,7 +53,11 @@ class FunctionMetadata:
             print(metadata.arg_types)  # Output: {"arg1": int, "arg2": str}
             ```
         """
-        hints = get_type_hints(func)
+        try:
+            hints = get_type_hints(func)
+        except Exception:
+            hints = {}
+        
         return_type = hints.pop("return", Any)
         return cls(
             name=func.__name__,
@@ -136,8 +140,7 @@ class Step:
             func: The function to validate.
 
         Raises:
-            ValueError: If the function is not callable, lacks a return type
-                        annotation, or does not return a string.
+            ValueError: If the function is not callable.
 
         Example:
             Validate a function:
@@ -150,18 +153,6 @@ class Step:
         """
         if not callable(func):
             raise ValueError("func must be a callable")
-
-        hints = get_type_hints(func)
-        if "return" not in hints:
-            raise ValueError(
-                f"Function {func.__name__} must have a return type annotation"
-            )
-
-        return_type = hints["return"]
-        if return_type is not str:
-            raise ValueError(
-                f"Function {func.__name__} must return str (got {return_type})"
-            )
 
     @staticmethod
     def _validate_name(name: str) -> None:
