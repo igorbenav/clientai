@@ -56,46 +56,87 @@ class StepFunction:
         self._step_info: Optional[Step] = None
         wraps(func)(self)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> str:
+    def __call__(
+        self, instance: Optional[Any], *args: Any, **kwargs: Any
+    ) -> Any:
         """
-        Execute the wrapped step function.
+        Execute the step function with instance binding.
 
         Args:
-            *args: Positional arguments to pass to the function.
-            **kwargs: Keyword arguments to pass to the function.
+            instance: The agent instance the step is being called from.
+                      If None, executes the raw function without engine
+                      involvement.
+            *args: Positional arguments to pass to the step
+            **kwargs: Keyword arguments to pass to the step
 
         Returns:
-            str: The result of the step function execution.
+            Any: Either:
+                - Result from execution_engine if called from instance
+                  with step info
+                - Raw function result if called without instance or step info
+
+        Example:
+            When called from an agent instance:
+            ```python
+            result = step(
+                agent_instance,
+                "input data"
+            )  # Uses execution engine
+            ```
+
+            When called directly:
+            ```python
+            result = step(
+                None,
+                "input data"
+            )  # Calls raw function
+            ```
         """
-        return self.func(*args, **kwargs)
+        if instance is None:
+            return self.func(*args, **kwargs)
+
+        if self._step_info:
+            return instance.execution_engine.execute_step(
+                self._step_info, *args, **kwargs
+            )
+        return self.func(instance, *args, **kwargs)
 
     def __get__(
         self, instance: Optional[object], owner: Optional[type]
     ) -> Union["StepFunction", Callable[..., str]]:
         """
-        Support instance method binding via the descriptor protocol.
+        Make steps behave like instance methods via the descriptor protocol.
 
-        Implementing __get__ transforms the wrapped function into a bound
-        method when accessed through an instance. This ensures that the
-        'self' argument is correctly provided to the function during calls.
+        When a step is accessed on an agent instance, returns
+        a bound method that automatically passes the instance through
+        __call__ for engine execution. When accessed on the class,
+        returns the StepFunction itself.
 
         Args:
-            instance: The instance of the class where the method
-                      is being accessed. If accessed directly from
-                      the class, this will be None.
-            owner: The class on which the descriptor is defined.
+            instance: The agent instance accessing the step.
+                      None if accessed on class.
+            owner: The agent class the step is defined on.
 
         Returns:
             Union[StepFunction, Callable[..., str]]:
-                - If accessed via the class (instance is None),
-                  returns the StepFunction itself.
-                - If accessed via an instance, returns a callable that,
-                  when invoked, automatically prepends the instance as
-                  the first argument to the wrapped function.
+                - If accessed on class (instance=None), returns
+                  the StepFunction itself
+                - If accessed on instance, returns a callable
+                  that passes the instance through __call__
+                  for engine-managed execution
+
+        Example:
+            ```python
+            # On instance - returns bound method that uses engine
+            agent.analyze_data("input")
+
+            # On class - returns raw StepFunction
+            AgentClass.analyze_data
+            ```
         """
         if instance is None:
             return self
-        return lambda *args, **kwargs: self.func(instance, *args, **kwargs)
+        return lambda *args, **kwargs: self(instance, *args, **kwargs)
 
 
 class BoundRunFunction:
