@@ -679,6 +679,9 @@ class StepExecutionEngine:
             raise StepError("No agent context available for step execution")
 
         logger.info(f"Executing step '{step.name}'")
+        if stream is None:
+            stream = getattr(step, "stream", False)
+
         logger.debug(
             f"Step configuration: use_tools={step.use_tools}, "
             f"send_to_llm={step.send_to_llm}, "
