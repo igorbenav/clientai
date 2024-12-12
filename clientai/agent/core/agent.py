@@ -111,7 +111,10 @@ class Agent:
                 - A string (model name)
                 - A dict with model parameters
                 - A ModelConfig instance
-            tools: Optional list of pre-configured tools to register
+            tools: Optional list of tools to register. Can be:
+                - Functions (with proper type hints and docstrings)
+                - Tool instances
+                - ToolConfig instances
             tool_selection_config: Complete tool selection configuration
             tool_confidence: Confidence threshold for tool selection (0.0-1.0)
             tool_model: Model to use for tool selection decisions
@@ -210,7 +213,20 @@ class Agent:
             self.workflow_manager = WorkflowManager()
 
             if tools:
-                for tool_config in tools:
+                for tool_item in tools:
+                    if isinstance(tool_item, ToolConfig):
+                        tool_config = tool_item
+                    elif isinstance(tool_item, Tool):
+                        tool_config = ToolConfig(tool=tool_item)
+                    else:
+                        try:
+                            tool_instance = Tool.create(func=tool_item)
+                            tool_config = ToolConfig(tool=tool_instance)
+                        except Exception as e:
+                            raise ValueError(
+                                f"Failed to create tool from "
+                                f"function: {str(e)}"
+                            )
                     self.tool_registry.register(tool_config)
 
             self._register_class_tools()
