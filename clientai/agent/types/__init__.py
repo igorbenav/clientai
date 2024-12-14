@@ -32,8 +32,7 @@ class ToolProtocol(Protocol):
     name: str
     description: str
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
 __all__ = [
