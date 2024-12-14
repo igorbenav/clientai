@@ -317,4 +317,11 @@ class ErrorAwareAgent(Agent):
    self.context.set_state("key3", "value3")
    ```
 
-Remember that context management is crucial for building reliable and maintainable agents. Follow these practices to ensure your agents handle state and data effectively while remaining performant and maintainable.
+Now that you've mastered context management, check out our [Examples](../../examples/overview.md) section to see these concepts in action:
+
+- How to build a simple Q&A bot that introduces core agent features
+- Techniques for creating a task planner using `create_agent` and basic tools
+- Methods for implementing a writing assistant with multi-step workflows
+- Patterns for developing a sophisticated code analyzer with custom workflows
+
+Each example demonstrates different aspects of ClientAI, from basic agent creation to complex systems combining steps, tools, and context management. Start with the [Simple Q&A Bot](../../examples/agent/simple_qa.md) to see ClientAI's fundamentals in practice, or jump straight to the [Code Analyzer](../../examples/agent/code_analyzer.md) for a more advanced implementation.

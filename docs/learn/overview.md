@@ -22,6 +22,7 @@ This guide will take you through:
 ## Prerequisites
 
 To get the most out of this guide, you should have:
+
 - Basic Python programming knowledge
 - ClientAI installed in your environment
 - Basic understanding of machine learning concepts (helpful but not required)

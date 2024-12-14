@@ -498,4 +498,9 @@ def process_data(data: List[float]) -> float:
         raise
 ```
 
-For context handling, see next: [Context](../agent/context.md).
+Now that you understand tools, explore the [Context](context.md) section to discover:
+
+- How to maintain state across your agent's workflow
+- Techniques for sharing data between steps
+- Methods for tracking and accessing results
+- Patterns for efficient context management

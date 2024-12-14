@@ -368,4 +368,9 @@ Key points to remember:
 
 Remember that steps are building blocks - design them to be modular, focused, and reusable when possible. Clear documentation and appropriate error handling will make your workflows more maintainable and reliable.
 
-For detailed information about tool usage, see next [Tools](tools.md).
+Now that you've mastered workflow steps, continue to the [Tools](tools.md) section to learn:
+
+- How to extend your agent's capabilities with custom tools
+- Techniques for automatic tool selection and execution
+- Best practices for tool design and implementation
+- Advanced tool configuration and error handling

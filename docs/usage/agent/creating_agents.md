@@ -236,4 +236,9 @@ Choose the right agent based on your task:
   logging.basicConfig(level=logging.DEBUG)
   ```
 
-For detailed information about workflow steps, see next: [Workflow Steps](workflow_steps.md).
+Now that you've learned how to create and configure agents, head to the [Workflow Steps](workflow_steps.md) section to discover:
+
+- How to build complex reasoning chains using specialized steps
+- The four types of steps and when to use each one
+- Techniques for controlling data flow between steps
+- Advanced step configuration for robust workflows
