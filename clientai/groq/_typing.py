@@ -88,8 +88,7 @@ class GroqChatCompletionProtocol(Protocol):
         model: str,
         stream: bool = False,
         **kwargs: Any,
-    ) -> Union[GroqResponse, Iterator[GroqStreamResponse]]:
-        ...
+    ) -> Union[GroqResponse, Iterator[GroqStreamResponse]]: ...
 
 
 class GroqChatProtocol(Protocol):

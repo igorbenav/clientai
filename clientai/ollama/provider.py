@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 from ..ai_provider import AIProvider
 from ..exceptions import (
@@ -46,7 +46,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Ollama package is not installed.
 
-    Examples:
+    Example:
         Initialize the Ollama provider:
         ```python
         provider = Provider(host="http://localhost:11434")
@@ -62,6 +62,66 @@ class Provider(AIProvider):
         self.client: OllamaClientProtocol = cast(
             OllamaClientProtocol, Client(host=host) if host else ollama
         )
+
+    def _prepare_options(
+        self,
+        json_output: bool = False,
+        system_prompt: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """
+        Prepare the options dictionary for Ollama API calls.
+
+        Args:
+            json_output: If True, set format to "json"
+            system_prompt: Optional system prompt
+            temperature: Optional temperature value
+            top_p: Optional top-p value
+            **kwargs: Additional options to include
+
+        Returns:
+            Dict[str, Any]: The prepared options dictionary
+        """
+        options: Dict[str, Any] = {}
+
+        if json_output:
+            options["format"] = "json"
+        if system_prompt:
+            options["system"] = system_prompt
+        if temperature is not None:
+            options["temperature"] = temperature
+        if top_p is not None:
+            options["top_p"] = top_p
+
+        options.update(kwargs)
+
+        return options
+
+    def _validate_temperature(self, temperature: Optional[float]) -> None:
+        """[previous implementation remains the same]"""
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Temperature must be a number between 0 and 2"
+                )
+            if temperature < 0 or temperature > 2:
+                raise InvalidRequestError(
+                    f"Temperature must be between 0 and 2, got {temperature}"
+                )
+
+    def _validate_top_p(self, top_p: Optional[float]) -> None:
+        """[previous implementation remains the same]"""
+        if top_p is not None:
+            if not isinstance(top_p, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Top-p must be a number between 0 and 1"
+                )
+            if top_p < 0 or top_p > 1:
+                raise InvalidRequestError(
+                    f"Top-p must be between 0 and 1, got {top_p}"
+                )
 
     def _stream_generate_response(
         self,
@@ -146,9 +206,12 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> OllamaGenericResponse:
         """
@@ -157,19 +220,25 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Ollama model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           Uses Ollama's native system parameter.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
             json_output: If True, set format="json" to get JSON-formatted
                 responses using Ollama's native JSON support. The prompt
                 should specify the desired JSON structure.
+            temperature: Optional temperature value for generation (0.0-2.0).
+                Controls randomness in the output.
+            top_p: Optional top-p value for nucleus sampling (0.0-1.0).
+                Controls diversity of the output.
             **kwargs: Additional keyword arguments to pass to the Ollama API.
 
         Returns:
             OllamaGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -179,24 +248,15 @@ class Provider(AIProvider):
             print(response)
             ```
 
-            Generate text (full response):
+            Generate creative text with high temperature:
             ```python
             response = provider.generate_text(
-                "Explain machine learning",
+                "Write a story about a space adventure",
                 model="llama2",
-                return_full_response=True
+                temperature=0.8,
+                top_p=0.9
             )
-            print(response["response"])
-            ```
-
-            Generate text (streaming):
-            ```python
-            for chunk in provider.generate_text(
-                "Explain machine learning",
-                model="llama2",
-                stream=True
-            ):
-                print(chunk, end="", flush=True)
+            print(response)
             ```
 
             Generate JSON output:
@@ -215,14 +275,22 @@ class Provider(AIProvider):
             ```
         """
         try:
-            if json_output:
-                kwargs["format"] = "json"
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            options = self._prepare_options(
+                json_output=json_output,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                top_p=top_p,
+                **kwargs,
+            )
 
             response = self.client.generate(
                 model=model,
                 prompt=prompt,
                 stream=stream,
-                **kwargs,
+                options=options,
             )
 
             if stream:
@@ -247,9 +315,12 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> OllamaGenericResponse:
         """
@@ -259,20 +330,27 @@ class Provider(AIProvider):
             messages: A list of message dictionaries, each containing
                       'role' and 'content'.
             model: The name or identifier of the Ollama model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be inserted at the start of the
+                           conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
             json_output: If True, set format="json" to get JSON-formatted
                 responses using Ollama's native JSON support. The messages
                 should specify the desired JSON structure.
+            temperature: Optional temperature value for generation (0.0-2.0).
+                Controls randomness in the output.
+            top_p: Optional top-p value for nucleus sampling (0.0-1.0).
+                Controls diversity of the output.
             **kwargs: Additional keyword arguments to pass to the Ollama API.
 
         Returns:
             OllamaGenericResponse: The chat response, full response object,
             or an iterator for streaming responses.
 
-        Examples:
-            Chat (message content only):
+        Example:
+            Chat with default settings:
             ```python
             messages = [
                 {"role": "user", "content": "What is machine learning?"},
@@ -286,14 +364,15 @@ class Provider(AIProvider):
             print(response)
             ```
 
-            Chat (full response):
+            Creative chat with high temperature:
             ```python
             response = provider.chat(
                 messages,
                 model="llama2",
-                return_full_response=True
+                temperature=0.8,
+                top_p=0.9
             )
-            print(response["message"]["content"])
+            print(response)
             ```
 
             Chat with JSON output:
@@ -315,14 +394,27 @@ class Provider(AIProvider):
             ```
         """
         try:
-            if json_output:
-                kwargs["format"] = "json"
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
+            options = self._prepare_options(
+                json_output=json_output,
+                temperature=temperature,
+                top_p=top_p,
+                **kwargs,
+            )
 
             response = self.client.chat(
                 model=model,
-                messages=messages,
+                messages=chat_messages,
                 stream=stream,
-                **kwargs,
+                options=options,
             )
 
             if stream:

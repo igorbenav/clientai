@@ -5,14 +5,34 @@ description = "Simple unified API for multiple AI services."
 authors = ["Igor Benav <igor.magalhaes.r@gmail.com>"]
 readme = "README.md"
 
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
+
+keywords = ["ai", "agents", "llm", "nlp", "language-model", "ai-agents"]
+
 [tool.poetry.dependencies]
 python = "^3.9"
-pydantic = "^2.9.2"
 openai = {version = "^1.50.2", optional = true}
 replicate = {version = "^0.34.1", optional = true}
 ollama = {version = "^0.3.3", optional = true}
 groq = {version = "^0.11.0", optional = true}
-redis = {version = "^5.0.3", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.8"
@@ -22,7 +42,13 @@ openai = "^1.50.2"
 replicate = "^0.34.1"
 ollama = "^0.3.3"
 groq = "^0.11.0"
-redis = "^5.0.3"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+python-dotenv = "^1.0.1"
+mkdocs-meta-descriptions-plugin = "^3.0.0"
+mkdocs-material = "^9.5.48"
+mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 
 [tool.poetry.extras]
 minimal = []
@@ -30,8 +56,7 @@ openai = ["openai"]
 replicate = ["replicate"]
 ollama = ["ollama"]
 groq = ["groq"]
-redis = ["redis"]
-full = ["openai", "replicate", "ollama", "groq", "redis"]
+full = ["openai", "replicate", "ollama", "groq"]
 
 [build-system]
 requires = ["poetry-core"]

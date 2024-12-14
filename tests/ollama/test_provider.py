@@ -40,7 +40,10 @@ def test_generate_text_full_response(reset_mocks, provider):
 
     assert result == mock_response
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", prompt="Test prompt", stream=False
+        model="test-model",
+        prompt="Test prompt",
+        stream=False,
+        options={},
     )
 
 
@@ -67,7 +70,10 @@ def test_generate_text_content_only(reset_mocks, provider):
 
     assert result == "This is a test response"
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", prompt="Test prompt", stream=False
+        model="test-model",
+        prompt="Test prompt",
+        stream=False,
+        options={},
     )
 
 
@@ -84,7 +90,10 @@ def test_generate_text_stream(reset_mocks, provider):
 
     assert list(result) == ["This ", "is ", "a ", "test"]
     reset_mocks.generate.assert_called_once_with(
-        model="test-model", prompt="Test prompt", stream=True
+        model="test-model",
+        prompt="Test prompt",
+        stream=True,
+        options={},
     )
 
 
@@ -108,7 +117,10 @@ def test_chat_full_response(reset_mocks, provider):
 
     assert result == mock_response
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", messages=messages, stream=False
+        model="test-model",
+        messages=messages,
+        stream=False,
+        options={},
     )
 
 
@@ -132,7 +144,10 @@ def test_chat_content_only(reset_mocks, provider):
 
     assert result == "This is a test response"
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", messages=messages, stream=False
+        model="test-model",
+        messages=messages,
+        stream=False,
+        options={},
     )
 
 
@@ -150,5 +165,91 @@ def test_chat_stream(reset_mocks, provider):
 
     assert list(result) == ["This ", "is ", "a ", "test"]
     reset_mocks.chat.assert_called_once_with(
-        model="test-model", messages=messages, stream=True
+        model="test-model",
+        messages=messages,
+        stream=True,
+        options={},
+    )
+
+
+def test_generate_text_with_options(reset_mocks, provider):
+    mock_response = OllamaResponse(
+        model="test-model",
+        created_at="2023-01-01T00:00:00Z",
+        response="This is a test response",
+        done=True,
+        context=None,
+        total_duration=100,
+        load_duration=10,
+        prompt_eval_count=5,
+        prompt_eval_duration=20,
+        eval_count=15,
+        eval_duration=70,
+        done_reason="completed",
+    )
+    reset_mocks.generate.return_value = mock_response
+
+    result = provider.generate_text(
+        "Test prompt",
+        "test-model",
+        system_prompt="System prompt",
+        temperature=0.7,
+        top_p=0.9,
+        json_output=True,
+    )
+
+    assert result == "This is a test response"
+    reset_mocks.generate.assert_called_once_with(
+        model="test-model",
+        prompt="Test prompt",
+        stream=False,
+        options={
+            "system": "System prompt",
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "format": "json",
+        },
+    )
+
+
+def test_chat_with_options(reset_mocks, provider):
+    mock_response = OllamaChatResponse(
+        model="test-model",
+        created_at="2023-01-01T00:00:00Z",
+        message={"role": "assistant", "content": "This is a test response"},
+        done=True,
+        total_duration=100,
+        load_duration=10,
+        prompt_eval_count=5,
+        prompt_eval_duration=20,
+        eval_count=15,
+        eval_duration=70,
+    )
+    reset_mocks.chat.return_value = mock_response
+
+    messages = [{"role": "user", "content": "Test message"}]
+    result = provider.chat(
+        messages,
+        "test-model",
+        system_prompt="System prompt",
+        temperature=0.7,
+        top_p=0.9,
+        json_output=True,
+    )
+
+    expected_messages = [
+        {"role": "system", "content": "System prompt"},
+        {"role": "user", "content": "Test message"},
+    ]
+
+    assert result == "This is a test response"
+    reset_mocks.chat.assert_called_once_with(
+        model="test-model",
+        messages=expected_messages,
+        stream=False,
+        options={
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "format": "json",
+        },
     )

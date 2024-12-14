@@ -11,7 +11,7 @@
   </a>
 </p>
 <p align="center" markdown=1>
-  <i>A unified client for seamless interaction with multiple AI providers.</i>
+  <i>A unified client for AI providers with built-in agent support.</i>
 </p>
 <p align="center" markdown=1>
 <a href="https://github.com/igorbenav/clientai/actions/workflows/tests.yml">
@@ -26,23 +26,52 @@
 </p>
 <hr>
 <p align="justify">
-<b>ClientAI</b> is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, Groq and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
+<b>ClientAI</b> is a Python package that provides a unified framework for building AI applications, from direct provider interactions to transparent LLM-powered agents, with seamless support for OpenAI, Replicate, Groq and Ollama.
 </p>
 <hr>
 
 ## Features
 
-- **Unified Interface**: Consistent methods for text generation and chat across multiple AI providers.
-- **Multiple Providers**: Support for OpenAI, Replicate, Groq and Ollama, with easy extensibility for future providers.
-- **Streaming Support**: Efficient streaming of responses for real-time applications.
-- **Flexible Configuration**: Easy setup with provider-specific configurations.
-- **Customizable**: Extensible design for adding new providers or customizing existing ones.
-- **Type Hinting**: Comprehensive type annotations for better development experience.
-- **Provider Isolation**: Optional installation of provider-specific dependencies to keep your environment lean.
+- **Unified Interface**: Consistent methods across multiple AI providers (OpenAI, Replicate, Groq, Ollama).
+- **Streaming Support**: Real-time response streaming and chat capabilities.
+- **Intelligent Agents**: Framework for building transparent, multi-step LLM workflows with tool integration.
+- **Modular Design**: Use components independently, from simple provider wrappers to complete agent systems.
+- **Type Safety**: Comprehensive type hints for better development experience.
 
-## Minimal Example
+## Installing
 
-Here's a quick example to get you started with ClientAI:
+To install ClientAI with all providers, run:
+
+```sh
+pip install clientai[all]
+```
+
+Or, if you prefer to install only specific providers:
+
+```sh
+pip install clientai[openai]  # For OpenAI support
+pip install clientai[replicate]  # For Replicate support
+pip install clientai[ollama]  # For Ollama support
+pip install clientai[groq]  # For Groq support
+```
+
+## Design Philosophy
+
+The ClientAI Agent module is built on four core principles:
+
+1. **Prompt-Centric Design**: Prompts are the key interface between you and the LLM. They should be explicit, debuggable, and easy to understand. No hidden or obscured prompts - what you see is what is sent to the model.
+
+2. **Customization First**: Every component is designed to be extended or overridden. Create custom steps, tool selectors, or entirely new workflow patterns. The architecture embraces your modifications.
+
+3. **Zero Lock-In**: Start with high-level components and drop down to lower levels as needed. You can:
+    - Extend `Agent` for custom behavior
+    - Use individual components directly
+    - Gradually replace parts with your own implementation
+    - Or gradually migrate away entirely - no lock-in
+
+## Examples
+
+### 1. Basic Client Usage
 
 ```python
 from clientai import ClientAI
@@ -73,6 +102,87 @@ response = client.chat(
 print(response)
 ```
 
+### 2. Quick-Start Agent
+
+The fastest way to create a simple agent:
+
+```python
+from clientai import client
+from clientai.agent import create_agent, tool
+
+# creating a tool with an explicit description
+@tool(name="add", description="Add two numbers together")
+def add(x: int, y: int) -> int:
+    return x + y
+
+# creating a tool that uses the docstring as description
+@tool(name="multiply")
+def multiply(x: int, y: int) -> int:
+    """Multiply two numbers and return their product."""
+    return x * y
+
+calculator = create_agent(
+    client=client("groq", api_key="your-groq-key"),
+    role="calculator", 
+    system_prompt="You are a helpful calculator assistant.",
+    model="llama-3.2-3b-preview",
+    tools=[add, multiply]
+)
+
+result = calculator.run("What is 5 plus 3, then multiplied by 2?")
+print(result)
+```
+
+### 3. Custom Agent with Workflow
+
+For more control, create a custom agent with defined steps:
+
+```python
+from clientai import Agent, think, act, Tool
+
+# Create a standalone tool
+@tool(name="calculator")
+def calculate_average(numbers: list[float]) -> float:
+    """Calculate the arithmetic mean of a list of numbers."""
+    return sum(numbers) / len(numbers)
+
+class DataAnalyzer(Agent):
+    # add an analyze step
+    @think("analyze")
+    def analyze_data(self, input_data: str) -> str:
+        """Analyze sales data by calculating key metrics."""
+        return f"""
+            Please analyze these sales figures:
+        
+            {input_data}
+
+            Calculate the average using the calculator tool
+            and identify the trend.
+            """
+
+    # and also an act step
+    @act
+    def summarize(self, analysis: str) -> str:
+        """Create a brief summary of the analysis."""
+        return """
+            Create a brief summary that includes:
+            1. The average sales figure
+            2. Whether sales are trending up or down
+            3. One key recommendation
+            """
+
+# Initialize with the tool
+analyzer = DataAnalyzer(
+    client=client("replicate", api_key="your-replicate-key"),
+    default_model="meta/meta-llama-3-70b-instruct",
+    tool_confidence=0.8,
+    tools=[calculate_average]
+)
+
+result = analyzer.run("Monthly sales: [1000, 1200, 950, 1100]")
+print(result)
+```
+
 ## Requirements
 
 Before installing ClientAI, ensure you have the following prerequisites:
@@ -80,34 +190,24 @@ Before installing ClientAI, ensure you have the following prerequisites:
 * **Python:** Version 3.9 or newer.
 * **Dependencies:** The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`, `groq`) are optional and can be installed separately.
 
-## Installing
-
-To install ClientAI with all providers, run:
-
-```sh
-pip install clientai[all]
-```
-
-Or, if you prefer to install only specific providers:
-
-```sh
-pip install clientai[openai]  # For OpenAI support
-pip install clientai[replicate]  # For Replicate support
-pip install clientai[ollama]  # For Ollama support
-pip install clientai[groq]  # For Groq support
-```
-
 ## Usage
 
-ClientAI offers a consistent way to interact with different AI providers:
+ClientAI offers three main ways to interact with AI providers:
 
-1. Initialize the client with your chosen provider and credentials.
-2. Use the `generate_text` method for text generation tasks.
-3. Use the `chat` method for conversational interactions.
+1. Text Generation: Use the `generate_text` method for text generation tasks.
+2. Chat: Use the `chat` method for conversational interactions.
+3. Agents: Create intelligent agents with automated tool selection and workflow management.
 
-Both methods support streaming responses and returning full response objects.
+All methods support streaming responses and returning full response objects.
 
-For more detailed usage examples and advanced features, please refer to the Usage section of this documentation.
+## Next Steps
+
+1. Check out the [Usage Guide](usage/overview.md) for detailed functionality and advanced features
+2. See the [API Reference](api/overview.md) for complete API documentation
+3. For agent development, see the [Agent Guide](usage/agent/creating_agents.md)
+4. Explore our [Examples](examples/overview.md) for practical applications and real-world usage patterns
+
+Remember to handle API keys securely and never expose them in your code or version control systems.
 
 ## License
 

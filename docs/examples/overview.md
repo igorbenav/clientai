@@ -1,64 +1,145 @@
 # Examples Overview
 
-Welcome to the Examples section of the ClientAI documentation. This section provides practical, real-world examples of how to use ClientAI in various applications. Whether you're a beginner looking to get started or an experienced developer seeking inspiration for more complex projects, these examples will demonstrate the versatility and power of ClientAI.
+Welcome to the Examples section of the ClientAI documentation. We provide both complete example applications and core usage patterns to help you get started.
 
-## Featured Examples
+## Example Applications
 
-Our examples cover a range of applications, from simple text generation to more complex AI-driven systems. Here's an overview of what you'll find in this section:
+### Client-Based Examples
+1. [**Simple Q&A Bot**](client/simple_qa.md): Basic question-answering bot showing provider initialization, prompt handling, and core text generation/chat methods.
 
-1. **AI Dungeon Master**: A text-based RPG that uses multiple AI providers to create an interactive storytelling experience.
+2. [**Multi-Provider Translator**](client/translator.md): Translation comparator demonstrating simultaneous usage of multiple providers, configurations, and response handling.
 
-    - [AI Dungeon Master Tutorial](ai_dungeon_master.md)
+3. [**AI Dungeon Master**](client/ai_dungeon_master.md): Text-based RPG orchestrating multiple providers for game state management and dynamic narrative generation.
 
-2. **Chatbot Assistant**: A simple chatbot that can answer questions and engage in conversation using ClientAI.
+### Agent-Based Examples
+1. [**Simple Q&A Bot**](agent/simple_qa.md): Q&A Bot implementation with Agent, introducing basic agent features.
 
-    - Soon
+2. [**Task Planner**](agent/task_planner.md): Basic agent that breaks down goals into steps, introducing create_agent and simple tool creation.
 
-3. **Sentiment Analyzer**: An application that analyzes the sentiment of given text using different AI models.
+3. [**Writing Assistant**](agent/writing_assistant.md): Multi-step writing improvement agent showcasing workflow steps with think/act/synthesize, decorator configurations, and tool integration.
 
-    - Soon
+4. [**Code Analyzer**](agent/code_analyzer.md): Code analysis assistant showcasing custom workflows.
 
-## Usage
+## Core Usage Patterns
 
-Each example is documented on its own page, where you'll find:
-
-- A detailed explanation of the example's purpose and functionality
-- Step-by-step instructions for implementing the example
-- Code snippets and full source code
-- Explanations of key ClientAI features used in the example
-- Tips for customizing and extending the example
-
-### Quick Start Example
-
-Here's a simple example to get you started with ClientAI:
+### Working with Providers
 
 ```python
 from clientai import ClientAI
 
-# Initialize the client
-client = ClientAI('openai', api_key="your-openai-api-key")
+# Initialize with your preferred provider
+client = ClientAI('openai', api_key="your-openai-key")
+# Or: ClientAI('groq', api_key="your-groq-key")
+# Or: ClientAI('replicate', api_key="your-replicate-key")
+# Or: ClientAI('ollama', host="your-ollama-host")
 
-# Generate a short story
-prompt = "Write a short story about a robot learning to paint."
-response = client.generate_text(prompt, model="gpt-3.5-turbo")
+# Basic text generation
+response = client.generate_text(
+    "Tell me a joke",
+    model="gpt-3.5-turbo",
+)
+print(response)
 
+# Chat functionality
+messages = [
+    {"role": "user", "content": "What is the capital of France?"},
+    {"role": "assistant", "content": "Paris."},
+    {"role": "user", "content": "What is its population?"}
+]
+
+response = client.chat(
+    messages,
+    model="gpt-3.5-turbo",
+)
 print(response)
 ```
 
-For more general usage instructions, please refer to our [Quickstart Guide](../quick-start.md).
+### Working with Agents
 
-## Customizing Examples
+#### Quick-Start Agent
+```python
+from clientai import client
+from clientai.agent import create_agent, tool
 
-Feel free to use these examples as starting points for your own projects. You can modify and extend them to suit your specific needs. If you create an interesting project using ClientAI, we'd love to hear about it!
+@tool(name="add", description="Add two numbers together")
+def add(x: int, y: int) -> int:
+    return x + y
+
+@tool(name="multiply")
+def multiply(x: int, y: int) -> int:
+    """Multiply two numbers and return their product."""
+    return x * y
+
+# Create a simple calculator agent
+calculator = create_agent(
+    client=client("groq", api_key="your-groq-key"),
+    role="calculator", 
+    system_prompt="You are a helpful calculator assistant.",
+    model="llama-3.2-3b-preview",
+    tools=[add, multiply]
+)
+
+result = calculator.run("What is 5 plus 3, then multiplied by 2?")
+print(result)
+```
+
+#### Custom Workflow Agent
+```python
+from clientai import Agent, think, act, tool
+
+@tool(name="calculator")
+def calculate_average(numbers: list[float]) -> float:
+    """Calculate the arithmetic mean of a list of numbers."""
+    return sum(numbers) / len(numbers)
+
+class DataAnalyzer(Agent):
+    @think("analyze")
+    def analyze_data(self, input_data: str) -> str:
+        """Analyze sales data by calculating key metrics."""
+        return f"""
+            Please analyze these sales figures:
+        
+            {input_data}
+
+            Calculate the average using the calculator tool
+            and identify the trend.
+            """
+
+    @act
+    def summarize(self, analysis: str) -> str:
+        """Create a brief summary of the analysis."""
+        return """
+            Create a brief summary that includes:
+            1. The average sales figure
+            2. Whether sales are trending up or down
+            3. One key recommendation
+            """
+
+# Initialize with the tool
+analyzer = DataAnalyzer(
+    client=client("replicate", api_key="your-replicate-key"),
+    default_model="meta/meta-llama-3-70b-instruct",
+    tool_confidence=0.8,
+    tools=[calculate_average]
+)
+
+result = analyzer.run("Monthly sales: [1000, 1200, 950, 1100]")
+print(result)
+```
+
+## Best Practices
+
+1. **Handle API Keys Securely**: Never hardcode API keys in your source code
+2. **Use Type Hints**: Take advantage of ClientAI's type system for better IDE support
+3. **Implement Error Handling**: Add appropriate try/catch blocks for API calls
+4. **Monitor Usage**: Keep track of API calls and token usage across providers
 
 ## Contributing
 
-We welcome contributions to our examples collection! If you've created an example that you think would be valuable to others, please consider submitting it. Check out our [Contributing Guidelines](../community/CONTRIBUTING.md) for more information on how to contribute.
+Have you built something interesting with ClientAI? We'd love to feature it! Check our [Contributing Guidelines](../community/CONTRIBUTING.md) for information on how to submit your examples.
 
-## Feedback
+## Next Steps
 
-Your feedback helps us improve our examples and documentation. If you have suggestions for new examples, improvements to existing ones, or any other feedback, please let us know through GitHub issues or our community channels.
-
----
-
-Explore each example to see ClientAI in action and learn how to implement AI-driven features in your own projects.
+- Explore the [Usage Guide](../usage/overview.md) for detailed documentation
+- Review the [API Reference](../api/overview.md) for complete API details
+- Join our community to share your experiences and get help

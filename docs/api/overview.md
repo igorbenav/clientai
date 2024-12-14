@@ -8,23 +8,23 @@ ClientAI's API is comprised of several key components, each serving a specific p
 
 1. **ClientAI Class**: This is the main class of our library. It provides a unified interface for interacting with different AI providers and is the primary entry point for using ClientAI.
 
-    - [ClientAI Class Reference](clientai.md)
+    - [ClientAI Class Reference](client/clientai.md)
 
 2. **AIProvider Class**: An abstract base class that defines the interface for all AI provider implementations. It ensures consistency across different providers.
 
-    - [AIProvider Class Reference](ai_provider.md)
+    - [AIProvider Class Reference](client/ai_provider.md)
 
 3. **Provider-Specific Classes**: These classes implement the AIProvider interface for each supported AI service (Ollama, OpenAI, Replicate, Groq).
 
-    - [Ollama Provider Reference](specific_providers/ollama_provider.md)
-    - [OpenAI Provider Reference](specific_providers/openai_provider.md)
-    - [Replicate Provider Reference](specific_providers/replicate_provider.md)
-    - [Groq Provider Reference](specific_providers/groq_provider.md)
+    - [Ollama Provider Reference](client/specific_providers/ollama_provider.md)
+    - [OpenAI Provider Reference](client/specific_providers/openai_provider.md)
+    - [Replicate Provider Reference](client/specific_providers/replicate_provider.md)
+    - [Groq Provider Reference](client/specific_providers/groq_provider.md)
 
 4. **Ollama Manager**: These classes handle the local Ollama server configuration and lifecycle management.
 
-    - [OllamaManager Class Reference](ollama_manager/ollama_manager.md)
-    - [OllamaServerConfig Class Reference](ollama_manager/ollama_server_config.md)
+    - [OllamaManager Class Reference](client/ollama_manager/ollama_manager.md)
+    - [OllamaServerConfig Class Reference](client/ollama_manager/ollama_server_config.md)
 
 ## Usage
 
@@ -49,11 +49,7 @@ response = client.generate_text(
 print(response)
 ```
 
-For more detailed usage instructions and examples, please refer to the [Usage Guide](../usage/overview.md) (🚧 Under Construction, come back soon 🚧).
-
-## Extending ClientAI
-
-If you wish to add support for a new AI provider or extend the functionality of existing providers, you can do so by implementing the AIProvider interface. See the [Extending ClientAI Guide](../extending.md) for more information.
+For more detailed usage instructions and examples, please refer to the [Usage Guide](../usage/overview.md).
 
 ## Contribution
 
@@ -62,7 +58,3 @@ We welcome contributions to ClientAI! If you're interested in contributing, plea
 ## Feedback
 
 Your feedback is crucial in helping us improve ClientAI and its documentation. If you have any suggestions, corrections, or queries, please don't hesitate to reach out to us via GitHub issues or our community channels.
-
----
-
-Navigate through each section for detailed documentation of ClientAI's API components.

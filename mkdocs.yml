@@ -1,5 +1,5 @@
 site_name: ClientAI
-site_description: A unified client for seamless interaction with multiple AI providers.
+site_description: A unified client for AI providers with built-in agent support.
 site_author: Igor Benav
 site_url: https://github.com/igorbenav/clientai
 
@@ -35,6 +35,7 @@ theme:
 
 plugins:
   - search
+  - meta-descriptions
   - mkdocstrings:
       handlers:
         python:
@@ -43,47 +44,75 @@ plugins:
 
 nav:
   - ClientAI: index.md
-  - Installing: installing.md
-  - Quick-Start: quick-start.md
   - Usage:
-    - ClientAI:
-      - usage/overview.md
-      - usage/initialization.md
-      - usage/text_generation.md
-      - usage/chat_functionality.md
-      - usage/multiple_providers.md
-      - usage/error_handling.md
-    - usage/ollama_manager.md
+    - Overview: usage/overview.md
+    - Client:
+      - Initialization: usage/client/initialization.md
+      - Text Generation: usage/client/text_generation.md
+      - Chat Functionality: usage/client/chat_functionality.md
+      - Multiple Providers: usage/client/multiple_providers.md
+      - Error Handling: usage/client/error_handling.md
+    - Agent:
+      - Creating Agents: usage/agent/creating_agents.md
+      - Workflow Steps: usage/agent/workflow_steps.md
+      - Tools and Tool Selection: usage/agent/tools.md
+      - Context Management: usage/agent/context.md
+    - Ollama Manager: usage/ollama_manager.md
   - Examples:
     - Overview: examples/overview.md
-    - Examples:
-      - AI Dungeon Master: examples/ai_dungeon_master.md
+    - Client Examples:
+      - Simple Q&A Bot: examples/client/simple_qa.md
+      - Multi-Provider Translator: examples/client/translator.md
+      - AI Dungeon Master: examples/client/ai_dungeon_master.md
+    - Agent Examples:
+      - Simple Q&A Bot: examples/agent/simple_qa.md
+      - Task Planner: examples/agent/task_planner.md
+      - Writing Assistant: examples/agent/writing_assistant.md
+      - Code Analyzer: examples/agent/code_analyzer.md
+  - Learn:
+    - Overview: learn/overview.md
   - Advanced:
     - Overview: advanced/overview.md
-    - Specific Providers:
-      - Ollama: advanced/ollama_specific.md
-      - OpenAI: advanced/openai_specific.md
-      - Replicate: advanced/replicate_specific.md
-      - Groq: advanced/groq_specific.md
+    - Client:
+      - Ollama: advanced/client/ollama_specific.md
+      - OpenAI: advanced/client/openai_specific.md
+      - Replicate: advanced/client/replicate_specific.md
+      - Groq: advanced/client/groq_specific.md
+    - Agent:
+      - Creating Custom Run: advanced/agent/creating_run.md
     - Error Handling: advanced/error_handling.md
   - API Reference:
     - Overview: api/overview.md
-    - ClientAI: api/clientai.md
-    - AIProvider: api/ai_provider.md
-    - Specific Providers:
-      - Ollama: api/specific_providers/ollama_provider.md
-      - OpenAI: api/specific_providers/openai_provider.md
-      - Replicate: api/specific_providers/replicate_provider.md
-      - Groq: api/specific_providers/groq_provider.md
-    - Ollama Manager:
-      - OllamaManager: api/ollama_manager/ollama_manager.md
-      - OllamaServerConfig: api/ollama_manager/ollama_server_config.md
+    - Agent:
+      - Core:
+        - Agent: api/agent/core/agent.md
+        - AgentContext: api/agent/core/context.md
+        - WorkflowManager: api/agent/core/workflow.md
+        - StepExecutionEngine: api/agent/core/execution.md
+      - Steps:
+        - Step: api/agent/steps/step.md
+        - StepTypes: api/agent/steps/types.md
+        - Decorators: api/agent/steps/decorators.md
+      - Tools:
+        - Tool: api/agent/tools/tool.md
+        - ToolRegistry: api/agent/tools/registry.md
+        - ToolSelector: api/agent/tools/selector.md
+    - Client:
+      - ClientAI: api/client/clientai.md
+      - AIProvider: api/client/ai_provider.md
+      - Specific Providers:
+        - Ollama: api/client/specific_providers/ollama_provider.md
+        - OpenAI: api/client/specific_providers/openai_provider.md
+        - Replicate: api/client/specific_providers/replicate_provider.md
+        - Groq: api/client/specific_providers/groq_provider.md
+      - Ollama Manager:
+        - OllamaManager: api/client/ollama_manager/ollama_manager.md
+        - OllamaServerConfig: api/client/ollama_manager/ollama_server_config.md
   - Community:
     - Overview: community/overview.md
     - Contributing: community/CONTRIBUTING.md
     - Code of Conduct: community/CODE_OF_CONDUCT.md
     - License: community/LICENSE.md
-  - Extending: extending.md
 
 markdown_extensions:
   - admonition
@@ -105,3 +134,8 @@ edit_uri: edit/main/docs/
 
 extra_css:
   - stylesheets/extra.css
+
+extra:
+  analytics:
+    provider: google
+    property: !ENV [GOOGLE_ANALYTICS_KEY, '']

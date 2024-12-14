@@ -48,7 +48,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Replicate package is not installed.
 
-    Examples:
+    Example:
         Initialize the Replicate provider:
         ```python
         provider = Provider(api_key="your-replicate-api-key")
@@ -62,6 +62,24 @@ class Provider(AIProvider):
                 "Please install it with 'pip install clientai[replicate]'."
             )
         self.client: ReplicateClientProtocol = Client(api_token=api_key)
+
+    def _validate_temperature(self, temperature: Optional[float]) -> None:
+        """Validate the temperature parameter."""
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)):  # noqa: UP038
+                raise InvalidRequestError("Temperature must be a number")
+
+    def _validate_top_p(self, top_p: Optional[float]) -> None:
+        """Validate the top_p parameter."""
+        if top_p is not None:
+            if not isinstance(top_p, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Top-p must be a number between 0 and 1"
+                )
+            if top_p < 0 or top_p > 1:
+                raise InvalidRequestError(
+                    f"Top-p must be between 0 and 1, got {top_p}"
+                )
 
     def _process_output(self, output: Any) -> str:
         """
@@ -181,9 +199,12 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -193,6 +214,9 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Replicate model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                      If provided, will be added as a system message before
+                      the prompt.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -206,7 +230,7 @@ class Provider(AIProvider):
             ReplicateGenericResponse: The generated text, full response object,
             or an iterator for streaming responses.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -252,9 +276,21 @@ class Provider(AIProvider):
             ```
         """
         try:
-            input_params = {"prompt": prompt}
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            formatted_prompt = ""
+            if system_prompt:
+                formatted_prompt = f"<system>{system_prompt}</system>\n"
+            formatted_prompt += f"<user>{prompt}</user>\n<assistant>"
+
+            input_params = {"prompt": formatted_prompt}
             if json_output:
                 input_params["output"] = "json"
+            if temperature is not None:
+                input_params["temperature"] = temperature  # type: ignore
+            if top_p is not None:
+                input_params["top_p"] = top_p  # type: ignore
 
             prediction = self.client.predictions.create(
                 model=model,
@@ -285,9 +321,12 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> ReplicateGenericResponse:
         """
@@ -297,6 +336,9 @@ class Provider(AIProvider):
             messages: A list of message dictionaries, each containing
                       'role' and 'content'.
             model: The name or identifier of the Replicate model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                      If provided, will be inserted at the start of the
+                      conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text.
             stream: If True, return an iterator for streaming responses.
@@ -354,14 +396,30 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
             prompt = "\n".join(
-                [f"{m['role']}: {m['content']}" for m in messages]
+                [
+                    f"<{m['role']}>{m['content']}</{m['role']}>"
+                    for m in chat_messages
+                ]
             )
-            prompt += "\nassistant: "
+            prompt += "\n<assistant>"
 
             input_params = {"prompt": prompt}
             if json_output:
                 input_params["output"] = "json"
+            if temperature is not None:
+                input_params["temperature"] = temperature  # type: ignore
+            if top_p is not None:
+                input_params["top_p"] = top_p  # type: ignore
 
             prediction = self.client.predictions.create(
                 model=model,

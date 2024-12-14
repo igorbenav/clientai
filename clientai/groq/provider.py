@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from typing import Any, List, Union, cast
+from typing import Any, List, Optional, Union, cast
 
 from .._common_types import Message
 from ..ai_provider import AIProvider
@@ -60,7 +60,7 @@ class Provider(AIProvider):
     Raises:
         ImportError: If the Groq package is not installed.
 
-    Examples:
+    Example:
         Initialize the Groq provider:
         ```python
         provider = Provider(api_key="your-groq-api-key")
@@ -76,6 +76,30 @@ class Provider(AIProvider):
         self.client: GroqClientProtocol = cast(
             GroqClientProtocol, Client(api_key=api_key)
         )
+
+    def _validate_temperature(self, temperature: Optional[float]) -> None:
+        """Validate the temperature parameter."""
+        if temperature is not None:
+            if not isinstance(temperature, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Temperature must be a number between 0 and 2"
+                )
+            if temperature < 0 or temperature > 2:
+                raise InvalidRequestError(
+                    f"Temperature must be between 0 and 2, got {temperature}"
+                )
+
+    def _validate_top_p(self, top_p: Optional[float]) -> None:
+        """Validate the top_p parameter."""
+        if top_p is not None:
+            if not isinstance(top_p, (int, float)):  # noqa: UP038
+                raise InvalidRequestError(
+                    "Top-p must be a number between 0 and 1"
+                )
+            if top_p < 0 or top_p > 1:
+                raise InvalidRequestError(
+                    f"Top-p must be between 0 and 1, got {top_p}"
+                )
 
     def _stream_response(
         self,
@@ -159,9 +183,12 @@ class Provider(AIProvider):
         self,
         prompt: str,
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -170,6 +197,9 @@ class Provider(AIProvider):
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the Groq model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be added as a system message
+                           before the prompt.
             return_full_response: If True, return the full response object.
                 If False, return only the generated text. Defaults to False.
             stream: If True, return an iterator for streaming responses.
@@ -179,6 +209,14 @@ class Provider(AIProvider):
                 with streaming and stop sequences. Will return a 400 error with
                 code "json_validate_failed" if JSON generation fails. Defaults
                 to False.
+            temperature: Optional temperature value (0.0-2.0).
+                         Controls randomness in generation.
+                         Lower values make the output more focused
+                         and deterministic, higher values make it
+                         more creative.
+            top_p: Optional nucleus sampling parameter (0.0-1.0).
+                   Controls diversity by limiting cumulative probability
+                   in token selection.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
@@ -189,7 +227,7 @@ class Provider(AIProvider):
             InvalidRequestError: If json_output and stream are both True.
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Generate text (text only):
             ```python
             response = provider.generate_text(
@@ -225,7 +263,13 @@ class Provider(AIProvider):
             ```
         """
         try:
-            messages: List[Message] = [{"role": "user", "content": prompt}]
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            messages: List[Optional[Message]] = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
 
             completion_kwargs: dict[str, Any] = {
                 "model": model,
@@ -234,6 +278,10 @@ class Provider(AIProvider):
             }
             if json_output:
                 completion_kwargs["response_format"] = {"type": "json_object"}
+            if temperature is not None:
+                completion_kwargs["temperature"] = temperature
+            if top_p is not None:
+                completion_kwargs["top_p"] = top_p
             completion_kwargs.update(kwargs)
 
             response = self.client.chat.completions.create(**completion_kwargs)
@@ -260,9 +308,12 @@ class Provider(AIProvider):
         self,
         messages: List[Message],
         model: str,
+        system_prompt: Optional[str] = None,
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
         **kwargs: Any,
     ) -> GroqGenericResponse:
         """
@@ -270,8 +321,11 @@ class Provider(AIProvider):
 
         Args:
             messages: A list of message dictionaries, each containing
-                    'role' and 'content'.
+                      'role' and 'content'.
             model: The name or identifier of the Groq model to use.
+            system_prompt: Optional system prompt to guide model behavior.
+                           If provided, will be inserted at the start of
+                           the conversation.
             return_full_response: If True, return the full response object.
                 If False, return only the chat content.
             stream: If True, return an iterator for streaming responses.
@@ -280,6 +334,14 @@ class Provider(AIProvider):
                 with streaming and stop sequences. Will return a 400 error with
                 code "json_validate_failed" if JSON generation fails.
                 Defaults to False.
+            temperature: Optional temperature value (0.0-2.0).
+                         Controls randomness in generation.
+                         Lower values make the output more focused
+                         and deterministic, higher values make it
+                         more creative.
+            top_p: Optional nucleus sampling parameter (0.0-1.0).
+                   Controls diversity by limiting cumulative probability
+                   in token selection.
             **kwargs: Additional keyword arguments to pass to the Groq API.
 
         Returns:
@@ -290,7 +352,7 @@ class Provider(AIProvider):
             InvalidRequestError: If json_output and stream are both True.
             ClientAIError: If an error occurs during the API call.
 
-        Examples:
+        Example:
             Chat (message content only):
             ```python
             messages = [
@@ -334,13 +396,26 @@ class Provider(AIProvider):
             ```
         """
         try:
+            self._validate_temperature(temperature)
+            self._validate_top_p(top_p)
+
+            chat_messages = messages.copy()
+            if system_prompt:
+                chat_messages.insert(
+                    0, {"role": "system", "content": system_prompt}
+                )
+
             completion_kwargs: dict[str, Any] = {
                 "model": model,
-                "messages": messages,
+                "messages": chat_messages,
                 "stream": stream,
             }
             if json_output:
                 completion_kwargs["response_format"] = {"type": "json_object"}
+            if temperature is not None:
+                completion_kwargs["temperature"] = temperature
+            if top_p is not None:
+                completion_kwargs["top_p"] = top_p
             completion_kwargs.update(kwargs)
 
             response = self.client.chat.completions.create(**completion_kwargs)

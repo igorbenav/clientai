@@ -49,7 +49,9 @@ def test_generate_text_full_response(mock_client, provider):
     assert isinstance(result, dict)
     assert result["output"] == "This is a test response"
     mock_client.predictions.create.assert_called_once_with(
-        model=VALID_MODEL, input={"prompt": "Test prompt"}, stream=False
+        model=VALID_MODEL,
+        input={"prompt": "<user>Test prompt</user>\n<assistant>"},
+        stream=False,
     )
 
 
@@ -66,7 +68,9 @@ def test_generate_text_content_only(mock_client, provider):
 
     assert result == "This is a test response"
     mock_client.predictions.create.assert_called_once_with(
-        model=VALID_MODEL, input={"prompt": "Test prompt"}, stream=False
+        model=VALID_MODEL,
+        input={"prompt": "<user>Test prompt</user>\n<assistant>"},
+        stream=False,
     )
 
 
@@ -80,7 +84,9 @@ def test_generate_text_stream(mock_client, provider):
 
     assert list(result) == ["This ", "is ", "a ", "test"]
     mock_client.predictions.create.assert_called_once_with(
-        model=VALID_MODEL, input={"prompt": "Test prompt"}, stream=True
+        model=VALID_MODEL,
+        input={"prompt": "<user>Test prompt</user>\n<assistant>"},
+        stream=True,
     )
 
 
@@ -98,7 +104,7 @@ def test_chat_full_response(mock_client, provider):
     assert result["output"] == "This is a test response"
     mock_client.predictions.create.assert_called_once_with(
         model=VALID_MODEL,
-        input={"prompt": "user: Test message\nassistant: "},
+        input={"prompt": "<user>Test message</user>\n<assistant>"},
         stream=False,
     )
 
@@ -116,7 +122,7 @@ def test_chat_content_only(mock_client, provider):
     assert result == "This is a test response"
     mock_client.predictions.create.assert_called_once_with(
         model=VALID_MODEL,
-        input={"prompt": "user: Test message\nassistant: "},
+        input={"prompt": "<user>Test message</user>\n<assistant>"},
         stream=False,
     )
 
@@ -133,8 +139,53 @@ def test_chat_stream(mock_client, provider):
     assert list(result) == ["This ", "is ", "a ", "test"]
     mock_client.predictions.create.assert_called_once_with(
         model=VALID_MODEL,
-        input={"prompt": "user: Test message\nassistant: "},
+        input={"prompt": "<user>Test message</user>\n<assistant>"},
         stream=True,
+    )
+
+
+def test_generate_text_with_system_prompt(mock_client, provider):
+    mock_prediction = MockPrediction(
+        id="test_id", status="succeeded", output="This is a test response"
+    )
+    mock_client.predictions.create.return_value = mock_prediction
+    mock_client.predictions.get.return_value = mock_prediction
+
+    result = provider.generate_text(
+        "Test prompt", VALID_MODEL, system_prompt="You are a helpful assistant"
+    )
+
+    assert result == "This is a test response"
+    mock_client.predictions.create.assert_called_once_with(
+        model=VALID_MODEL,
+        input={
+            "prompt": "<system>You are a helpful assistant"
+            "</system>\n<user>Test prompt</user>\n<assistant>"
+        },
+        stream=False,
+    )
+
+
+def test_chat_with_system_prompt(mock_client, provider):
+    mock_prediction = MockPrediction(
+        id="test_id", status="succeeded", output="This is a test response"
+    )
+    mock_client.predictions.create.return_value = mock_prediction
+    mock_client.predictions.get.return_value = mock_prediction
+
+    messages = [{"role": "user", "content": "Test message"}]
+    result = provider.chat(
+        messages, VALID_MODEL, system_prompt="You are a helpful assistant"
+    )
+
+    assert result == "This is a test response"
+    mock_client.predictions.create.assert_called_once_with(
+        model=VALID_MODEL,
+        input={
+            "prompt": "<system>You are a helpful assistant"
+            "</system>\n<user>Test message</user>\n<assistant>"
+        },
+        stream=False,
     )
 
 
