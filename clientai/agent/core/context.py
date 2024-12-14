@@ -196,7 +196,7 @@ class AgentContext:
 
         Args:
             n: Number of recent interactions to retrieve.
-               Defaults to all within max_size.
+                Defaults to all within max_size.
             raw: If True, returns raw data structure.
                  If False, returns formatted string.
 

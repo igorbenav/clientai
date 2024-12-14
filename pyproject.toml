@@ -5,6 +5,28 @@ description = "Simple unified API for multiple AI services."
 authors = ["Igor Benav <igor.magalhaes.r@gmail.com>"]
 readme = "README.md"
 
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
+
+keywords = ["ai", "agents", "llm", "nlp", "language-model", "ai-agents"]
+
 [tool.poetry.dependencies]
 python = "^3.9"
 openai = {version = "^1.50.2", optional = true}
@@ -27,7 +49,7 @@ openai = ["openai"]
 replicate = ["replicate"]
 ollama = ["ollama"]
 groq = ["groq"]
-full = ["openai", "replicate", "ollama", "groq", "redis"]
+full = ["openai", "replicate", "ollama", "groq"]
 
 [build-system]
 requires = ["poetry-core"]

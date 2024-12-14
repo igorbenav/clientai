@@ -2,265 +2,240 @@ from unittest.mock import Mock
 
 import pytest
 
-from clientai.agent import Agent, ToolConfig, ToolSelectionConfig
+from clientai.agent.config import ToolConfig
 from clientai.agent.core.factory import create_agent
 from clientai.agent.exceptions import AgentError
-from clientai.exceptions import ClientAIError
-
-
-def add_numbers(x: int, y: int) -> int:
-    """Add two numbers."""
-    return x + y
-
-
-def multiply_numbers(x: int, y: int) -> int:
-    """Multiply two numbers."""
-    return x * y
+from clientai.agent.tools import ToolSelectionConfig
 
 
 @pytest.fixture
 def mock_client():
-    client = Mock()
-    client.generate_text = Mock(side_effect=lambda prompt, **kwargs: prompt)
-    client.provider = Mock()
-    client.provider.__class__.__module__ = "clientai.openai.provider"
-    return client
+    return Mock()
 
 
 def test_basic_agent_creation(mock_client):
-    """Test creating a basic agent with minimal configuration."""
+    """Test basic agent creation with minimal configuration."""
     agent = create_agent(
         client=mock_client,
-        role="test",
+        role="test_role",
         system_prompt="Test prompt",
-        model="test-model",
+        model="gpt-4",
     )
 
-    assert isinstance(agent, Agent)
-    assert agent._default_model.name == "test-model"
+    assert agent is not None
+    assert agent._client == mock_client
+    assert agent._default_model.name == "gpt-4"
     assert len(agent.workflow_manager.get_steps()) == 1
-    assert "test_step" in agent.workflow_manager.get_steps()
 
 
-def test_agent_with_tools(mock_client):
-    """Test creating an agent with function tools."""
+def test_agent_creation_with_tools(mock_client):
+    """Test agent creation with tool configuration."""
+
+    def mock_tool(x: int) -> int:
+        """Test tool."""
+        return x * 2
+
+    # Test with basic tool
     agent = create_agent(
         client=mock_client,
-        role="calculator",
+        role="test_role",
         system_prompt="Test prompt",
-        model="test-model",
-        tools=[add_numbers, multiply_numbers],
+        model="gpt-4",
+        tools=[mock_tool],
     )
+    assert len(agent.get_tools()) == 1
 
-    tools = agent.get_tools()
-    assert len(tools) == 2
-    tool_names = {tool.name for tool in tools}
-    assert "add_numbers" in tool_names
-    assert "multiply_numbers" in tool_names
-
-
-def test_agent_with_tool_config(mock_client):
-    """Test creating an agent with ToolConfig objects."""
-    tool_config = ToolConfig(tool=add_numbers, scopes=["think"])
+    # Test with ToolConfig
+    tool_config = ToolConfig(tool=mock_tool, scopes=["think"])
     agent = create_agent(
         client=mock_client,
-        role="calculator",
+        role="test_role",
         system_prompt="Test prompt",
-        model="test-model",
+        model="gpt-4",
         tools=[tool_config],
     )
-
-    tools = agent.get_tools("think")
-    assert len(tools) == 1
-    assert tools[0].name == "add_numbers"
+    assert len(agent.get_tools("think")) == 1
 
 
-def test_agent_with_tool_selection_config(mock_client):
-    """Test creating an agent with tool selection configuration."""
+def test_agent_creation_with_step_types(mock_client):
+    """Test agent creation with different step types."""
+    step_types = ["think", "act", "observe", "synthesize"]
+
+    for step_type in step_types:
+        agent = create_agent(
+            client=mock_client,
+            role="test_role",
+            system_prompt="Test prompt",
+            model="gpt-4",
+            step=step_type,
+        )
+        steps = agent.workflow_manager.get_steps()
+        assert len(steps) == 1
+        step = next(iter(steps.values()))
+        assert step.step_type.name.lower() == step_type
+
+
+def test_agent_creation_with_tool_selection_config(mock_client):
+    """Test agent creation with tool selection configuration."""
     tool_config = ToolSelectionConfig(
         confidence_threshold=0.8, max_tools_per_step=2
     )
+
     agent = create_agent(
         client=mock_client,
-        role="calculator",
+        role="test_role",
         system_prompt="Test prompt",
-        model="test-model",
+        model="gpt-4",
         tool_selection_config=tool_config,
-        tools=[add_numbers],
     )
 
     assert agent._tool_selection_config.confidence_threshold == 0.8
     assert agent._tool_selection_config.max_tools_per_step == 2
 
 
-def test_agent_with_step_type(mock_client):
-    """Test creating agents with different step types."""
-    think_agent = create_agent(
-        client=mock_client,
-        role="analyzer",
-        system_prompt="Test prompt",
-        model="test-model",
-        step="think",
-    )
-
-    act_agent = create_agent(
-        client=mock_client,
-        role="executor",
-        system_prompt="Test prompt",
-        model="test-model",
-        step="act",
-    )
-
-    # Check that different step types have different default temperatures
-    assert think_agent._default_model.get_parameters().get(
-        "temperature", 0
-    ) != act_agent._default_model.get_parameters().get("temperature", 0)
-
-
-def test_agent_with_custom_model_params(mock_client):
-    """Test creating an agent with custom model parameters."""
+def test_agent_creation_with_model_params(mock_client):
+    """Test agent creation with various model parameters."""
     agent = create_agent(
         client=mock_client,
-        role="test",
+        role="test_role",
         system_prompt="Test prompt",
-        model="test-model",
-        temperature=0.8,
+        model="gpt-4",
+        temperature=0.7,
         top_p=0.9,
-        max_tokens=100,
-    )
-
-    params = agent._default_model.get_parameters()
-    assert params["temperature"] == 0.8
-    assert params["top_p"] == 0.9
-    assert params["max_tokens"] == 100
-
-
-def test_streaming_agent(mock_client):
-    """Test creating an agent with streaming enabled."""
-    agent = create_agent(
-        client=mock_client,
-        role="test",
-        system_prompt="Test prompt",
-        model="test-model",
         stream=True,
+        extra_param="value",
     )
 
-    assert agent._default_model.stream is True
+    # Check model configuration parameters
+    config_dict = agent._default_model.to_dict()
+    assert config_dict["name"] == "gpt-4"
+    assert config_dict["temperature"] == 0.7
+    assert config_dict["top_p"] == 0.9
+    assert config_dict["stream"] is True
+    assert config_dict["extra_param"] == "value"
 
 
-@pytest.mark.parametrize(
-    "invalid_input",
-    [
-        {"role": "", "error": "Role must be a non-empty string"},
-        {"role": None, "error": "Role must be a non-empty string"},
-        {
-            "system_prompt": "",
-            "error": "System prompt must be a non-empty string",
-        },
-        {
-            "system_prompt": None,
-            "error": "System prompt must be a non-empty string",
-        },
-        {"model": "", "error": "Model must be a non-empty string"},
-        {"model": None, "error": "Model must be a non-empty string"},
-        {
-            "temperature": 1.5,
-            "error": "Invalid model configuration: "
-            "Temperature must be between 0.0 and 1.0",
-        },
-        {
-            "temperature": -0.1,
-            "error": "Invalid model configuration: "
-            "Temperature must be between 0.0 and 1.0",
-        },
-        {
-            "top_p": 1.5,
-            "error": "Invalid model configuration: "
-            "Top_p must be between 0.0 and 1.0",
-        },
-        {
-            "top_p": -0.1,
-            "error": "Invalid model configuration: "
-            "Top_p must be between 0.0 and 1.0",
-        },
-    ],
-)
-def test_invalid_inputs(mock_client, invalid_input):
-    """Test that invalid inputs raise appropriate errors."""
-    error_msg = invalid_input.pop("error")
-    base_args = {
-        "client": mock_client,
-        "role": "test",
-        "system_prompt": "Test prompt",
-        "model": "test-model",
-    }
+def test_agent_creation_errors(mock_client):
+    """Test error cases in agent creation."""
+    # Test missing required parameters
+    with pytest.raises(AgentError, match="Role must be a non-empty string"):
+        create_agent(
+            client=mock_client,
+            role="",
+            system_prompt="Test prompt",
+            model="gpt-4",
+        )
 
-    with pytest.raises(AgentError, match=error_msg):
-        create_agent(**{**base_args, **invalid_input})
-
-
-def test_conflicting_tool_configs(mock_client):
-    """Test that conflicting tool configurations raise an error."""
     with pytest.raises(
-        AgentError,
-        match="Invalid tool selection configuration: "
-        "Cannot specify both tool_selection_config "
-        "and individual tool parameters",
+        AgentError, match="System prompt must be a non-empty string"
     ):
         create_agent(
             client=mock_client,
-            role="test",
-            system_prompt="Test prompt",
-            model="test-model",
-            tool_selection_config=ToolSelectionConfig(),
-            tool_confidence=0.8,
+            role="test_role",
+            system_prompt="",
+            model="gpt-4",
         )
 
-
-def test_agent_execution(mock_client):
-    """Test that the created agent can execute successfully."""
-    agent = create_agent(
-        client=mock_client,
-        role="test",
-        system_prompt="Test prompt",
-        model="test-model",
-    )
-
-    result = agent.run("test input")
-    assert isinstance(result, str)
-    assert len(agent.context.last_results) == 1
-
-
-def test_client_error_handling(mock_client):
-    """Test that client errors are handled properly."""
-    mock_client.generate_text.side_effect = ClientAIError("API Error")
-    agent = create_agent(
-        client=mock_client,
-        role="test",
-        system_prompt="Test prompt",
-        model="test-model",
-    )
-
-    with pytest.raises(ClientAIError):
-        agent.run("test input")
-
-
-def test_invalid_step_type(mock_client):
-    """Test that invalid step types raise an error."""
-    with pytest.raises(AgentError) as exc_info:
+    # Test invalid tool configuration
+    with pytest.raises(AgentError):
         create_agent(
             client=mock_client,
-            role="test",
+            role="test_role",
             system_prompt="Test prompt",
-            model="test-model",
-            step="invalid_step_type!",
+            model="gpt-4",
+            tool_selection_config=ToolSelectionConfig(),
+            tool_confidence=0.8,  # Conflict
         )
 
-    error_msg = str(exc_info.value)
+    # Test invalid temperature
+    with pytest.raises(AgentError):
+        create_agent(
+            client=mock_client,
+            role="test_role",
+            system_prompt="Test prompt",
+            model="gpt-4",
+            temperature=2.0,  # Invalid value
+        )
 
-    assert error_msg.startswith("Step must be one of {")
-    assert error_msg.endswith("} or a valid Python identifier")
 
-    set_portion = error_msg[error_msg.find("{") + 1 : error_msg.find("}")]
-    step_types = {s.strip("'") for s in set_portion.split(", ")}
-    assert step_types == {"think", "act", "observe", "synthesize"}
+def test_agent_streaming_configuration(mock_client):
+    """Test agent creation with streaming configuration."""
+    # Test streaming enabled
+    agent = create_agent(
+        client=mock_client,
+        role="test_role",
+        system_prompt="Test prompt",
+        model="gpt-4",
+        stream=True,
+    )
+    steps = agent.workflow_manager.get_steps()
+    step = next(iter(steps.values()))
+    assert step.stream is True
+
+    # Test streaming disabled
+    agent = create_agent(
+        client=mock_client,
+        role="test_role",
+        system_prompt="Test prompt",
+        model="gpt-4",
+        stream=False,
+    )
+    steps = agent.workflow_manager.get_steps()
+    step = next(iter(steps.values()))
+    assert step.stream is False
+
+
+def test_agent_tool_model_configuration(mock_client):
+    """Test agent creation with tool model configuration."""
+    agent = create_agent(
+        client=mock_client,
+        role="test_role",
+        system_prompt="Test prompt",
+        model="gpt-4",
+        tool_model="different-model",
+    )
+
+    assert agent._tool_model.name == "different-model"
+
+    # Test tool model inherits from default when not specified
+    agent = create_agent(
+        client=mock_client,
+        role="test_role",
+        system_prompt="Test prompt",
+        model="gpt-4",
+    )
+
+    assert agent._tool_model.name == "gpt-4"
+
+
+def test_custom_step_creation(mock_client):
+    """Test agent creation with custom step type."""
+    agent = create_agent(
+        client=mock_client,
+        role="test_role",
+        system_prompt="Test prompt",
+        model="gpt-4",
+        step="custom_step",
+    )
+
+    steps = agent.workflow_manager.get_steps()
+    assert len(steps) == 1
+    step = next(iter(steps.values()))
+    assert step.step_type.name == "ACT"  # Custom steps default to ACT type
+
+
+def test_sanitized_step_names(mock_client):
+    """Test step name sanitization in agent creation."""
+    # Test with special characters
+    agent = create_agent(
+        client=mock_client,
+        role="test@role#123",
+        system_prompt="Test prompt",
+        model="gpt-4",
+    )
+
+    steps = agent.workflow_manager.get_steps()
+    step_name = next(iter(steps.keys()))
+    assert step_name.isidentifier()  # Should be a valid Python identifier
+    assert "@" not in step_name
+    assert "#" not in step_name

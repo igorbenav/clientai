@@ -58,6 +58,9 @@ def tool(
         - Tool inherits all function attributes and metadata
     """
 
+    if callable(name):
+        return Tool.create(func=name)
+
     def decorator(func: Callable[..., T]) -> Tool:
         """Create a Tool instance from the decorated function.
 

@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Dict
+from typing import Any, ClassVar, Dict, Optional
 
 
 class ModelConfig:
@@ -15,6 +15,8 @@ class ModelConfig:
         return_full_response: Whether to return complete API response
         stream: Whether to enable response streaming
         json_output: Whether responses should be formatted as JSON
+        temperature: Optional temperature value (0.0-1.0) controlling
+                     response randomness
 
     Example:
         Create and use model configuration:
@@ -40,6 +42,7 @@ class ModelConfig:
         "return_full_response",
         "stream",
         "json_output",
+        "temperature",
     }
 
     def __init__(
@@ -48,12 +51,17 @@ class ModelConfig:
         return_full_response: bool = False,
         stream: bool = False,
         json_output: bool = False,
+        temperature: Optional[float] = None,
         **kwargs: Any,
     ):
+        if temperature is not None and not 0.0 <= temperature <= 1.0:
+            raise ValueError("Temperature must be between 0.0 and 1.0")
+
         self.name = name
         self.return_full_response = return_full_response
         self.stream = stream
         self.json_output = json_output
+        self.temperature = temperature
         self._extra_kwargs = kwargs
 
     def get_parameters(self) -> Dict[str, Any]:
@@ -78,6 +86,7 @@ class ModelConfig:
             "return_full_response": self.return_full_response,
             "stream": self.stream,
             "json_output": self.json_output,
+            "temperature": self.temperature,
         }
         params.update(self._extra_kwargs)
         return {k: v for k, v in params.items() if v is not None}
@@ -114,6 +123,7 @@ class ModelConfig:
             ),
             stream=core_kwargs.get("stream", self.stream),
             json_output=core_kwargs.get("json_output", self.json_output),
+            temperature=core_kwargs.get("temperature", self.temperature),
             **{**self._extra_kwargs, **extra_kwargs},
         )
 
@@ -172,5 +182,6 @@ class ModelConfig:
             "return_full_response": self.return_full_response,
             "stream": self.stream,
             "json_output": self.json_output,
+            "temperature": self.temperature,
             **self._extra_kwargs,
         }

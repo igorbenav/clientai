@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <i>A unified client for seamless interaction with multiple AI providers.</i>
+  <i>A unified client for AI providers with built-in agent support.</i>
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ---
 
-**ClientAI** is a Python package that provides a unified interface for interacting with multiple AI providers, including OpenAI, Replicate, Groq and Ollama. It offers seamless integration and consistent methods for text generation and chat functionality across different AI platforms.
+<b>ClientAI</b> is a Python package that provides a unified framework for building AI applications, from direct provider interactions to transparent LLM-powered agents, with seamless support for OpenAI, Replicate, Groq and Ollama.
 
 **Documentation**: [igorbenav.github.io/clientai/](https://igorbenav.github.io/clientai/)
 
@@ -32,20 +32,11 @@
 
 ## Features
 
-- 🔄 **Unified Interface**: Consistent methods for text generation and chat across multiple AI providers.
-- 🔌 **Multiple Providers**: Support for OpenAI, Replicate, Groq and Ollama, with easy extensibility for future providers.
-- 🌊 **Streaming Support**: Efficient streaming of responses for real-time applications.
-- 🎛️ **Flexible Configuration**: Easy setup with provider-specific configurations.
-- 🔧 **Customizable**: Extensible design for adding new providers or customizing existing ones.
-- 🧠 **Type Hinting**: Comprehensive type annotations for better development experience.
-- 🔒 **Provider Isolation**: Optional installation of provider-specific dependencies to keep your environment lean.
-
-## Requirements
-
-Before installing ClientAI, ensure you have the following:
-
-- **Python**: Version 3.9 or newer.
-- **Dependencies**: The core ClientAI package has minimal dependencies. Provider-specific packages (e.g., `openai`, `replicate`, `ollama`, `groq`) are optional and can be installed separately.
+- **Unified Interface**: Consistent methods across multiple AI providers (OpenAI, Replicate, Groq, Ollama).
+- **Streaming Support**: Real-time response streaming and chat capabilities.
+- **Intelligent Agents**: Framework for building transparent, multi-step LLM workflows with tool integration.
+- **Modular Design**: Use components independently, from simple provider wrappers to complete agent systems.
+- **Type Safety**: Comprehensive type hints for better development experience.
 
 ## Installing
 
@@ -64,104 +55,88 @@ pip install clientai[ollama]  # For Ollama support
 pip install clientai[groq]  # For Groq support
 ```
 
-## Usage
+## Quick Start Examples
 
-ClientAI provides a simple and consistent way to interact with different AI providers. Here are some examples:
-
-### Initializing the Client
+### Basic Provider Usage
 
 ```python
 from clientai import ClientAI
 
 # Initialize with OpenAI
-openai_client = ClientAI('openai', api_key="your-openai-key")
+client = ClientAI('openai', api_key="your-openai-key")
 
-# Initialize with Replicate
-replicate_client = ClientAI('replicate', api_key="your-replicate-key")
-
-# Initialize with Ollama
-ollama_client = ClientAI('ollama', host="your-ollama-host")
-
-# Initialize with Groq
-groq_client = ClientAI('groq', host="your-groq-key")
-```
-
-### Generating Text
-
-```python
-# Using OpenAI
-response = openai_client.generate_text(
+# Generate text
+response = client.generate_text(
     "Tell me a joke",
     model="gpt-3.5-turbo",
 )
+print(response)
 
-# Using Replicate
-response = replicate_client.generate_text(
-    "Explain quantum computing",
-    model="meta/llama-2-70b-chat:latest",
-)
-
-# Using Ollama
-response = ollama_client.generate_text(
-    "What is the capital of France?",
-    model="llama2",
-)
-
-# Using Groq
-response = groq_client.generate_text(
-    "Who was the first US president?",
-    model="llama3-8b-8192",
-)
-```
-
-### Chat Functionality
-
-```python
+# Chat functionality
 messages = [
     {"role": "user", "content": "What is the capital of France?"},
     {"role": "assistant", "content": "Paris."},
     {"role": "user", "content": "What is its population?"}
 ]
 
-# Using OpenAI
-response = openai_client.chat(
+response = client.chat(
     messages,
     model="gpt-3.5-turbo",
 )
-
-# Using Replicate
-response = replicate_client.chat(
-    messages,
-    model="meta/llama-2-70b-chat:latest",
-)
-
-# Using Ollama
-response = ollama_client.chat(
-    messages,
-    model="llama2",
-)
-
-# Using Groq
-response = groq_client.chat(
-    messages,
-    model="llama3-8b-8192",
-)
+print(response)
 ```
 
-### Streaming Responses
+### Quick-Start Agent
 
 ```python
-for chunk in client.generate_text(
-    "Tell me a long story",
-    model="gpt-3.5-turbo",
-    stream=True
-):
-    print(chunk, end="", flush=True)
+from clientai import client
+from clientai.agent import create_agent, tool
+
+@tool(name="calculator")
+def calculate_average(numbers: list[float]) -> float:
+    """Calculate the arithmetic mean of a list of numbers."""
+    return sum(numbers) / len(numbers)
+
+analyzer = create_agent(
+    client=client("groq", api_key="your-groq-key"),
+    role="analyzer", 
+    system_prompt="You are a helpful data analysis assistant.",
+    model="llama-3.2-3b-preview",
+    tools=[calculate_average]
+)
+
+result = analyzer.run("Calculate the average of these numbers: [1000, 1200, 950, 1100]")
+print(result)
 ```
+
+See our [documentation](https://igorbenav.github.io/clientai/) for more examples, including:
+- Custom workflow agents with multiple steps
+- Complex tool integration and selection
+- Real-world applications like AI Dungeon Master
+- Advanced usage patterns and best practices
+
+## Design Philosophy
+
+The ClientAI Agent module is built on four core principles:
+
+1. **Prompt-Centric Design**: Prompts are explicit, debuggable, and transparent. What you see is what is sent to the model.
+
+2. **Customization First**: Every component is designed to be extended or overridden. Create custom steps, tool selectors, or entirely new workflow patterns.
+
+3. **Zero Lock-In**: Start with high-level components and drop down to lower levels as needed. You can:
+    - Extend `Agent` for custom behavior
+    - Use individual components directly
+    - Gradually replace parts with your own implementation
+    - Or migrate away entirely - no lock-in
+
+## Requirements
+
+- **Python:** Version 3.9 or newer
+- **Dependencies:** Core package has minimal dependencies. Provider-specific packages are optional.
 
 ## Contributing
 
-Contributions to ClientAI are welcome! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for more information.
+Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more information.
 
 ## License
 
