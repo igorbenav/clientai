@@ -110,9 +110,9 @@ print(result)
 ```
 
 See our [documentation](https://igorbenav.github.io/clientai/) for more examples, including:
+
 - Custom workflow agents with multiple steps
 - Complex tool integration and selection
-- Real-world applications like AI Dungeon Master
 - Advanced usage patterns and best practices
 
 ## Design Philosophy

@@ -1,53 +1,31 @@
 # Usage Overview
 
-This Usage section provides comprehensive guides on how to effectively use the key features of ClientAI. Each topic focuses on a specific aspect of usage, ensuring you have all the information needed to leverage the full potential of ClientAI in your projects.
+This Usage section provides comprehensive guides on how to effectively use ClientAI's two main components: the Client for direct AI provider interactions and the Agent for building autonomous AI workflows. Each topic focuses on specific aspects, ensuring you have all the information needed to leverage the full potential of ClientAI in your projects.
 
-## Key Topics
+## Client Features
 
-### 1. Initializing ClientAI
+Learn how to initialize and use ClientAI with different AI providers. These guides cover the fundamentals of direct AI interaction:
 
-This guide covers the process of initializing ClientAI with different AI providers. It provides a step-by-step approach to setting up ClientAI for use with OpenAI, Replicate, and Ollama.
-
-- [Initializing ClientAI Guide](initialization.md)
-
-### 2. Text Generation with ClientAI
-
-Learn how to use ClientAI for text generation tasks. This guide explores the various options and parameters available for generating text across different AI providers.
-
-- [Text Generation Guide](text_generation.md)
-
-### 3. Chat Functionality in ClientAI
-
-Discover how to leverage ClientAI's chat functionality. This guide covers creating chat conversations, managing context, and handling chat-specific features across supported providers.
-
-- [Chat Functionality Guide](chat_functionality.md)
-
-### 4. Working with Multiple Providers
-
-Explore techniques for effectively using multiple AI providers within a single project. This guide demonstrates how to switch between providers and leverage their unique strengths.
-
-- [Multiple Providers Guide](multiple_providers.md)
-
-
-### 5. Using Ollama Manager
-
-Learn how to use Ollama Manager for streamlined prototyping and development. This guide covers server lifecycle management, resource configuration, and best practices for different use cases.
-
+- [Initialization Guide](client/initialization.md)
+- [Text Generation Guide](client/text_generation.md)
+- [Chat Functionality Guide](client/chat_functionality.md)
+- [Multiple Providers Guide](client/multiple_providers.md)
 - [Ollama Manager Guide](ollama_manager.md)
 
-### 6. Handling Responses and Errors
+## Agent Features
 
-Learn best practices for handling responses from AI providers and managing potential errors. This guide covers response parsing, error handling, and retry strategies.
+Discover how to create and customize AI agents for autonomous workflows:
 
-- Soon
+- [Creating Agents Guide](agent/creating_agents.md)
+- [Workflow Steps Guide](agent/workflow_steps.md)
+- [Tools and Tool Selection](agent/tools.md)
+- [Context Management](agent/context.md)
 
 ## Getting Started
 
-To make the most of these guides, we recommend familiarizing yourself with basic Python programming and asynchronous programming concepts, as ClientAI leverages these extensively.
+### Quick Start with Client
 
-### Quick Start Example
-
-Here's a simple example to get you started with ClientAI:
+Here's a simple example using the basic client for direct AI interaction:
 
 ```python
 from clientai import ClientAI
@@ -64,47 +42,78 @@ response = client.generate_text(
 print(response)
 ```
 
-For more detailed examples and explanations, refer to the specific guides linked above.
+### Quick Start with Agent
+
+Here's how to create a simple agent with tools:
+
+```python
+from clientai import ClientAI, create_agent
+
+client = ClientAI('openai', api_key="your-openai-api-key")
+
+# Create a calculator tool
+@tool(name="Calculator", description="Performs basic math operations")
+def calculate(x: int, y: int) -> int:
+    return x + y
+
+# Create an agent with the calculator tool
+agent = create_agent(
+    client=client,
+    role="math_helper",
+    system_prompt="You are a helpful math assistant.",
+    model="gpt-4",
+    tools=[calculate]
+)
+
+# Run the agent
+result = agent.run("What is 5 plus 3?")
+print(result)
+```
 
 ## Advanced Usage
 
-### Streaming Responses
+### Streaming with Client
 
-ClientAI supports streaming responses for compatible providers. Here's a basic example:
+The client supports streaming responses:
 
 ```python
 for chunk in client.generate_text(
-    "Tell me a long story about space exploration",
+    "Tell me a story about space exploration",
     model="gpt-3.5-turbo",
     stream=True
 ):
     print(chunk, end="", flush=True)
 ```
 
-### Using Different Models
+### Multi-Step Agent Workflows
 
-ClientAI allows you to specify different models for each provider. For example:
+Create agents with multiple processing steps:
 
 ```python
-# Using GPT-4 with OpenAI
-openai_response = openai_client.generate_text(
-    "Explain quantum computing",
-    model="gpt-4"
-)
+class AnalysisAgent(Agent):
+    @think("analyze")
+    def analyze_data(self, input_data: str) -> str:
+        return f"Analyze this data: {input_data}"
+    
+    @act("process")
+    def process_results(self, analysis: str) -> str:
+        return f"Based on the analysis: {analysis}"
 
-# Using Llama 2 with Replicate
-replicate_response = replicate_client.generate_text(
-    "Describe the process of photosynthesis",
-    model="meta/llama-2-70b-chat:latest"
+agent = AnalysisAgent(
+    client=client,
+    default_model="gpt-4",
+    tool_confidence=0.8
 )
 ```
 
 ## Best Practices
 
-1. **API Key Management**: Always store your API keys securely, preferably as environment variables.
-2. **Error Handling**: Implement proper error handling to manage potential API failures or rate limiting issues.
-3. **Model Selection**: Choose appropriate models based on your task requirements and budget considerations.
-4. **Context Management**: For chat applications, manage conversation context efficiently to get the best results.
+### Client Best Practices
+
+1. **API Key Management**: Store API keys securely as environment variables
+2. **Error Handling**: Implement proper error handling for API failures
+3. **Model Selection**: Choose models based on task requirements and budget
+4. **Context Management**: Manage conversation context efficiently
 
 ## Contribution
 
