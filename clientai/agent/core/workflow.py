@@ -492,6 +492,8 @@ class WorkflowManager:
             agent.context.set_input(input_data)
             agent.context.increment_iteration()
 
+            engine._current_agent = agent  # type: ignore
+
             try:
                 if self._custom_run:
                     return self._execute_custom_run(
@@ -572,13 +574,8 @@ class WorkflowManager:
                 logger.info("Workflow execution completed")
                 return last_result
 
-            except (StepError, WorkflowError, ValueError):
-                raise
-            except Exception as e:
-                logger.error(f"Unexpected workflow execution error: {e}")
-                raise WorkflowError(
-                    f"Unexpected workflow execution error: {str(e)}"
-                ) from e
+            finally:
+                engine._current_agent = None  # type: ignore
 
         except (StepError, WorkflowError, ValueError):
             raise
