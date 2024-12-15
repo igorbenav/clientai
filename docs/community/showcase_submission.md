@@ -14,7 +14,7 @@
 ## How to Submit
 
 !!! info "Submission Steps"
-    1. Create a new issue using our [Showcase Submission Template](https://github.com/igorbenav/clientai/issues/new?template=showcase_submission.yml)
+    1. Create a new issue using our [Showcase Submission Template](https://github.com/igorbenav/clientai/issues/new?assignees=&labels=showcase&projects=&template=showcase-submission.md&title=Showcase%3A+)
     2. Fill in the relevant information for your project type
     3. We'll review your submission and add it to the showcase!
 
