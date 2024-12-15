@@ -6,34 +6,34 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="This section provides in-depth guides on leveraging specific features of ClientAI and provider-specific functionalities. Each topic delves into a particular aspect of usage or focuses on a specific provider&#x27;s unique capabilities.">
+        <meta name="description" content="A unified client for AI providers with built-in agent support.">
       
       
         <meta name="author" content="Igor Benav">
       
       
-        <link rel="canonical" href="https://github.com/igorbenav/clientai/advanced/overview/">
+        <link rel="canonical" href="https://github.com/igorbenav/clientai/showcase/">
       
       
-        <link rel="prev" href="../../learn/overview/">
+        <link rel="prev" href="../api/client/ollama_manager/ollama_server_config/">
       
       
-        <link rel="next" href="../client/ollama_specific/">
+        <link rel="next" href="../community/overview/">
       
       
-      <link rel="icon" href="../../assets/logo.png">
+      <link rel="icon" href="../assets/logo.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.48">
     
     
       
-        <title>Overview - ClientAI</title>
+        <title>Showcase - ClientAI</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.6f8fc17f.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -52,11 +52,11 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#advanced-overview" class="md-skip">
+        <a href="#showcase" class="md-skip">
           Skip to content
         </a>
       
@@ -106,9 +106,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="ClientAI" class="md-header__button md-logo" aria-label="ClientAI" data-md-component="logo">
+    <a href=".." title="ClientAI" class="md-header__button md-logo" aria-label="ClientAI" data-md-component="logo">
       
-  <img src="../../assets/logo.png" alt="logo">
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -125,7 +125,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Showcase
             
           </span>
         </div>
@@ -234,7 +234,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
     
@@ -253,7 +253,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../usage/overview/" class="md-tabs__link">
+        <a href="../usage/overview/" class="md-tabs__link">
           
   
     
@@ -273,7 +273,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../examples/overview/" class="md-tabs__link">
+        <a href="../examples/overview/" class="md-tabs__link">
           
   
     
@@ -293,7 +293,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../learn/overview/" class="md-tabs__link">
+        <a href="../learn/overview/" class="md-tabs__link">
           
   
     
@@ -309,13 +309,11 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../advanced/overview/" class="md-tabs__link">
           
   
     
@@ -335,7 +333,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/overview/" class="md-tabs__link">
+        <a href="../api/overview/" class="md-tabs__link">
           
   
     
@@ -351,9 +349,11 @@
         
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../../showcase/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
     
@@ -372,7 +372,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../community/overview/" class="md-tabs__link">
+        <a href="../community/overview/" class="md-tabs__link">
           
   
     
@@ -407,9 +407,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="ClientAI" class="md-nav__button md-logo" aria-label="ClientAI" data-md-component="logo">
+    <a href=".." title="ClientAI" class="md-nav__button md-logo" aria-label="ClientAI" data-md-component="logo">
       
-  <img src="../../assets/logo.png" alt="logo">
+  <img src="../assets/logo.png" alt="logo">
 
     </a>
     ClientAI
@@ -436,7 +436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -504,7 +504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/overview/" class="md-nav__link">
+      <a href="../usage/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -575,7 +575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/client/initialization/" class="md-nav__link">
+      <a href="../usage/client/initialization/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -596,7 +596,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/client/text_generation/" class="md-nav__link">
+      <a href="../usage/client/text_generation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -617,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/client/chat_functionality/" class="md-nav__link">
+      <a href="../usage/client/chat_functionality/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -638,7 +638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/client/multiple_providers/" class="md-nav__link">
+      <a href="../usage/client/multiple_providers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -659,7 +659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/client/error_handling/" class="md-nav__link">
+      <a href="../usage/client/error_handling/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -736,7 +736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/agent/creating_agents/" class="md-nav__link">
+      <a href="../usage/agent/creating_agents/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -757,7 +757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/agent/workflow_steps/" class="md-nav__link">
+      <a href="../usage/agent/workflow_steps/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -778,7 +778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/agent/tools/" class="md-nav__link">
+      <a href="../usage/agent/tools/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -799,7 +799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/agent/context/" class="md-nav__link">
+      <a href="../usage/agent/context/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -828,7 +828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usage/ollama_manager/" class="md-nav__link">
+      <a href="../usage/ollama_manager/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -902,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/overview/" class="md-nav__link">
+      <a href="../examples/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -969,7 +969,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/client/simple_qa/" class="md-nav__link">
+      <a href="../examples/client/simple_qa/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -990,7 +990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/client/translator/" class="md-nav__link">
+      <a href="../examples/client/translator/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1011,7 +1011,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/client/ai_dungeon_master/" class="md-nav__link">
+      <a href="../examples/client/ai_dungeon_master/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1088,7 +1088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/agent/simple_qa/" class="md-nav__link">
+      <a href="../examples/agent/simple_qa/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1109,7 +1109,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/agent/task_planner/" class="md-nav__link">
+      <a href="../examples/agent/task_planner/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1130,7 +1130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/agent/writing_assistant/" class="md-nav__link">
+      <a href="../examples/agent/writing_assistant/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1151,7 +1151,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/agent/code_analyzer/" class="md-nav__link">
+      <a href="../examples/agent/code_analyzer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1229,7 +1229,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../learn/overview/" class="md-nav__link">
+      <a href="../learn/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1254,10 +1254,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1272,20 +1270,17 @@
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1296,7 +1291,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Advanced
@@ -1307,30 +1302,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../advanced/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1339,80 +1314,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#provider-specific-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      Provider-Specific Parameters
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#custom-run-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      Custom Run Workflows
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complex-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Workflows
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#advanced-tool-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced Tool Patterns
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#advanced-integration-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced Integration Topics
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-and-monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing and Monitoring
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1473,7 +1374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../client/ollama_specific/" class="md-nav__link">
+      <a href="../advanced/client/ollama_specific/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1494,7 +1395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../client/openai_specific/" class="md-nav__link">
+      <a href="../advanced/client/openai_specific/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1515,7 +1416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../client/replicate_specific/" class="md-nav__link">
+      <a href="../advanced/client/replicate_specific/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1536,7 +1437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../client/groq_specific/" class="md-nav__link">
+      <a href="../advanced/client/groq_specific/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1607,7 +1508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../agent/creating_run/" class="md-nav__link">
+      <a href="../advanced/agent/creating_run/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1636,7 +1537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../error_handling/" class="md-nav__link">
+      <a href="../advanced/error_handling/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1710,7 +1611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/overview/" class="md-nav__link">
+      <a href="../api/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1825,7 +1726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/core/agent/" class="md-nav__link">
+      <a href="../api/agent/core/agent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1846,7 +1747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/core/context/" class="md-nav__link">
+      <a href="../api/agent/core/context/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1867,7 +1768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/core/workflow/" class="md-nav__link">
+      <a href="../api/agent/core/workflow/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1888,7 +1789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/core/execution/" class="md-nav__link">
+      <a href="../api/agent/core/execution/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1963,7 +1864,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/steps/step/" class="md-nav__link">
+      <a href="../api/agent/steps/step/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1984,7 +1885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/steps/types/" class="md-nav__link">
+      <a href="../api/agent/steps/types/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2005,7 +1906,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/steps/decorators/" class="md-nav__link">
+      <a href="../api/agent/steps/decorators/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2080,7 +1981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/tools/tool/" class="md-nav__link">
+      <a href="../api/agent/tools/tool/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2101,7 +2002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/tools/registry/" class="md-nav__link">
+      <a href="../api/agent/tools/registry/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2122,7 +2023,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/agent/tools/selector/" class="md-nav__link">
+      <a href="../api/agent/tools/selector/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2207,7 +2108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/clientai/" class="md-nav__link">
+      <a href="../api/client/clientai/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2228,7 +2129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/ai_provider/" class="md-nav__link">
+      <a href="../api/client/ai_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2297,7 +2198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/specific_providers/ollama_provider/" class="md-nav__link">
+      <a href="../api/client/specific_providers/ollama_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2318,7 +2219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/specific_providers/openai_provider/" class="md-nav__link">
+      <a href="../api/client/specific_providers/openai_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2339,7 +2240,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/specific_providers/replicate_provider/" class="md-nav__link">
+      <a href="../api/client/specific_providers/replicate_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2360,7 +2261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/specific_providers/groq_provider/" class="md-nav__link">
+      <a href="../api/client/specific_providers/groq_provider/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2433,7 +2334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/ollama_manager/ollama_manager/" class="md-nav__link">
+      <a href="../api/client/ollama_manager/ollama_manager/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2454,7 +2355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/client/ollama_manager/ollama_server_config/" class="md-nav__link">
+      <a href="../api/client/ollama_manager/ollama_server_config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2495,10 +2396,30 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../showcase/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Showcase
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -2507,6 +2428,44 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Applications
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorials
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2568,7 +2527,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/overview/" class="md-nav__link">
+      <a href="../community/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2589,7 +2548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/CONTRIBUTING/" class="md-nav__link">
+      <a href="../community/CONTRIBUTING/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2610,7 +2569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/showcase_submission/" class="md-nav__link">
+      <a href="../community/showcase_submission/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2631,7 +2590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/CODE_OF_CONDUCT/" class="md-nav__link">
+      <a href="../community/CODE_OF_CONDUCT/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2652,7 +2611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../community/LICENSE/" class="md-nav__link">
+      <a href="../community/LICENSE/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2700,54 +2659,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#provider-specific-parameters" class="md-nav__link">
+  <a href="#applications" class="md-nav__link">
     <span class="md-ellipsis">
-      Provider-Specific Parameters
+      Applications
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-run-workflows" class="md-nav__link">
+  <a href="#tutorials" class="md-nav__link">
     <span class="md-ellipsis">
-      Custom Run Workflows
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complex-workflows" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Workflows
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#advanced-tool-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced Tool Patterns
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#advanced-integration-topics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Advanced Integration Topics
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-and-monitoring" class="md-nav__link">
-    <span class="md-ellipsis">
-      Testing and Monitoring
+      Tutorials
     </span>
   </a>
   
@@ -2771,157 +2694,72 @@
   
 
 
-<h1 id="advanced-overview">Advanced Overview<a class="headerlink" href="#advanced-overview" title="Permanent link">&para;</a></h1>
-<p>This section provides in-depth guides on leveraging specific features of ClientAI and provider-specific functionalities. Each topic delves into a particular aspect of usage or focuses on a specific provider's unique capabilities.</p>
-<h2 id="provider-specific-parameters">Provider-Specific Parameters<a class="headerlink" href="#provider-specific-parameters" title="Permanent link">&para;</a></h2>
-<p>Different AI providers offer unique parameters and features. Understanding these can help you fine-tune your AI interactions for optimal results.</p>
-<ol>
-<li>
-<p><strong>Ollama Specific Guide:</strong> Learn about Ollama's unique parameters, including context handling, streaming options, and custom templates.</p>
-<ul>
-<li><a href="../client/ollama_specific/">Ollama Specific Guide</a></li>
-</ul>
-</li>
-<li>
-<p><strong>OpenAI Specific Guide:</strong> Explore OpenAI's advanced features, such as logit bias and model-specific parameters.</p>
-<ul>
-<li><a href="../client/openai_specific/">OpenAI Specific Guide</a></li>
-</ul>
-</li>
-<li>
-<p><strong>Replicate Specific Guide</strong>: Discover Replicate's distinctive offerings, including model versioning and custom deployment options.</p>
-<ul>
-<li><a href="../client/replicate_specific/">Replicate Specific Guide</a></li>
-</ul>
-</li>
-<li>
-<p><strong>Groq Specific Guide</strong>: Also check Groq's specific settings and parameters.</p>
-<ul>
-<li><a href="../client/groq_specific/">Groq Specific Guide</a></li>
-</ul>
-</li>
-</ol>
-<h2 id="custom-run-workflows">Custom Run Workflows<a class="headerlink" href="#custom-run-workflows" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>Creating Custom Run Methods</strong>: Learn how to implement custom run methods for complete workflow control.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Managing State in Custom Runs</strong>: Master state management techniques in custom run implementations.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Tool Usage in Custom Runs</strong>: Effectively leverage tools within custom run methods.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Error Handling in Custom Runs</strong>: Implement robust error handling in custom workflows.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-</ol>
-<h2 id="complex-workflows">Complex Workflows<a class="headerlink" href="#complex-workflows" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>Multi-Step Decision Making</strong>: Advanced patterns for complex decision workflows.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Parallel Step Execution</strong>: Implementing concurrent step execution patterns.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Conditional Workflows</strong>: Creating dynamic, condition-based workflows.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-</ol>
-<h2 id="advanced-tool-patterns">Advanced Tool Patterns<a class="headerlink" href="#advanced-tool-patterns" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>Tool Chaining</strong>: Techniques for combining multiple tools effectively.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Tool Result Caching</strong>: Optimizing tool execution with intelligent caching.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Tool Fallback Strategies</strong>: Implementing robust tool execution patterns.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-</ol>
-<h2 id="advanced-integration-topics">Advanced Integration Topics<a class="headerlink" href="#advanced-integration-topics" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>External Service Integration</strong>: Patterns for integrating with external services.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Database Integration</strong>: Implementing persistent storage in agent workflows.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Event Systems</strong>: Building event-driven agent architectures.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-</ol>
-<h2 id="testing-and-monitoring">Testing and Monitoring<a class="headerlink" href="#testing-and-monitoring" title="Permanent link">&para;</a></h2>
-<ol>
-<li>
-<p><strong>Testing Strategies</strong>: Comprehensive testing approaches for agent systems.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Performance Monitoring</strong>: Monitoring and optimizing agent performance.</p>
-<ul>
-<li><code>🚧 Coming Soon</code></li>
-</ul>
-</li>
-<li>
-<p><strong>Error Handling and Retry Strategies</strong>: Best practices for error handling.</p>
-<ul>
-<li><a href="../error_handling/">Error Handling and Retry Strategies</a></li>
-</ul>
-</li>
-</ol>
-<p>Each guide in this section is designed to provide you with a deeper understanding of ClientAI's capabilities and how to leverage them effectively in your projects.</p>
+<h1 id="showcase">Showcase<a class="headerlink" href="#showcase" title="Permanent link">&para;</a></h1>
+<div class="admonition example">
+<p class="admonition-title"><strong>Categories</strong></p>
+<p>Browse by type: <a href="#applications">Applications</a> · <a href="#tutorials">Tutorials</a></p>
+</div>
+<h2 id="applications">Applications<a class="headerlink" href="#applications" title="Permanent link">&para;</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Be the First!</p>
+<p>No applications yet. Have you built something with ClientAI? We'd love to feature it here!</p>
+<p><strong><a href="../community/showcase_submission/">Submit Your Project</a></strong></p>
+</div>
+<h2 id="tutorials">Tutorials<a class="headerlink" href="#tutorials" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Simple Q&amp;A Bot</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/client/simple_qa/">View Tutorial</a></p>
+<p>Learn the basics of ClientAI by building a Q&amp;A bot with chat functionality, context management, and real-time streaming responses.</p>
+<p><code>OpenAI</code> <code>Chat</code> <code>Beginner</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Multi-Provider Translator</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/client/translator/">View Tutorial</a></p>
+<p>Build a translator that compares outputs from different AI providers, with performance metrics and parallel processing.</p>
+<p><code>OpenAI</code> <code>Groq</code> <code>Replicate</code> <code>Intermediate</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">AI Dungeon Master</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/client/ai_dungeon_master/">View Tutorial</a></p>
+<p>Create an AI-powered text adventure game using multiple providers, with dynamic storytelling and game state management.</p>
+<p><code>OpenAI</code> <code>Replicate</code> <code>Ollama</code> <code>Advanced</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Simple Q&amp;A Bot (Agent)</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/agent/simple_qa/">View Tutorial</a></p>
+<p>Build a Q&amp;A bot using ClientAI's agent framework, demonstrating core agent features and context management.</p>
+<p><code>OpenAI</code> <code>Agent</code> <code>Beginner</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Task Planner</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/agent/task_planner/">View Tutorial</a></p>
+<p>Develop a local task planning system that breaks down goals into actionable steps with realistic timelines.</p>
+<p><code>Ollama</code> <code>Planning</code> <code>Intermediate</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Writing Assistant</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/agent/writing_assistant/">View Tutorial</a></p>
+<p>Create a sophisticated writing assistant that analyzes text, suggests improvements, and rewrites content while maintaining context.</p>
+<p><code>Groq</code> <code>Writing</code> <code>Intermediate</code></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Code Analyzer</p>
+<p><strong>By ClientAI Team</strong> · <a href="../examples/agent/code_analyzer/">View Tutorial</a></p>
+<p>Build a code analysis assistant that examines code structure, identifies potential issues, and suggests improvements.</p>
+<p><code>Ollama</code> <code>Development</code> <code>Advanced</code></p>
+</div>
+<hr />
+<div class="admonition question">
+<p class="admonition-title">Add Your Project</p>
+<p>Built something with ClientAI? We'd love to showcase it!</p>
+<p><strong><a href="../community/showcase_submission/">Submit Your Project</a></strong></p>
+</div>
 
 
 
 
 
 
-
-  
-  
 
 
 
@@ -2964,10 +2802,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.tabs", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.tabs", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   </body>
