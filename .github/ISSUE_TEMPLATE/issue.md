@@ -1,20 +1,17 @@
 ---
 name: ClientAI Issue
-about: Report a bug or request a feature
-title: '[Bug/Feature]: '
-labels: 'triage'
+about: Report a bug
+title: '[Bug]: '
+labels: 'bug'
 assignees: ''
 
 ---
 
-**Issue Type**
-Bug Report, Feature Request, Documentation Issue, or Question
-
 **Description**
-Describe the bug or feature request. For bugs, explain what happened and what you expected to happen.
+Describe the bug. Explain what happened and what you expected to happen.
 
 **To Reproduce**
-Steps to reproduce the issue (for bugs):
+Steps to reproduce the issue:
 ```python
 # Your code here
 ```
