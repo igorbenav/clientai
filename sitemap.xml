@@ -2,206 +2,206 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://github.com/igorbenav/clientai/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/error_handling/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/agent/creating_run/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/client/groq_specific/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/client/ollama_specific/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/client/openai_specific/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/advanced/client/replicate_specific/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/core/agent/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/core/context/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/core/execution/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/core/workflow/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/steps/decorators/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/steps/step/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/steps/types/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/tools/registry/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/tools/selector/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/agent/tools/tool/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/ai_provider/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/clientai/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/ollama_manager/ollama_manager/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/ollama_manager/ollama_server_config/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/specific_providers/groq_provider/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/specific_providers/ollama_provider/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/specific_providers/openai_provider/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/api/client/specific_providers/replicate_provider/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/community/CODE_OF_CONDUCT/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/community/CONTRIBUTING/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/community/LICENSE/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/community/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/agent/code_analyzer/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/agent/simple_qa/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/agent/task_planner/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/agent/writing_assistant/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/client/ai_dungeon_master/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/client/simple_qa/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/examples/client/translator/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/learn/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/ollama_manager/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/overview/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/agent/context/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/agent/creating_agents/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/agent/tools/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/agent/workflow_steps/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/client/chat_functionality/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/client/error_handling/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/client/initialization/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/client/multiple_providers/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
     <url>
          <loc>https://github.com/igorbenav/clientai/usage/client/text_generation/</loc>
-         <lastmod>2024-12-14</lastmod>
+         <lastmod>2024-12-15</lastmod>
     </url>
 </urlset>
