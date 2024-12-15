@@ -108,9 +108,11 @@ nav:
       - Ollama Manager:
         - OllamaManager: api/client/ollama_manager/ollama_manager.md
         - OllamaServerConfig: api/client/ollama_manager/ollama_server_config.md
+  - Showcase: showcase.md
   - Community:
     - Overview: community/overview.md
     - Contributing: community/CONTRIBUTING.md
+    - Showcase Submission: community/showcase_submission.md
     - Code of Conduct: community/CODE_OF_CONDUCT.md
     - License: community/LICENSE.md
 

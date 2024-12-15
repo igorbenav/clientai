@@ -57,4 +57,4 @@ We welcome contributions to ClientAI! If you're interested in contributing, plea
 
 ## Feedback
 
-Your feedback is crucial in helping us improve ClientAI and its documentation. If you have any suggestions, corrections, or queries, please don't hesitate to reach out to us via GitHub issues or our community channels.
+Your feedback is crucial in helping us improve ClientAI and its documentation. If you have any suggestions, corrections, or queries, please don't hesitate to reach out to us via GitHub issues.
