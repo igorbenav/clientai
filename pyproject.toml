@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clientai"
-version = "0.4.2"
+version = "0.4.3"
 description = "A unified client for AI providers with built-in agent support."
 authors = ["Igor Benav <igor.magalhaes.r@gmail.com>"]
 readme = "README.md"
