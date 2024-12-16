@@ -29,6 +29,7 @@ keywords = ["ai", "agents", "llm", "nlp", "language-model", "ai-agents"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+httpx = ">=0.27.0,<0.28.0"
 openai = {version = "^1.50.2", optional = true}
 replicate = {version = "^0.34.1", optional = true}
 ollama = {version = "^0.3.3", optional = true}
@@ -42,6 +43,7 @@ openai = "^1.50.2"
 replicate = "^0.34.1"
 ollama = "^0.3.3"
 groq = "^0.11.0"
+httpx = ">=0.27.0,<0.28.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.6.1"
@@ -52,11 +54,11 @@ mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 
 [tool.poetry.extras]
 minimal = []
-openai = ["openai"]
+openai = ["openai", "httpx"]
 replicate = ["replicate"]
 ollama = ["ollama"]
-groq = ["groq"]
-full = ["openai", "replicate", "ollama", "groq"]
+groq = ["groq", "httpx"]
+full = ["openai", "replicate", "ollama", "groq", "httpx"]
 
 [build-system]
 requires = ["poetry-core"]
