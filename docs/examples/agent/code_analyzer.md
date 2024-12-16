@@ -1,12 +1,44 @@
 # Building a Code Analysis Assistant with ClientAI
 
-In this tutorial, we're going to build a code analysis assistant that can help developers improve their Python code. Our assistant will analyze code structure, identify potential issues, and suggest improvements. We'll use ClientAI's framework along with local AI models to create something that's both powerful and practical.
+In this tutorial, we'll create a code analysis system using ClientAI and Ollama. Our assistant will analyze Python code structure, identify potential issues, suggest improvements, and generate documentation - all running on your local machine.
 
-## Understanding the Foundation
+## Table of Contents
 
-Let's start with what we're actually building. A code analyzer needs to look at several aspects of code: its structure, complexity, style, and documentation. To do this effectively, we'll use Python's abstract syntax tree (AST) module to parse and analyze code programmatically.
+1. [Setup and Core Components](#getting-started)
+2. [Analysis Tools](#checking-code-style)
+3. [Building the Assistant](#registering-our-tools)
+4. [Usage and Extensions](#creating-the-command-line-interface)
 
-First, we need a way to represent our analysis results. Here's how we structure this:
+## Getting Started
+
+First, let's grab all the tools we'll need. Here are our imports:
+
+```python
+import ast
+import json
+import logging
+import re
+from dataclasses import dataclass
+from typing import List
+
+from clientai import ClientAI
+from clientai.agent import (
+    Agent,
+    ToolConfig,
+    act,
+    observe,
+    run,
+    synthesize,
+    think,
+)
+from clientai.ollama.manager import OllamaManager, OllamaServerConfig
+```
+
+There's quite a bit here, but don't worry - each piece has its purpose. The `ast` module is going to help us understand Python code by turning it into a tree structure we can analyze. We'll use `json` for data handling, and `re` for pattern matching when we check code style. The ClientAI imports give us the framework we need to build our AI-powered assistant.
+
+## Structuring Our Results
+
+When we analyze code, we need a clean way to organize what we find. Here's how we'll structure our results:
 
 ```python
 @dataclass
@@ -19,9 +51,11 @@ class CodeAnalysisResult:
     issues: List[str]
 ```
 
-This dataclass gives us a clean way to organize our findings. The complexity score helps us understand how intricate the code is, while the other fields track the various components we find in the code.
+Think of this as our report card for code analysis. The complexity score tells us how intricate the code is - higher numbers might mean it's getting too complicated. We keep track of functions and classes we find, which helps us understand the code's structure. The imports list shows us what external code is being used, and the issues list is where we'll note any problems we spot.
 
-Now let's write the core analysis function that examines Python code:
+## Analyzing Code Structure
+
+Now here's where things get interesting. We need to look inside the code and understand its structure. Here's how we do that:
 
 ```python
 def analyze_python_code_original(code: str) -> CodeAnalysisResult:
@@ -36,8 +70,11 @@ def analyze_python_code_original(code: str) -> CodeAnalysisResult:
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 functions.append(node.name)
-                complexity += sum(1 for _ in ast.walk(node) 
-                                if isinstance(_, (ast.If, ast.For, ast.While)))
+                complexity += sum(
+                    1
+                    for _ in ast.walk(node)
+                    if isinstance(_, (ast.If, ast.For, ast.While))
+                )
             elif isinstance(node, ast.ClassDef):
                 classes.append(node.name)
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -57,41 +94,113 @@ def analyze_python_code_original(code: str) -> CodeAnalysisResult:
         )
 ```
 
-This function does the heavy lifting of our analysis. When we pass it a string of Python code, it uses the AST module to parse the code into a tree structure that we can examine. We walk through this tree looking for different types of nodes that represent functions, classes, and imports.
+This function is like a code detective. We hand it some Python code as a string, and it starts investigating. First, it uses `ast.parse()` to turn the code into a tree structure - imagine turning a book into a detailed outline. Then it walks through this tree, looking for interesting things.
 
-For each function we find, we also calculate its complexity. We do this by counting control structures like if statements, for loops, and while loops. This gives us a rough measure of how complex the function is - more control structures generally mean more complex code that might need simplification.
+When it finds a function, it doesn't just record its name - it also looks at how complex the function is by counting things like if statements, for loops, and while loops. Each of these makes the code a bit harder to understand, so we keep track of them.
 
-Next, we need to look at code style. Python has some well-established style conventions, and we want to check if code follows them:
+We're also on the lookout for classes and import statements. This helps us understand how the code is organized and what external tools it's using.
+
+## Checking Code Style
+
+Next up is our style checker. Good code isn't just about working correctly - it should also be easy to read and maintain:
 
 ```python
-def check_style_issues(code: str) -> str:
-    """Check Python code style issues."""
+def check_style_issues_original(code: str) -> List[str]:
+    """Check for Python code style issues."""
     issues = []
-    
+
     for i, line in enumerate(code.split("\n"), 1):
         if len(line.strip()) > 88:
             issues.append(f"Line {i} exceeds 88 characters")
-            
+
     function_pattern = r"def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\("
     for match in re.finditer(function_pattern, code):
         name = match.group(1)
         if not name.islower():
             issues.append(f"Function '{name}' should use snake_case")
-            
+
+    return issues
+```
+
+This function is like a proofreader for code. It checks a couple of key style points. First, it makes sure lines aren't too long - we use 88 characters as our limit because that's a good balance between using space efficiently and keeping code readable.
+
+It also checks function names. In Python, we like to use snake_case for function names (like `calculate_total` instead of `calculateTotal`). The function uses a regular expression pattern to find function definitions and checks if they follow this convention.
+
+## Helping with Documentation
+
+Documentation is crucial for good code, so we've built a helper for that too:
+
+```python
+def generate_docstring(code: str) -> str:
+    """Generate docstring for Python code."""
+    try:
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                args = []
+                if isinstance(node, ast.FunctionDef):
+                    args = [a.arg for a in node.args.args]
+                return f"""
+                Suggested docstring for {node.name}:
+
+                Args:
+                {chr(4).join(f"{arg}: Description of {arg}" for arg in args)}
+                Returns:
+                    Description of return value
+
+                Examples:
+                    ```python
+                    # Example usage of {node.name}
+                    ```
+                """
+        return "No functions or classes found to document."
+    except Exception as e:
+        return f"Error generating docstring: {str(e)}"
+```
+
+This is like having a documentation assistant. It looks at functions and classes in your code and generates a template for documenting them. For functions, it automatically finds all the parameters and creates placeholders for describing what they do. It also reminds you to document the return value and include usage examples.
+
+## Making Our Tools AI-Ready
+
+Finally, we need to wrap our tools so they can work with the AI system. We do this by converting their output to JSON:
+
+```python
+def analyze_python_code(code: str) -> str:
+    """Wrap analyze_python_code_original to return JSON string."""
+    if not code:
+        return json.dumps({"error": "No code provided"})
+    result = analyze_python_code_original(code)
+    return json.dumps({
+        "complexity": result.complexity,
+        "functions": result.functions,
+        "classes": result.classes,
+        "imports": result.imports,
+        "issues": result.issues,
+    })
+
+def check_style_issues(code: str) -> str:
+    """Wrap check_style_issues_original to return JSON string."""
+    if not code:
+        return json.dumps({"error": "No code provided"})
+    issues = check_style_issues_original(code)
     return json.dumps({"issues": issues})
 ```
 
-This style checker looks at a couple of key aspects of Python style. First, it checks line length - lines that are too long can be hard to read and understand. Second, it looks at function naming conventions. In Python, we typically use snake_case for function names (like `calculate_total` rather than `calculateTotal`).
+These wrapper functions make our tools more robust by adding input validation and converting their output to a format that the AI can easily understand. They're like translators that help our Python analysis tools communicate with the AI system.
 
-Now that we have our core analysis functions, let's integrate them with ClientAI. Here's how we package them as tools for the AI to use:
+Now that we have our core analysis tools built, let's turn them into something the AI can use. This is where things get really interesting - we're going to teach our AI assistant how to use these tools effectively.
+
+## Registering Our Tools
+
+First, we need to tell ClientAI about our analysis tools. Here's how we do that:
 
 ```python
 def create_review_tools() -> List[ToolConfig]:
-    """Create tool configurations for the assistant."""
+    """Create the tool configurations for code review."""
     return [
         ToolConfig(
             tool=analyze_python_code,
-            name="code_analyzer", 
+            name="code_analyzer",
             description=(
                 "Analyze Python code structure and complexity. "
                 "Expects a 'code' parameter with the Python code as a string."
@@ -107,33 +216,40 @@ def create_review_tools() -> List[ToolConfig]:
             ),
             scopes=["observe"],
         ),
+        ToolConfig(
+            tool=generate_docstring,
+            name="docstring_generator",
+            description=(
+                "Generate docstring suggestions for Python code. "
+                "Expects a 'code' parameter with the Python code as a string."
+            ),
+            scopes=["act"],
+        ),
     ]
 ```
 
-The `ToolConfig` wrapper provides metadata that helps the AI understand and use our tools effectively:
+Each `ToolConfig` is like a job description for our tools. We give each tool a name that the AI will use to reference it, a description that helps the AI understand when and how to use it, and a scope that determines when the tool can be used. We put our analysis tools in the "observe" scope because they gather information, while the docstring generator goes in the "act" scope because it produces new content.
 
-- `name`: A unique identifier the AI uses to reference the tool
-- `description`: Helps the AI understand what the tool does and how to use it
-- `scopes`: Controls when the tool can be used in the workflow - in this case, during observation steps when the AI is gathering information
+## Building the Assistant
 
-Now let's look at how we build our assistant that uses these tools:
+Now comes the fun part - creating our AI assistant. We'll design it to work in steps, kind of like how a human code reviewer would think:
 
 ```python
 class CodeReviewAssistant(Agent):
-    """Code review assistant implementation."""
-    
+    """An agent that performs comprehensive Python code review."""
+
     @observe(
         name="analyze_structure",
         description="Analyze code structure and style",
         stream=True,
     )
     def analyze_structure(self, code: str) -> str:
-        """First step: Analyze code structure."""
+        """Analyze the code structure, complexity, and style issues."""
         self.context.state["code_to_analyze"] = code
-        
         return """
         Please analyze this Python code structure and style:
-        
+
+        The code to analyze has been provided in the context as 'code_to_analyze'.
         Use the code_analyzer and style_checker tools to evaluate:
         1. Code complexity and structure metrics
         2. Style compliance issues
@@ -142,22 +258,19 @@ class CodeReviewAssistant(Agent):
         """
 ```
 
-Our assistant inherits from ClientAI's Agent class, which provides the framework for creating AI-powered tools. The `@observe` decorator marks this method as an observation step - a step where we gather information about the code we're analyzing.
+This first step is like the initial read-through of the code. The assistant uses our analysis tools to understand what it's looking at. Notice how we store the code in the context - this makes it available throughout the review process.
 
-Inside the method, we store the code in the assistant's context. This makes it available to our tools and other steps in the process. Then we return a prompt that tells the AI what we want it to analyze.
-
-Let's add a step for suggesting improvements:
+Next, we want our assistant to think about improvements:
 
 ```python
     @think(
         name="suggest_improvements",
-        description="Generate improvement suggestions",
+        description="Suggest code improvements based on analysis",
         stream=True,
     )
     def suggest_improvements(self, analysis_result: str) -> str:
-        """Second step: Generate improvement suggestions."""
+        """Generate improvement suggestions based on the analysis results."""
         current_code = self.context.state.get("current_code", "")
-        
         return f"""
         Based on the code analysis of:
 
@@ -168,31 +281,107 @@ Let's add a step for suggesting improvements:
         And the analysis results:
         {analysis_result}
 
-        Please suggest improvements for:
-        1. Reducing complexity
+        Please suggest specific improvements for:
+        1. Reducing complexity where identified
         2. Fixing style issues
-        3. Improving organization
-        4. Enhancing readability
+        3. Improving code organization
+        4. Optimizing import usage
+        5. Enhancing readability
+        6. Enhancing explicitness
+
+        Provide concrete, actionable suggestions that maintain the code's functionality
+        while improving its quality.
         """
 ```
 
-This step takes the results from our analysis and asks the AI to generate specific suggestions for improvement. We're using the `@think` decorator here because this step involves processing information and making recommendations rather than just gathering data.
+This step is where the AI starts to form opinions about what could be better. It looks at both the code and the analysis results to make specific suggestions for improvement.
 
-Finally, we need a way to use our assistant. Here's how we set up the command-line interface:
+Then we have a step dedicated to documentation:
+
+```python
+    @act(
+        name="improve_documentation",
+        description="Generate improved documentation",
+        stream=True,
+    )
+    def improve_docs(self, improvements: str) -> str:
+        """Generate documentation improvements for the code."""
+        current_code = self.context.state.get("current_code", "")
+        return f"""
+        For this code:
+
+        ```python
+        {current_code}
+        ```
+
+        And these suggested improvements:
+        {improvements}
+
+        Please provide comprehensive documentation improvements:
+        1. Module-level documentation
+        2. Class and function docstrings
+        3. Inline comments for complex logic
+        4. Usage examples
+        """
+```
+
+The documentation step uses the context of both the original code and the suggested improvements to recommend better documentation. This way, the documentation reflects not just what the code does now, but also takes into account the planned improvements.
+
+Finally, we wrap everything up in a comprehensive report:
+
+```python
+    @synthesize(
+        name="create_report",
+        description="Create final review report",
+        stream=True,
+    )
+    def generate_report(self) -> str:
+        """Generate a comprehensive code review report."""
+        current_code = self.context.original_input
+        return f"""
+        Please create a comprehensive code review report for:
+
+        ```python
+        {current_code}
+        ```
+
+        Include these sections:
+
+        1. Code Analysis Summary
+        2. Suggested Improvements
+        3. Documentation Recommendations
+        4. Prioritized Action Items
+
+        Format the report with clear headings and specific code examples where relevant.
+        """
+```
+
+The report step pulls everything together into a clear, actionable document that developers can use to improve their code.
+
+Now that we've built our assistant, let's get it up and running and see it in action. We'll set up a nice command-line interface that makes it easy to interact with our code reviewer.
+
+## Creating the Command-Line Interface
+
+Now let's create a user-friendly way to interact with our assistant:
 
 ```python
 def main():
-    """Run the code analysis assistant."""
+    logger = logging.getLogger(__name__)
+
+    # Configure Ollama server
     config = OllamaServerConfig(
         host="127.0.0.1",
         port=11434,
         gpu_layers=35,
         cpu_threads=8,
     )
-    
+
+    # Use context manager for Ollama server
     with OllamaManager(config) as manager:
+        # Initialize ClientAI with Ollama
         client = ClientAI("ollama", host=f"http://{config.host}:{config.port}")
-        
+
+        # Create code review assistant with tools
         assistant = CodeReviewAssistant(
             client=client,
             default_model="llama3",
@@ -200,27 +389,120 @@ def main():
             tool_confidence=0.8,
             max_tools_per_step=2,
         )
+
+        print("Code Review Assistant (Local AI)")
+        print("Enter Python code to review, or 'quit' to exit.")
+        print("End input with '###' on a new line.")
+
+        while True:
+            try:
+                print("\n" + "=" * 50 + "\n")
+                print("Enter code:")
+                
+                # Collect code input
+                code_lines = []
+                while True:
+                    line = input()
+                    if line == "###":
+                        break
+                    code_lines.append(line)
+
+                code = "\n".join(code_lines)
+                if code.lower() == "quit":
+                    break
+
+                # Process the code
+                result = assistant.run(code, stream=True)
+
+                # Handle both streaming and non-streaming results
+                if isinstance(result, str):
+                    print(result)
+                else:
+                    for chunk in result:
+                        print(chunk, end="", flush=True)
+                print("\n")
+
+            except ValueError as e:
+                logger.error(f"Error reviewing code: {e}")
+                print(f"\nError: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                print("\nAn unexpected error occurred. Please try again.")
+
+if __name__ == "__main__":
+    main()
 ```
 
-This sets up our connection to the local AI model and creates our assistant. We configure it to use our analysis tools and set parameters for how confidently it should use those tools.
+Let's break down what this interface does:
 
-When you use the assistant, you can enter Python code and get back detailed analysis and suggestions:
+1. It sets up a local Ollama server for running our AI model
+2. Creates our assistant with the tools we built
+3. Provides a simple way to input code (type until you enter '###')
+4. Handles the review process and displays results in real-time
+
+## Seeing It in Action
+
+Let's try our assistant with a real piece of code. Here's how you'd use it:
 
 ```python
-def example(x,y):
-    if x > 0:
-        if y > 0:
-            return x+y
-    return 0
+# Run the assistant
+python code_reviewer.py
+
+# Enter some code to review:
+def calculate_total(values,tax_rate):
+    Total = 0
+    for Val in values:
+        if Val > 0:
+            if tax_rate > 0:
+                Total += Val + (Val * tax_rate)
+            else:
+                Total += Val
+    return Total
+###
 ```
 
-The assistant will analyze this code and point out several things:
+The assistant will analyze this code and provide a comprehensive review that might include:
 
-- The nested if statements increase complexity
-- The function name is good (it uses snake_case)
-- It's missing type hints and a docstring
-- The logic could be simplified
+1. Structure Analysis:
+    - Identifies nested if statements that increase complexity
+    - Notes the inconsistent variable naming (Total, Val)
 
-The beauty of this system is that it combines static analysis (our Python tools) with AI-powered insights to provide comprehensive code review feedback. The AI can explain issues in a way that's easy to understand and suggest specific improvements based on best practices.
+2. Style Issues:
+    - Missing type hints for parameters
+    - Missing docstring
+    - Inconsistent capitalization in variable names
 
-You can build on this foundation by adding more types of analysis, improving the style checks, or even adding support for automatically fixing some of the issues it finds. The key is that we've created a flexible framework that can grow with your needs.
+3. Documentation Suggestions:
+    - Provides a template docstring with parameter descriptions
+    - Suggests adding examples showing how to use the function
+
+4. Improvement Recommendations:
+    - Simplifying the nested conditions
+    - Using consistent snake_case naming
+    - Adding type hints and validation
+
+## Extending the Assistant
+
+Want to make the assistant better? Here are some ideas for extending it:
+
+1. Add More Analysis Tools:
+    - Security vulnerability scanning
+    - Performance analysis
+    - Type checking
+
+2. Enhance Style Checking:
+    - Add more PEP 8 rules
+    - Check for common anti-patterns
+    - Analyze variable naming patterns
+
+3. Improve Documentation Analysis:
+    - Check coverage of docstrings
+    - Validate example code in docstrings
+    - Generate more detailed usage examples
+
+4. Add Auto-fixing Capabilities:
+    - Automatic formatting
+    - Simple refactoring suggestions
+    - Documentation generation
+
+The modular nature of our assistant makes it easy to add these enhancements - just create new tools and add them to the workflow.

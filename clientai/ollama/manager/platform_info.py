@@ -273,9 +273,9 @@ class PlatformInfo:
                 )
                 env["GPU_DEVICE_ORDINAL"] = ",".join(map(str, devices))
             if config.gpu_memory_fraction is not None:
-                env[
-                    "GPU_MAX_HEAP_SIZE"
-                ] = f"{int(config.gpu_memory_fraction * 100)}%"
+                env["GPU_MAX_HEAP_SIZE"] = (
+                    f"{int(config.gpu_memory_fraction * 100)}%"
+                )
 
         elif self.gpu_vendor == GPUVendor.APPLE:
             if config.gpu_layers is not None:
