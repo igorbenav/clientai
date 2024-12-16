@@ -59,8 +59,7 @@ class OllamaClientProtocol(Protocol):
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
         **kwargs: Any,
-    ) -> Union[OllamaResponse, Iterator[OllamaStreamResponse]]:
-        ...
+    ) -> Union[OllamaResponse, Iterator[OllamaStreamResponse]]: ...
 
     def chat(
         self,
@@ -70,8 +69,7 @@ class OllamaClientProtocol(Protocol):
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
         **kwargs: Any,
-    ) -> Union[OllamaChatResponse, Iterator[OllamaStreamResponse]]:
-        ...
+    ) -> Union[OllamaChatResponse, Iterator[OllamaStreamResponse]]: ...
 
 
 Client = "ollama.Client"
