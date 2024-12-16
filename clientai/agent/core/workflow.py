@@ -388,7 +388,7 @@ class WorkflowManager:
         """
         try:
             if param_count == 0:
-                return engine.execute_step(step, agent, stream=current_stream)
+                return engine.execute_step(step, stream=current_stream)
             elif param_count == 1:
                 input_data = (
                     agent.context.original_input
@@ -396,15 +396,14 @@ class WorkflowManager:
                     else last_result
                 )
                 return engine.execute_step(
-                    step, agent, input_data, stream=current_stream
+                    step, input_data, stream=current_stream
                 )
             else:
                 previous_results = self._get_previous_results(
-                    agent, param_count
+                    agent, param_count - 1
                 )
-                return engine.execute_step(
-                    step, agent, *previous_results, stream=current_stream
-                )
+                args = [last_result] + previous_results
+                return engine.execute_step(step, *args, stream=current_stream)
         except Exception as e:
             raise StepError(
                 f"Failed to execute step '{step.name}': {str(e)}"
@@ -524,10 +523,13 @@ class WorkflowManager:
                             is_intermediate_step=True,
                         )
 
-                        result = engine.execute_step(
-                            step,
-                            last_result,
-                            stream=current_stream,
+                        result = self._execute_step(
+                            step=step,
+                            agent=agent,
+                            last_result=last_result,
+                            param_count=param_count,
+                            current_stream=current_stream,
+                            engine=engine,
                         )
 
                         step_result = self._handle_step_result(
@@ -537,6 +539,7 @@ class WorkflowManager:
                             last_result = step_result
 
                         logger.debug(f"Step {step.name} completed")
+
                     except (StepError, ValueError) as e:
                         logger.error(f"Error in step '{step.name}': {e}")
                         if step.config.required:
@@ -562,8 +565,13 @@ class WorkflowManager:
                         is_intermediate_step=False,
                     )
 
-                    result = engine.execute_step(
-                        final_step, last_result, stream=current_stream
+                    result = self._execute_step(
+                        step=final_step,
+                        agent=agent,
+                        last_result=last_result,
+                        param_count=param_count,
+                        current_stream=current_stream,
+                        engine=engine,
                     )
 
                     if not current_stream:

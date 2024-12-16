@@ -601,11 +601,13 @@ Example:
 @overload
 def run(
     *, description: Optional[str] = None
-) -> Callable[[Callable[..., T]], RunFunction]: ...
+) -> Callable[[Callable[..., T]], RunFunction]:
+    ...
 
 
 @overload
-def run(func: Callable[..., T]) -> RunFunction: ...
+def run(func: Callable[..., T]) -> RunFunction:
+    ...
 
 
 def run(
