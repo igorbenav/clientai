@@ -12,7 +12,8 @@ class ReplicatePredictionProtocol(Protocol):
     error: Optional[str]
     output: Any
 
-    def stream(self) -> Iterator[Any]: ...
+    def stream(self) -> Iterator[Any]:
+        ...
 
 
 ReplicatePrediction = ReplicatePredictionProtocol
@@ -59,10 +60,12 @@ ReplicateStreamChunk = Union[str, ReplicateStreamResponse]
 
 class ReplicatePredictionsProtocol(Protocol):
     @staticmethod
-    def create(**kwargs: Any) -> ReplicatePredictionProtocol: ...
+    def create(**kwargs: Any) -> ReplicatePredictionProtocol:
+        ...
 
     @staticmethod
-    def get(id: str) -> ReplicatePredictionProtocol: ...
+    def get(id: str) -> ReplicatePredictionProtocol:
+        ...
 
 
 class ReplicateClientProtocol(Protocol):

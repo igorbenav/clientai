@@ -26,7 +26,8 @@ class AIProviderProtocol(Protocol, Generic[R, T, S]):
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
-    ) -> GenericResponse[R, T, S]: ...
+    ) -> GenericResponse[R, T, S]:
+        ...
 
     def chat(
         self,
@@ -35,7 +36,8 @@ class AIProviderProtocol(Protocol, Generic[R, T, S]):
         return_full_response: bool = False,
         stream: bool = False,
         **kwargs: Any,
-    ) -> GenericResponse[R, T, S]: ...
+    ) -> GenericResponse[R, T, S]:
+        ...
 
 
 P = TypeVar("P", bound=AIProviderProtocol)
