@@ -58,7 +58,7 @@ openai = ["openai", "httpx"]
 replicate = ["replicate"]
 ollama = ["ollama"]
 groq = ["groq", "httpx"]
-full = ["openai", "replicate", "ollama", "groq", "httpx"]
+all = ["openai", "replicate", "ollama", "groq", "httpx"]
 
 [build-system]
 requires = ["poetry-core"]

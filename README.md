@@ -43,16 +43,16 @@
 To install ClientAI with all providers, run:
 
 ```sh
-pip install clientai[all]
+pip install "clientai[all]"
 ```
 
 Or, if you prefer to install only specific providers:
 
 ```sh
-pip install clientai[openai]  # For OpenAI support
-pip install clientai[replicate]  # For Replicate support
-pip install clientai[ollama]  # For Ollama support
-pip install clientai[groq]  # For Groq support
+pip install "clientai[openai]"  # For OpenAI support
+pip install "clientai[replicate]"  # For Replicate support
+pip install "clientai[ollama]"  # For Ollama support
+pip install "clientai[groq]"  # For Groq support
 ```
 
 ## Quick Start Examples
