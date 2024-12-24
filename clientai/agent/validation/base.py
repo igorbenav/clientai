@@ -9,6 +9,7 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+    Union,
     get_args,
     get_type_hints,
 )
@@ -44,7 +45,7 @@ class ModelValidator(Generic[T]):
 
     def validate(
         self,
-        data: str | Iterator[str],
+        data: Union[str, Iterator[str]],
         partial: bool = False,
         context: Optional[Dict[str, Any]] = None,
     ) -> ValidationResult[T]:
