@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, List, Optional, get_type_hints
+from typing import Any, Callable, List, Optional, Type, get_type_hints
 
 from ..config.models import ModelConfig
 from ..config.steps import StepConfig
@@ -81,7 +81,12 @@ class Step:
         llm_config: LLM configuration if the step interacts with an LLM.
         send_to_llm: Whether the step sends its data to an LLM. Default True.
         stream: Whether to stream the LLM's response
-        json_output: Whether the LLM should return a JSON. Default False.
+        json_output: Whether the step's output should be validated as JSON.
+            Cannot be used with stream=True.
+        return_type: Optional type to validate output against when
+            json_output=True. Must be a Pydantic model for validation.
+        return_full_response: Whether to return the complete API response.
+            Cannot be used with json_output=True.
         use_tools: Whether tool selection is enabled for step. Default True.
         tool_selection_config: Configuration for tool selection behavior.
         tool_model: Optional specific model to use for tool selection.
@@ -106,6 +111,11 @@ class Step:
             )
         )
         ```
+
+    Notes:
+        - Streaming and validation (json_output, return_type)
+          cannot be used together
+        - Return type validation requires a Pydantic model type
     """
 
     func: Callable[..., Any]
@@ -116,6 +126,8 @@ class Step:
     send_to_llm: bool = True
     stream: bool = False
     json_output: bool = False
+    return_type: Optional[Type[Any]] = None
+    return_full_response: bool = False
     use_tools: bool = True
     tool_selection_config: Optional[ToolSelectionConfig] = None
     tool_model: Optional[ModelConfig] = None
@@ -128,28 +140,38 @@ class Step:
         self._validate_function(self.func)
         self._validate_name(self.name)
 
+        if self.json_output and self.return_full_response:
+            raise ValueError(
+                f"Step '{self.name}' cannot use both JSON validation and "
+                "full response return. These options are mutually exclusive."
+            )
+
     @staticmethod
     def _validate_function(func: Callable[..., Any]) -> None:
-        """
-        Validate the step function's signature and return type.
+        """Validate the step function's signature and return type.
 
-        Ensures that the function is callable, has a return type annotation,
-        and that the return type is a string.
+        Ensures the function is callable. When json_output=True, also
+        validates that return type hints are present and match the
+        specified return_type.
 
         Args:
             func: The function to validate.
 
         Raises:
-            ValueError: If the function is not callable.
+            ValueError: If the function is not callable
+                        or has invalid type hints.
 
         Example:
             Validate a function:
             ```python
-            def example_function(input_data: str) -> str:
-                return f"Processed: {input_data}"
+            def example_function(data: str) -> OutputFormat:
+                return OutputFormat(value="test", score=0.5)
 
             validated_func = Step.validate_function(example_function)
             ```
+
+        Notes:
+            - Return type must be a Pydantic model for validation
         """
         if not callable(func):
             raise ValueError("func must be a callable")
@@ -293,6 +315,8 @@ class Step:
         send_to_llm: Optional[bool] = None,
         stream: bool = False,
         json_output: bool = False,
+        return_type: Optional[Type[Any]] = None,
+        return_full_response: bool = False,
         use_tools: bool = True,
         tool_selection_config: Optional[ToolSelectionConfig] = None,
         tool_model: Optional[ModelConfig] = None,
@@ -311,6 +335,12 @@ class Step:
             llm_config: Optional LLM configuration
             send_to_llm: Whether to send step output to LLM
             stream: Whether to stream LLM responses
+            json_output: Whether to validate the step's output as JSON.
+                Cannot be used with stream=True.
+            return_type: Type to validate output against when json_output=True.
+                Must be a Pydantic model.
+            return_full_response: Whether to return the complete API response.
+                                  Cannot be used with json_output=True.
             json_output: Whether LLM should return JSON
             use_tools: Whether to enable tool selection
             tool_selection_config: Optional tool selection configuration
@@ -351,6 +381,23 @@ class Step:
                 stream=True
             )
             ```
+
+            Create step with validation:
+            ```python
+            from pydantic import BaseModel
+
+            class OutputFormat(BaseModel):
+                value: str
+                score: float
+
+            step = Step.create(
+                func=analyze_data,
+                step_type=StepType.THINK,
+                name="analyze",
+                json_output=True,
+                return_type=OutputFormat
+            )
+            ```
         """
         metadata = FunctionMetadata.from_function(func)
         return cls(
@@ -362,6 +409,8 @@ class Step:
             send_to_llm=send_to_llm if send_to_llm is not None else True,
             stream=stream,
             json_output=json_output,
+            return_type=return_type,
+            return_full_response=return_full_response,
             use_tools=use_tools,
             tool_selection_config=tool_selection_config,
             tool_model=tool_model,

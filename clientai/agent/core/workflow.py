@@ -1,6 +1,6 @@
 import logging
 from collections import OrderedDict
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from ..exceptions import StepError, WorkflowError
 from ..steps.base import Step
@@ -70,6 +70,8 @@ class WorkflowManager:
         - Available results include the initial input and all previous results
         - Both parameter binding and context access can be used in an agent
         - A ValueError is raised if a step requests more results than available
+        - Streaming and validation cannot be used together in the same step
+        - Custom return types require explicit type hints and valid JSON output
     """
 
     def __init__(self) -> None:
@@ -381,10 +383,15 @@ class WorkflowManager:
             engine: Execution engine to use
 
         Returns:
-            Step execution result
+            Any: Step execution result which could be:
+                - str: For standard text responses
+                - Iterator[str]: For streaming responses
+                - Any: A validated type when json_output=True and
+                       return type is specified
+                Note: A step cannot use both streaming and validation.
 
         Raises:
-            StepError: If step execution fails
+            StepError: If step execution fails or validation fails
         """
         try:
             if param_count == 0:
@@ -395,6 +402,19 @@ class WorkflowManager:
                     if len(agent.context.last_results) == 0
                     else last_result
                 )
+
+                if isinstance(input_data, Iterator):
+                    try:
+                        collected = list(input_data)
+                        if collected and isinstance(collected[0], str):
+                            input_data = "".join(collected)
+                        else:
+                            input_data = collected[-1] if collected else None
+                    except Exception as e:
+                        raise StepError(
+                            f"Failed to collect streaming data: {str(e)}"
+                        )
+
                 return engine.execute_step(
                     step, input_data, stream=current_stream
                 )
@@ -402,8 +422,25 @@ class WorkflowManager:
                 previous_results = self._get_previous_results(
                     agent, param_count - 1
                 )
-                args = [last_result] + previous_results
-                return engine.execute_step(step, *args, stream=current_stream)
+
+                processed_results = []
+                for result in [last_result] + previous_results:
+                    if isinstance(result, Iterator):
+                        try:
+                            collected = list(result)
+                            if collected and isinstance(collected[0], str):
+                                result = "".join(collected)
+                            else:
+                                result = collected[-1] if collected else None
+                        except Exception as e:
+                            raise StepError(
+                                f"Failed to collect streaming data: {str(e)}"
+                            )
+                    processed_results.append(result)
+
+                return engine.execute_step(
+                    step, *processed_results, stream=current_stream
+                )
         except Exception as e:
             raise StepError(
                 f"Failed to execute step '{step.name}': {str(e)}"
@@ -474,12 +511,18 @@ class WorkflowManager:
                             stream configuration
 
         Returns:
-            Any: The final result of workflow execution
+            Any: The final result of workflow execution, which could be:
+                - str: A standard text response
+                - Iterator[str]: When streaming is enabled
+                - Any: A validated type when json_output=True
+                       and a return type is specified
+                Note: Streaming and validation cannot be used together.
 
         Raises:
             StepError: If a required step fails
             WorkflowError: If workflow execution fails
             ValueError: If step parameter validation fails
+            ValidationError: If output validation fails for a json_output step
         """
         try:
             logger.info(

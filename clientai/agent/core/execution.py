@@ -8,6 +8,13 @@ from ..config.models import ModelConfig
 from ..steps.base import Step
 from ..tools import ToolSelectionConfig, ToolSelector
 from ..utils.exceptions import StepError, ToolError
+from ..validation import (
+    OutputFormat,
+    PartialValidationError,
+    StepValidator,
+    ValidationError,
+    ValidatorContext,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -118,15 +125,6 @@ class StepExecutionEngine:
             logger.debug(
                 f"Initialized StepExecutionEngine with model: {default_model}"
             )
-
-        except ValueError as e:
-            logger.error(f"Initialization error: {e}")
-            raise StepError(str(e)) from e
-        except Exception as e:
-            logger.error(f"Unexpected initialization error: {e}")
-            raise StepError(
-                f"Unexpected initialization error: {str(e)}"
-            ) from e
 
         except ValueError as e:
             logger.error(f"Initialization error: {e}")
@@ -452,31 +450,33 @@ class StepExecutionEngine:
         prompt: str,
         api_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[str, Iterator[str]]:
-        """Execute a single LLM API call with proper configuration.
-
-        Args:
-            step: The step being executed
-            prompt: The prompt to send to the LLM
-            api_kwargs: Optional dictionary of API call arguments
-
-        Returns:
-            Either a string or an iterator of strings for streaming responses
-
-        Raises:
-            ClientAIError: If the LLM call fails
-            StepError: If there's an unexpected error
-        """
+        """Execute a single LLM API call with proper configuration."""
         try:
-            if api_kwargs is None:
-                model_config = step.llm_config or self._default_model
-                api_kwargs = self._prepare_api_kwargs(model_config)
+            model_config = step.llm_config or self._default_model
+
+            if isinstance(model_config, str):
+                model_config = ModelConfig(name=model_config)
+
+            param_attrs = ModelConfig.CORE_ATTRS - {"name"}
+
+            step_params = {
+                k: getattr(step, k) for k in param_attrs if hasattr(step, k)
+            }
+
+            effective_params = model_config.get_parameters()
+            effective_params.update(self._default_kwargs)
+            effective_params.update(step_params)
+
+            if api_kwargs:
+                additional_kwargs = {
+                    k: v
+                    for k, v in api_kwargs.items()
+                    if k not in ModelConfig.CORE_ATTRS
+                }
+                effective_params.update(additional_kwargs)
 
             result = self._client.generate_text(
-                prompt,
-                model=self._get_model_name(
-                    step.llm_config or self._default_model
-                ),
-                **api_kwargs,
+                prompt, model=model_config.name, **effective_params
             )
 
             return cast(Union[str, Iterator[str]], result)
@@ -504,14 +504,13 @@ class StepExecutionEngine:
             StepError: If API argument preparation fails
         """
         try:
-            return {
-                **self._default_kwargs,
-                **(
-                    model_config.get_parameters()
-                    if isinstance(model_config, ModelConfig)
-                    else {}
-                ),
-            }
+            kwargs = self._default_kwargs.copy()
+
+            if isinstance(model_config, ModelConfig):
+                model_params = model_config.get_parameters()
+                kwargs.update(model_params)
+
+            return kwargs
         except Exception as e:
             logger.error(f"Error preparing API arguments: {e}")
             raise StepError(
@@ -524,7 +523,8 @@ class StepExecutionEngine:
         prompt: str,
         api_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[str, Iterator[str]]:
-        """Execute an LLM call with appropriate retry handling.
+        """
+        Execute an LLM call using the appropriate execution strategy.
 
         Args:
             step: The step being executed
@@ -618,6 +618,57 @@ class StepExecutionEngine:
             logger.error(f"Error getting model name: {e}")
             raise StepError(f"Failed to get model name: {str(e)}") from e
 
+    def _validate_step_output(
+        self,
+        step: Step,
+        result: Union[str, Iterator[str]],
+    ) -> Any:
+        """Validate step output if validation is enabled.
+
+        Args:
+            step: The executed step
+            result: Raw result from step execution. May be:
+                - String: Direct response
+                - Iterator[str]: Streamed response chunks
+            stream: Whether this is a streaming response (currently unused)
+
+        Returns:
+            Any: Either:
+                - The validated data if validation is enabled and successful
+                - The original result if validation is not enabled
+
+        Raises:
+            ValidationError: If validation fails for the output data
+            StepError: If an unexpected error occurs during validation
+        """
+        validator = StepValidator.from_step(step)
+        if not validator:
+            return result
+
+        try:
+            context: ValidatorContext = ValidatorContext(
+                data=result,
+                format=OutputFormat.JSON,
+                partial=False,
+                metadata={
+                    "step_name": step.name,
+                    "step_type": step.step_type,
+                },
+            )
+            validation_result = validator.validate(result, context)
+            if validation_result.is_valid:
+                return validation_result.data
+
+            error_str = "\n".join(
+                f"{k}: {v}" for k, v in validation_result.errors.items()
+            )
+            raise ValidationError(error_str)
+
+        except ValidationError:
+            raise
+        except Exception as e:
+            raise StepError(f"Unexpected validation error: {str(e)}")
+
     def execute_step(
         self,
         step: Step,
@@ -628,7 +679,7 @@ class StepExecutionEngine:
         """Execute a single workflow step with full configuration.
 
         Main entry point for step execution, handling tool selection,
-        LLM interaction, error handling, and result management.
+        LLM interaction, validation, error handling, and result management.
 
         Args:
             step: The step to execute
@@ -637,15 +688,20 @@ class StepExecutionEngine:
             **kwargs: Additional keyword arguments for the step
 
         Returns:
-            Optional[Union[str, Iterator[str]]]: The step execution result:
-                - None if step is disabled or failed
-                - Complete string if streaming is disabled
-                - Iterator of string chunks if streaming is enabled
+            Returns:
+                Optional[Union[str, Iterator[str], Any]]:
+                    The step execution result:
+                    - None if step is disabled or failed
+                    - Complete string if streaming is disabled
+                    - Iterator of string chunks if streaming is enabled
+                    - Any type for validated outputs from json_output steps
 
         Raises:
             StepError: If step execution fails and step is required
             ToolError: If tool execution fails
             ClientAIError: If LLM interaction fails
+            ValidationError: If output validation fails for json_output steps
+            PartialValidationError: If streaming validation fails
 
         Example:
             Basic step execution:
@@ -669,11 +725,24 @@ class StepExecutionEngine:
                 print(result)
             ```
 
+            With validation:
+            ```python
+            class OutputModel(BaseModel):
+                value: str
+                score: float
+
+            @think("analyze", json_output=True)
+            def analyze(self, data: str) -> OutputModel:
+                return "..."
+            ```
+
         Notes:
             - Handles both streaming and non-streaming responses
             - Manages tool selection if enabled for step
             - Updates agent context with results
             - Supports retry logic for failed steps
+            - Validates output against Pydantic models when json_output=True
+            - Supports partial validation during streaming
         """
         if self._current_agent is None:
             raise StepError("No agent context available for step execution")
@@ -685,6 +754,7 @@ class StepExecutionEngine:
         logger.debug(
             f"Step configuration: use_tools={step.use_tools}, "
             f"send_to_llm={step.send_to_llm}, "
+            f"json_output={getattr(step, 'json_output', False)}"
             f"stream={stream}"
         )
 
@@ -718,10 +788,21 @@ class StepExecutionEngine:
                         f"Non-LLM step execution failed: {str(e)}"
                     ) from e
 
+            if result is not None:
+                result = self._validate_step_output(step, result)
+
             self._update_context(step, self._current_agent, result)
             return result
 
-        except (ClientAIError, StepError, ToolError, ValueError, TimeoutError):
+        except (
+            ClientAIError,
+            StepError,
+            ToolError,
+            ValueError,
+            TimeoutError,
+            ValidationError,
+            PartialValidationError,
+        ):
             raise
         except Exception as e:
             logger.error(f"Unexpected error executing step '{step.name}': {e}")

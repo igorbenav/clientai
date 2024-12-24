@@ -1,5 +1,15 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
 from clientai._typing import AIProviderProtocol
 from clientai.client_ai import ClientAI
@@ -219,6 +229,9 @@ def create_agent(
     temperature: Optional[float] = None,
     top_p: Optional[float] = None,
     stream: bool = False,
+    json_output: bool = False,
+    return_type: Optional[Type[Any]] = None,
+    return_full_response: bool = False,
     tools: Optional[List[Union[Callable[..., Any], ToolConfig]]] = None,
     tool_selection_config: Optional[ToolSelectionConfig] = None,
     tool_confidence: Optional[float] = None,
@@ -245,6 +258,12 @@ def create_agent(
         temperature: Optional temperature override for the model (0.0-1.0)
         top_p: Optional top_p override for the model (0.0-1.0)
         stream: Whether to stream the model's response
+        json_output: Whether the step should validate its output as JSON.
+                     Cannot be used with stream=True.
+        return_type: Optional type to validate the output against when
+            json_output=True. Must be a Pydantic model for validation.
+        return_full_response: Whether to return complete API responses.
+            Cannot be used with json_output=True.
         tools: Optional list of tools to use, either as:
             - Functions with proper type hints and docstrings
             - ToolConfig objects for more control
@@ -310,14 +329,47 @@ def create_agent(
             print(chunk, end="", flush=True)
         ```
 
+        Validator agent with JSON output:
+        ```python
+        from pydantic import BaseModel
+
+        class OutputFormat(BaseModel):
+            score: float
+            confidence: float
+
+        validator = create_agent(
+            client=client,
+            role="validator",
+            system_prompt="Score the input data.",
+            model="gpt-4",
+            json_output=True,
+            return_type=OutputFormat
+        )
+
+        result = validator.run("Test data")
+        print(result.score)  # Validated output
+        ```
+
     Notes:
         - Temperature and top_p have step defaults that can be overridden
         - Custom step types default to ACT behavior without default parameters
         - Functions passed as tools should have type hints and docstrings
+        - Validation requires a Pydantic model as return_type
+        - Stream and JSON output cannot be used together
         - Tool configuration options are mutually exclusive (can't use both
           tool_selection_config and individual parameters)
     """
     try:
+        if json_output and stream:
+            raise ValueError(
+                "Single-step agent cannot use both streaming and "
+                "JSON validation. These options are mutually exclusive."
+            )
+        if json_output and return_full_response:
+            raise ValueError(
+                "Single-step agent cannot use both JSON validation and"
+                " full response return. These options are mutually exclusive."
+            )
         if not role or not isinstance(role, str):
             raise ValueError("Role must be a non-empty string")
         if not system_prompt or not isinstance(system_prompt, str):
@@ -401,10 +453,14 @@ def create_agent(
                 name=f"{_sanitize_identifier(role)}_step",
                 description=f"Execute {role} functionality",
                 stream=stream,
+                json_output=json_output,
+                return_type=return_type,
+                return_full_response=return_full_response,
             )
-            def process(self, input_data: str) -> str:
-                """
-                Process input according to the configured behavior.
+            def process(
+                self, input_data: str
+            ) -> Union[str, Iterator[str], Any]:
+                """Process input according to the configured behavior.
 
                 This method implements the core functionality of the agent,
                 processing input data according to the role and configuration
@@ -414,7 +470,11 @@ def create_agent(
                     input_data: The input string to process
 
                 Returns:
-                    str: The processed result
+                    Union[str, Any]: Either:
+                        - String response if json_output=False
+                        - Validated model instance if json_output=True
+                          with return_type
+                        - Iterator[str] if streaming is enabled
 
                 Note:
                     The actual processing is determined by the agent's
@@ -423,6 +483,7 @@ def create_agent(
                     - The system prompt
                     - The selected model and its parameters
                     - Any available tools and their selection criteria
+                    - Output validation when json_output=True
                 """
                 return input_data
 

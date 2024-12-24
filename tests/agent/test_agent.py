@@ -115,19 +115,25 @@ def test_agent_streaming(base_agent):
         base_agent.execution_engine, "_current_agent", base_agent
     ):
         # Test basic streaming
-        mock_client.generate_text.return_value = iter(["chunk1", "chunk2"])
+        mock_client.generate_text.side_effect = lambda *args, **kwargs: iter(
+            ["chunk1", "chunk2"]
+        )
         result = base_agent.run("test input", stream=True)
         assert hasattr(result, "__iter__")
         chunks = list(result)
         assert chunks == ["chunk1", "chunk2"]
 
         # Test streaming override
-        mock_client.generate_text.return_value = "non-stream response"
+        mock_client.generate_text.side_effect = (
+            lambda *args, **kwargs: "non-stream response"
+        )
         result = base_agent.run("test input", stream=False)
         assert isinstance(result, str)
 
         # Test error in stream
-        mock_client.generate_text.return_value = iter([])
+        mock_client.generate_text.side_effect = lambda *args, **kwargs: iter(
+            []
+        )
         result = base_agent.run("test input", stream=True)
         assert list(result) == []
 

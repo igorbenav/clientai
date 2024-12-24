@@ -15,7 +15,7 @@ class ModelConfig:
         return_full_response: Whether to return complete API response
         stream: Whether to enable response streaming
         json_output: Whether responses should be formatted as JSON
-        temperature: Optional temperature value (0.0-1.0) controlling
+        temperature: Optional temperature value (0.0-2.0) controlling
                      response randomness
 
     Example:
@@ -54,8 +54,8 @@ class ModelConfig:
         temperature: Optional[float] = None,
         **kwargs: Any,
     ):
-        if temperature is not None and not 0.0 <= temperature <= 1.0:
-            raise ValueError("Temperature must be between 0.0 and 1.0")
+        if temperature is not None and not 0.0 <= temperature <= 2.0:
+            raise ValueError("Temperature must be between 0.0 and 2.0")
 
         self.name = name
         self.return_full_response = return_full_response
@@ -82,12 +82,15 @@ class ModelConfig:
             print(params)  # Output: {"temperature": 0.7}
             ```
         """
-        params = {
+        params: Dict[str, Any] = {
             "return_full_response": self.return_full_response,
             "stream": self.stream,
             "json_output": self.json_output,
-            "temperature": self.temperature,
         }
+
+        if self.temperature is not None:
+            params["temperature"] = self.temperature
+
         params.update(self._extra_kwargs)
         return {k: v for k, v in params.items() if v is not None}
 

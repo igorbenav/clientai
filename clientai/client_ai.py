@@ -20,42 +20,62 @@ class ClientAI(Generic[P, T, S]):
     for the chosen AI provider.
 
     Type Parameters:
-    P: The type of the AI provider.
-    T: The type of the full response for non-streaming operations.
-    S: The type of each chunk in streaming operations.
+        P: The type of the AI provider.
+        T: The type of the full response for non-streaming operations.
+        S: The type of each chunk in streaming operations.
 
     Attributes:
         provider: The initialized AI provider.
+        system_prompt: The default system prompt for all interactions.
+        temperature: The default temperature value for all interactions.
+        top_p: The default top-p value for all interactions.
 
     Args:
         provider_name: The name of the AI provider to use
-                       ('openai', 'replicate', 'ollama', or 'groq').
+                      ('openai', 'replicate', 'ollama', or 'groq').
         system_prompt: Optional system prompt to guide the model's behavior
-                       across all interactions.
+                      across all interactions.
         temperature: Optional default temperature value for all interactions.
-                    Controls randomness in the output (usually 0.0-2.0).
+                    Controls randomness in output. Provider defaults:
+                    - OpenAI: 0.0 to 2.0 (default: 1.0)
+                    - Ollama: 0.0 to 2.0 (default: 0.8)
+                    - Replicate: Model-dependent
+                    - Groq: 0.0 to 2.0 (default: 1.0)
         top_p: Optional default top-p value for all interactions.
-               Controls diversity via nucleus sampling (usually 0.0-1.0).
-        **kwargs (Any): Provider-specific initialization parameters.
+               Controls diversity via nucleus sampling. Provider defaults:
+               - OpenAI: 0.0 to 1.0 (default: 1.0)
+               - Ollama: 0.0 to 1.0 (default: 0.9)
+               - Replicate: Model-dependent
+               - Groq: 0.0 to 1.0 (default: 1.0)
+        **kwargs: Provider-specific initialization parameters.
+                 - For OpenAI, Replicate, Groq: Use api_key="your-key"
+                 - For Ollama: Use host="your-host" (default: http://localhost:11434)
 
     Raises:
-        ValueError: If an unsupported provider name is given.
+        ValueError: If an unsupported provider name is given or if
+                    temperature/top_p are outside valid ranges.
         ImportError: If the specified provider is not installed.
 
-    Example:
+    Examples:
         Initialize with OpenAI:
         ```python
         ai = ClientAI('openai', api_key="your-openai-key")
         ```
 
-        Initialize with custom generation parameters:
+        Initialize with custom parameters:
         ```python
         ai = ClientAI(
             'openai',
             api_key="your-openai-key",
+            system_prompt="You are a helpful assistant",
             temperature=0.8,
             top_p=0.9
         )
+        ```
+
+        Initialize Ollama with custom host:
+        ```python
+        ai = ClientAI('ollama', host="http://localhost:11434")
         ```
     """
 
@@ -65,7 +85,7 @@ class ClientAI(Generic[P, T, S]):
         system_prompt: Optional[str] = None,
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         prov_name = provider_name
         if prov_name not in ["openai", "replicate", "ollama", "groq"]:
@@ -117,35 +137,53 @@ class ClientAI(Generic[P, T, S]):
         top_p: Optional[float] = None,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> AIGenericResponse:
         """
-        Generate text based on a given prompt
-        using the specified AI model and provider.
+        Generate text based on a given prompt using
+        the specified AI model and provider.
 
         Args:
             prompt: The input prompt for text generation.
             model: The name or identifier of the AI model to use.
             system_prompt: Optional system prompt to override the default one.
-                           If None, uses the one specified in initialization.
+                         If None, uses the one specified in initialization.
             temperature: Optional temperature value to override the default.
-                        Controls randomness (usually 0.0-2.0).
+                        Controls randomness in output. Provider ranges:
+                        - OpenAI: 0.0 to 2.0 (default: 1.0)
+                        - Ollama: 0.0 to 2.0 (default: 0.8)
+                        - Replicate: Model-dependent
+                        - Groq: 0.0 to 2.0 (default: 1.0)
             top_p: Optional top-p value to override the default.
-                  Controls diversity via nucleus sampling (usually 0.0-1.0).
+                   Controls diversity via nucleus sampling. Provider ranges:
+                   - OpenAI: 0.0 to 1.0 (default: 1.0)
+                   - Ollama: 0.0 to 1.0 (default: 0.9)
+                   - Replicate: Model-dependent
+                   - Groq: 0.0 to 1.0 (default: 1.0)
             return_full_response: If True, returns the full structured
-                                  response. If False, returns only the
-                                  generated text.
+                                  response. If False, returns only
+                                  the generated text.
             stream: If True, returns an iterator for streaming responses.
-            **kwargs: Additional keyword arguments specific to
-                      the chosen provider's API.
+            json_output: If True, format the response as valid JSON.
+                        Provider implementations:
+                        - OpenAI/Groq: Uses response_format={
+                              "type": "json_object"
+                          }
+                        - Replicate: Adds output="json" to parameters
+                        - Ollama: Uses format="json" parameter
+            **kwargs: Additional keyword arguments
+                      specific to the provider's API.
 
         Returns:
-            AIGenericResponse:
-                The generated text response, full response structure,
-                or an iterator for streaming responses.
+            AIGenericResponse: The generated text response, full response
+                               structure, or iterator for streaming responses.
 
-        Example:
-            Generate text with default settings:
+        Raises:
+            ValueError: If temperature or top_p are outside valid ranges.
+
+        Examples:
+            Basic text generation:
             ```python
             response = ai.generate_text(
                 "Tell me a joke",
@@ -153,7 +191,7 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
 
-            Generate creative text with high temperature:
+            Generate creative text with custom parameters:
             ```python
             response = ai.generate_text(
                 "Write a story about space",
@@ -162,7 +200,27 @@ class ClientAI(Generic[P, T, S]):
                 top_p=0.9
             )
             ```
+
+            Generate JSON output:
+            ```python
+            response = ai.generate_text(
+                "Generate a user profile with name and age",
+                model="gpt-3.5-turbo",
+                json_output=True
+            )
+            ```
+
+            Stream response:
+            ```python
+            for chunk in ai.generate_text(
+                "Write a long story",
+                model="gpt-3.5-turbo",
+                stream=True
+            ):
+                print(chunk, end="", flush=True)
+            ```
         """
+
         effective_system_prompt = system_prompt or self.system_prompt
         effective_temperature = (
             temperature if temperature is not None else self.temperature
@@ -177,6 +235,7 @@ class ClientAI(Generic[P, T, S]):
             top_p=effective_top_p,
             return_full_response=return_full_response,
             stream=stream,
+            json_output=json_output,
             **kwargs,
         )
 
@@ -189,6 +248,7 @@ class ClientAI(Generic[P, T, S]):
         top_p: Optional[float] = None,
         return_full_response: bool = False,
         stream: bool = False,
+        json_output: bool = False,
         **kwargs: Any,
     ) -> AIGenericResponse:
         """
@@ -196,29 +256,46 @@ class ClientAI(Generic[P, T, S]):
         the specified AI model and provider.
 
         Args:
-            messages: A list of message dictionaries, each
-                      containing 'role' and 'content'.
+            messages: A list of message dictionaries, each containing
+                     'role' and 'content'.
             model: The name or identifier of the AI model to use.
             system_prompt: Optional system prompt to override the default one.
-                           If None, uses the one specified in initialization.
+                         If None, uses the one specified in initialization.
             temperature: Optional temperature value to override the default.
-                        Controls randomness (usually 0.0-2.0).
+                        Controls randomness in output. Provider ranges:
+                        - OpenAI: 0.0 to 2.0 (default: 1.0)
+                        - Ollama: 0.0 to 2.0 (default: 0.8)
+                        - Replicate: Model-dependent
+                        - Groq: 0.0 to 2.0 (default: 1.0)
             top_p: Optional top-p value to override the default.
-                  Controls diversity via nucleus sampling (usually 0.0-1.0).
+                   Controls diversity via nucleus sampling. Provider ranges:
+                   - OpenAI: 0.0 to 1.0 (default: 1.0)
+                   - Ollama: 0.0 to 1.0 (default: 0.9)
+                   - Replicate: Model-dependent
+                   - Groq: 0.0 to 1.0 (default: 1.0)
             return_full_response: If True, returns the full structured
-                                  response. If False, returns the
+                                  response. If False, returns only the
                                   assistant's message.
             stream: If True, returns an iterator for streaming responses.
-            **kwargs: Additional keyword arguments specific to
-                      the chosen provider's API.
+            json_output: If True, format the response as valid JSON.
+                        Provider implementations:
+                        - OpenAI/Groq: Uses response_format={
+                              "type": "json_object"
+                          }
+                        - Replicate: Adds output="json" to parameters
+                        - Ollama: Uses format="json" parameter
+            **kwargs: Additional keyword arguments
+                      specific to the provider's API.
 
         Returns:
-            AIGenericResponse:
-                The chat response, full response structure,
-                or an iterator for streaming responses.
+            AIGenericResponse: The chat response, full response structure,
+                             or an iterator for streaming responses.
 
-        Example:
-            Chat with default settings:
+        Raises:
+            ValueError: If temperature or top_p are outside valid ranges.
+
+        Examples:
+            Basic chat:
             ```python
             messages = [
                 {"role": "user", "content": "What is AI?"}
@@ -229,16 +306,44 @@ class ClientAI(Generic[P, T, S]):
             )
             ```
 
-            Creative chat with custom temperature:
+            Chat with system prompt and custom temperature:
             ```python
             response = ai.chat(
                 messages,
                 model="gpt-3.5-turbo",
+                system_prompt="You are a helpful AI teacher",
                 temperature=0.8,
                 top_p=0.9
             )
             ```
+
+            Chat with JSON output:
+            ```python
+            messages = [
+                {"role": "user", "content": "Generate a user profile"}
+            ]
+            response = ai.chat(
+                messages,
+                model="gpt-3.5-turbo",
+                json_output=True
+            )
+            ```
+
+            Stream chat response:
+            ```python
+            for chunk in ai.chat(
+                messages,
+                model="gpt-3.5-turbo",
+                stream=True
+            ):
+                print(chunk, end="", flush=True)
+            ```
         """
+        if temperature is not None and not 0.0 <= temperature <= 2.0:
+            raise ValueError("Temperature must be between 0.0 and 2.0")
+        if top_p is not None and not 0.0 <= top_p <= 1.0:
+            raise ValueError("Top-p must be between 0.0 and 1.0")
+
         effective_system_prompt = system_prompt or self.system_prompt
         effective_temperature = (
             temperature if temperature is not None else self.temperature
@@ -253,5 +358,6 @@ class ClientAI(Generic[P, T, S]):
             top_p=effective_top_p,
             return_full_response=return_full_response,
             stream=stream,
+            json_output=json_output,
             **kwargs,
         )

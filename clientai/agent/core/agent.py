@@ -330,17 +330,23 @@ class Agent:
 
     def _handle_streaming(
         self,
-        result: Union[str, Iterator[str]],
+        result: Union[str, Iterator[str], Any],
         stream_override: Optional[bool] = None,
-    ) -> Union[str, Iterator[str]]:
+    ) -> Union[str, Iterator[str], Any]:
         """Process workflow result based on streaming configuration.
 
         Args:
-            result: Raw result from workflow execution
+            result: Raw result from workflow execution. Could be:
+                - String: Direct response
+                - Iterator[str]: Streamed response chunks
+                - Any: Validated result from a JSON output step
             stream_override: Optional streaming configuration override
 
         Returns:
-            Processed result based on streaming settings
+            Processed result based on streaming settings:
+                - String: For non-streaming responses
+                - Iterator: For streamed responses
+                - Any: For validated results from JSON output steps
 
         Raises:
             AgentError: If stream handling fails
@@ -353,11 +359,15 @@ class Agent:
                     f"Failed to determine streaming configuration: {str(e)}"
                 )
 
+            if not isinstance(result, (str, Iterator)):  # noqa: UP038
+                return result
+
             if not should_stream:
                 if isinstance(result, str):
                     return result
                 try:
-                    return "".join(list(result))
+                    chunks = list(result)
+                    return "".join(chunks)
                 except Exception as e:
                     raise ValueError(
                         f"Failed to join stream results: {str(e)}"
