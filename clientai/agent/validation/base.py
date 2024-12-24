@@ -157,7 +157,7 @@ class StepValidator(Generic[T]):
         return any(isclass(arg) and issubclass(arg, BaseModel) for arg in args)
 
     def validate(
-        self, data: str | Iterator[str], context: ValidatorContext[T]
+        self, data: Union[str, Iterator[str]], context: ValidatorContext[T]
     ) -> ValidationResult[T]:
         """Validate step output data.
 
