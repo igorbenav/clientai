@@ -3,7 +3,10 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
+    Iterator,
     Optional,
+    Type,
     TypeVar,
     Union,
     overload,
@@ -19,7 +22,7 @@ from .types import StepType
 T = TypeVar("T")
 
 
-class StepFunction:
+class StepFunction(Generic[T]):
     """A wrapper class for step functions that maintains
     metadata and execution context.
 
@@ -45,7 +48,7 @@ class StepFunction:
         ```
     """
 
-    def __init__(self, func: Callable[..., str]) -> None:
+    def __init__(self, func: Callable[..., T]) -> None:
         """
         Initialize the step function wrapper.
 
@@ -103,7 +106,7 @@ class StepFunction:
 
     def __get__(
         self, instance: Optional[object], owner: Optional[type]
-    ) -> Union["StepFunction", Callable[..., str]]:
+    ) -> Union["StepFunction[T]", Callable[..., T]]:
         """
         Make steps behave like instance methods via the descriptor protocol.
 
@@ -263,7 +266,14 @@ class RunFunction:
 def create_step_decorator(
     step_type: StepType,
 ) -> Callable[
-    ..., Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]
+    ...,
+    Union[
+        StepFunction[Union[str, Iterator[str], Any]],
+        Callable[
+            [Callable[..., Union[str, Iterator[str], Any]]],
+            StepFunction[Union[str, Iterator[str], Any]],
+        ],
+    ],
 ]:
     """Generate a decorator for defining workflow steps of a specific type.
 
@@ -299,20 +309,30 @@ def create_step_decorator(
     """
 
     def decorator(
-        name: Optional[Union[str, Callable[..., str]]] = None,
+        name: Optional[
+            Union[str, Callable[..., Union[str, Iterator[str], Any]]]
+        ] = None,
         *,
         model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
         description: Optional[str] = None,
         send_to_llm: bool = True,
         stream: bool = False,
         json_output: bool = False,
+        return_type: Optional[Type[Any]] = None,
+        return_full_response: bool = False,
         use_tools: bool = True,
         tool_selection_config: Optional[ToolSelectionConfig] = None,
         tool_confidence: Optional[float] = None,
         tool_model: Optional[Union[str, Dict[str, Any], ModelConfig]] = None,
         max_tools_per_step: Optional[int] = None,
         step_config: Optional[StepConfig] = None,
-    ) -> Union[StepFunction, Callable[[Callable[..., str]], StepFunction]]:
+    ) -> Union[
+        StepFunction[Union[str, Iterator[str], Any]],
+        Callable[
+            [Callable[..., Union[str, Iterator[str], Any]]],
+            StepFunction[Union[str, Iterator[str], Any]],
+        ],
+    ]:
         """
         Core decorator implementation for workflow steps.
 
@@ -332,7 +352,14 @@ def create_step_decorator(
             send_to_llm: Whether this step's output should be sent to the
                          language model. Set to False for steps that process
                          data locally.
-            stream: Whether to stream the LLM's response
+            stream: Whether to stream the LLM's response.
+                Cannot be used with json_output.
+            json_output: Whether to validate the output against return_type.
+                Cannot be used with stream.
+            return_type: Type to validate against when json_output=True.
+                Must be a Pydantic model.
+            return_full_response: Whether to return the complete API response.
+                Cannot be used with json_output=True.
             json_output: Whether the LLM should format its response as JSON.
             use_tools: Whether this step should use automatic tool selection.
             tool_selection_config: Complete tool selection configuration for
@@ -350,9 +377,10 @@ def create_step_decorator(
             as part of the workflow
 
         Raises:
-            ValueError: If both tool_selection_config and individual tool
-                        parameters are provided or if the configuration is
-                        otherwise invalid
+            ValueError: If:
+                - Both stream and json_output are True
+                - return_type is specified without json_output=True
+                - Configuration parameters are invalid
 
         Example:
             Basic usage with tool selection:
@@ -401,16 +429,50 @@ def create_step_decorator(
                     return f"Analyze: {data}"
             ```
 
+            With validation:
+            ```python
+            from pydantic import BaseModel
+
+            class Response(BaseModel):
+                score: float
+                summary: str
+
+            class MyAgent(Agent):
+                @think(
+                    "analyze",
+                    description="Analyzes data",
+                    json_output=True,
+                    return_type=Response
+                )
+                def analyze_data(self, input_data: str) -> Response:
+                    return f"Please analyze: {input_data}"
+            ```
         Note:
             - Tool parameters are mutually exclusive with tool_selection_config
             - The step's model config takes precedence over the agent's default
             - When used as a bare decorator, parameters use the default values
+            - Streaming and validation are mutually exclusive
+            - Validation requires a Pydantic model as return_type
         """
 
-        def wrapper(func: Callable[..., str]) -> StepFunction:
+        def wrapper(
+            func: Callable[..., Union[str, Iterator[str], Any]],
+        ) -> StepFunction[Union[str, Iterator[str], Any]]:
             """Inner wrapper that creates the StepFunction instance."""
-            wrapped = StepFunction(func)
             step_name = name if isinstance(name, str) else func.__name__
+
+            if return_type and stream:
+                raise ValueError(
+                    f"Step '{step_name}' cannot use both streaming and data "
+                    "validation. These options are mutually exclusive."
+                )
+
+            if json_output and return_full_response:
+                raise ValueError(
+                    f"Step '{step_name}' cannot use both JSON validation and "
+                    "full response return. These options are mutually "
+                    "exclusive."
+                )
 
             if tool_selection_config and any(
                 x is not None
@@ -444,6 +506,14 @@ def create_step_decorator(
                 else:
                     tool_model_config = tool_model
 
+            if return_type is not None and json_output is not True:
+                raise ValueError(
+                    "`json_output` should be set to `True` "
+                    "when using `return_type`"
+                )
+
+            wrapped = StepFunction(func)
+
             wrapped._step_info = Step.create(
                 func=func,
                 step_type=step_type,
@@ -455,6 +525,8 @@ def create_step_decorator(
                 send_to_llm=send_to_llm,
                 stream=stream,
                 json_output=json_output,
+                return_type=return_type,
+                return_full_response=return_full_response,
                 use_tools=use_tools,
                 tool_selection_config=final_tool_config,
                 tool_model=tool_model_config,
@@ -562,6 +634,28 @@ Example:
     def analyze_data(self, data: str) -> str:
         return f"Analysis task: {data}"
     ```
+
+    ```python
+    # Standard usage
+    @think("analyze", description="Analyzes input data")
+    def analyze_data(self, data: str) -> str:
+        return f"Analysis task: {data}"
+
+    # With validation
+    from pydantic import BaseModel
+
+    class Analysis(BaseModel):
+        score: float
+        findings: str
+
+    @think(
+        "analyze",
+        json_output=True,
+        return_type=Analysis
+    )
+    def analyze_data(self, data: str) -> Analysis:
+        return Analysis(score=0.8, findings="Found X")
+    ```
 """
 
 act = create_step_decorator(StepType.ACT)
@@ -569,9 +663,30 @@ act = create_step_decorator(StepType.ACT)
 
 Example:
     ```python
+    # Standard usage
     @act("process", description="Processes analyzed data")
     def process_data(self, analysis: str) -> str:
         return f"Processing results: {analysis}"
+
+    # With validation
+    from pydantic import BaseModel
+
+    class ActionResult(BaseModel):
+        action_taken: str
+        success: bool
+        details: str
+
+    @act(
+        "process",
+        json_output=True,
+        return_type=ActionResult
+    )
+    def process_data(self, analysis: str) -> ActionResult:
+        return ActionResult(
+            action_taken="data_cleanup",
+            success=True,
+            details="Processed and normalized data"
+        )
     ```
 """
 
@@ -580,9 +695,31 @@ observe = create_step_decorator(StepType.OBSERVE)
 
 Example:
     ```python
+    # Standard usage
     @observe("gather", description="Gathers input data")
     def gather_data(self, query: str) -> str:
         return f"Gathering data for: {query}"
+
+    # With validation
+    from pydantic import BaseModel
+    from typing import List
+
+    class Observation(BaseModel):
+        data_points: List[float]
+        timestamp: str
+        source: str
+
+    @observe(
+        "gather",
+        json_output=True,
+        return_type=Observation
+    )
+    def gather_data(self, query: str) -> Observation:
+        return Observation(
+            data_points=[1.2, 3.4, 5.6],
+            timestamp="2024-01-01T12:00:00",
+            source="sensor_array"
+        )
     ```
 """
 
@@ -591,9 +728,31 @@ synthesize = create_step_decorator(StepType.SYNTHESIZE)
 
 Example:
     ```python
+    # Standard usage
     @synthesize("summarize", description="Summarizes results")
     def summarize_data(self, data: str) -> str:
         return f"Summary of: {data}"
+
+    # With validation
+    from pydantic import BaseModel
+    from typing import List, Dict
+
+    class Summary(BaseModel):
+        key_findings: List[str]
+        metrics: Dict[str, float]
+        conclusion: str
+
+    @synthesize(
+        "summarize",
+        json_output=True,
+        return_type=Summary
+    )
+    def summarize_data(self, data: str) -> Summary:
+        return Summary(
+            key_findings=["Finding 1", "Finding 2"],
+            metrics={"accuracy": 0.95, "confidence": 0.87},
+            conclusion="Data shows positive trends"
+        )
     ```
 """
 

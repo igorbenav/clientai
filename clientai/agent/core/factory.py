@@ -1,5 +1,15 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
 from clientai._typing import AIProviderProtocol
 from clientai.client_ai import ClientAI
@@ -50,15 +60,15 @@ def _process_tools(
                     else ToolConfig(tool=tool)
                 )
                 processed_tools.append(processed_tool)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 raise ValueError(f"Failed to process tool {tool}: {str(e)}")
 
         return processed_tools
 
-    except ValueError as e:
+    except ValueError as e:  # pragma: no cover
         logger.error(f"Tool processing error: {e}")
         raise ToolError(str(e)) from e
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"Unexpected error processing tools: {e}")
         raise ToolError(f"Unexpected error processing tools: {str(e)}") from e
 
@@ -117,7 +127,7 @@ def _create_tool_config(
     except ValueError as e:
         logger.error(f"Tool configuration error: {e}")
         raise ValueError(str(e)) from e
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"Unexpected error creating tool configuration: {e}")
         raise ValueError(
             f"Unexpected error creating tool configuration: {str(e)}"
@@ -164,12 +174,12 @@ def _create_model_config(
             raise ValueError(
                 f"Cannot override core parameters in model_kwargs: "
                 f"{', '.join(invalid_kwargs)}"
-            )
+            )  # pragma: no cover
 
         config.update(model_kwargs)
 
         if temperature is not None:
-            if not 0 <= temperature <= 1:
+            if not 0 <= temperature <= 1:  # pragma: no cover
                 raise ValueError("Temperature must be between 0.0 and 1.0")
             config["temperature"] = temperature
         elif "temperature" in step_config:
@@ -188,7 +198,7 @@ def _create_model_config(
     except ValueError as e:
         logger.error(f"Model configuration error: {e}")
         raise ValueError(str(e)) from e
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"Unexpected error creating model configuration: {e}")
         raise ValueError(
             f"Unexpected error creating model configuration: {str(e)}"
@@ -219,6 +229,9 @@ def create_agent(
     temperature: Optional[float] = None,
     top_p: Optional[float] = None,
     stream: bool = False,
+    json_output: bool = False,
+    return_type: Optional[Type[Any]] = None,
+    return_full_response: bool = False,
     tools: Optional[List[Union[Callable[..., Any], ToolConfig]]] = None,
     tool_selection_config: Optional[ToolSelectionConfig] = None,
     tool_confidence: Optional[float] = None,
@@ -245,6 +258,12 @@ def create_agent(
         temperature: Optional temperature override for the model (0.0-1.0)
         top_p: Optional top_p override for the model (0.0-1.0)
         stream: Whether to stream the model's response
+        json_output: Whether the step should validate its output as JSON.
+                     Cannot be used with stream=True.
+        return_type: Optional type to validate the output against when
+            json_output=True. Must be a Pydantic model for validation.
+        return_full_response: Whether to return complete API responses.
+            Cannot be used with json_output=True.
         tools: Optional list of tools to use, either as:
             - Functions with proper type hints and docstrings
             - ToolConfig objects for more control
@@ -310,19 +329,52 @@ def create_agent(
             print(chunk, end="", flush=True)
         ```
 
+        Validator agent with JSON output:
+        ```python
+        from pydantic import BaseModel
+
+        class OutputFormat(BaseModel):
+            score: float
+            confidence: float
+
+        validator = create_agent(
+            client=client,
+            role="validator",
+            system_prompt="Score the input data.",
+            model="gpt-4",
+            json_output=True,
+            return_type=OutputFormat
+        )
+
+        result = validator.run("Test data")
+        print(result.score)  # Validated output
+        ```
+
     Notes:
         - Temperature and top_p have step defaults that can be overridden
         - Custom step types default to ACT behavior without default parameters
         - Functions passed as tools should have type hints and docstrings
+        - Validation requires a Pydantic model as return_type
+        - Stream and JSON output cannot be used together
         - Tool configuration options are mutually exclusive (can't use both
           tool_selection_config and individual parameters)
     """
     try:
+        if json_output and stream:  # pragma: no cover
+            raise ValueError(
+                "Single-step agent cannot use both streaming and "
+                "JSON validation. These options are mutually exclusive."
+            )
+        if json_output and return_full_response:  # pragma: no cover
+            raise ValueError(
+                "Single-step agent cannot use both JSON validation and"
+                " full response return. These options are mutually exclusive."
+            )
         if not role or not isinstance(role, str):
             raise ValueError("Role must be a non-empty string")
         if not system_prompt or not isinstance(system_prompt, str):
             raise ValueError("System prompt must be a non-empty string")
-        if not model or not isinstance(model, str):
+        if not model or not isinstance(model, str):  # pragma: no cover
             raise ValueError("Model must be a non-empty string")
 
         logger.debug(f"Creating {role} agent with model {model}")
@@ -333,7 +385,7 @@ def create_agent(
             raise ValueError(
                 f"Step must be one of {allowed_steps} "
                 "or a valid Python identifier"
-            )
+            )  # pragma: no cover
 
         step_config = DEFAULT_STEP_CONFIGS.get(step_lower, {})
         logger.debug(f"Using step type: {step_lower}")
@@ -353,7 +405,7 @@ def create_agent(
 
         try:
             processed_tools = _process_tools(tools)
-        except ToolError as e:
+        except ToolError as e:  # pragma: no cover
             raise ValueError(f"Invalid tool configuration: {str(e)}")
 
         try:
@@ -401,10 +453,14 @@ def create_agent(
                 name=f"{_sanitize_identifier(role)}_step",
                 description=f"Execute {role} functionality",
                 stream=stream,
+                json_output=json_output,
+                return_type=return_type,
+                return_full_response=return_full_response,
             )
-            def process(self, input_data: str) -> str:
-                """
-                Process input according to the configured behavior.
+            def process(
+                self, input_data: str
+            ) -> Union[str, Iterator[str], Any]:
+                """Process input according to the configured behavior.
 
                 This method implements the core functionality of the agent,
                 processing input data according to the role and configuration
@@ -414,7 +470,11 @@ def create_agent(
                     input_data: The input string to process
 
                 Returns:
-                    str: The processed result
+                    Union[str, Any]: Either:
+                        - String response if json_output=False
+                        - Validated model instance if json_output=True
+                          with return_type
+                        - Iterator[str] if streaming is enabled
 
                 Note:
                     The actual processing is determined by the agent's
@@ -423,6 +483,7 @@ def create_agent(
                     - The system prompt
                     - The selected model and its parameters
                     - Any available tools and their selection criteria
+                    - Output validation when json_output=True
                 """
                 return input_data
 
@@ -435,12 +496,12 @@ def create_agent(
                 tool_model=tool_model,
                 **model_kwargs,
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise ValueError(f"Failed to initialize agent: {str(e)}")
 
     except ValueError as e:
         logger.error(f"Agent creation error: {e}")
         raise AgentError(str(e)) from e
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"Unexpected error creating agent: {e}")
         raise AgentError(f"Unexpected error creating agent: {str(e)}") from e

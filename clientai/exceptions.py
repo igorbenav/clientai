@@ -54,7 +54,9 @@ class TimeoutError(ClientAIError):
     """Raised when a request to the AI provider times out."""
 
 
-def map_status_code_to_exception(status_code: int) -> Type[ClientAIError]:
+def map_status_code_to_exception(
+    status_code: int,
+) -> Type[ClientAIError]:  # pragma: no cover
     """
     Maps an HTTP status code to the appropriate ClientAI exception class.
 

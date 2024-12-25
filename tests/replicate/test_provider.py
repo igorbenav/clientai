@@ -31,7 +31,7 @@ class MockPrediction:
     def stream(self):
         if isinstance(self.output, list):
             yield from self.output
-        else:
+        else:  # pragma: no cover
             yield self.output
 
 

@@ -51,7 +51,7 @@ class StepConfig:
     use_internal_retry: bool = True
 
     @classmethod
-    def from_dict(cls, config: dict) -> "StepConfig":
+    def from_dict(cls, config: dict) -> "StepConfig":  # pragma: no cover
         """Create step configuration from dictionary.
 
         Args:

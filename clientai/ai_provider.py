@@ -68,7 +68,7 @@ class AIProvider(ABC):
             - Replicate: Model-dependent
             - Groq: 0.0 to 1.0 (default: 1.0)
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def chat(
@@ -130,4 +130,4 @@ class AIProvider(ABC):
             - Replicate: Model-dependent
             - Groq: 0.0 to 1.0 (default: 1.0)
         """
-        pass
+        pass  # pragma: no cover

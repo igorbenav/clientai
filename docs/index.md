@@ -35,6 +35,7 @@
 - **Unified Interface**: Consistent methods across multiple AI providers (OpenAI, Replicate, Groq, Ollama).
 - **Streaming Support**: Real-time response streaming and chat capabilities.
 - **Intelligent Agents**: Framework for building transparent, multi-step LLM workflows with tool integration.
+- **Output Validation**: Built-in validation system for ensuring structured, reliable outputs from each step.
 - **Modular Design**: Use components independently, from simple provider wrappers to complete agent systems.
 - **Type Safety**: Comprehensive type hints for better development experience.
 
@@ -181,6 +182,45 @@ analyzer = DataAnalyzer(
 
 result = analyzer.run("Monthly sales: [1000, 1200, 950, 1100]")
 print(result)
+```
+
+### 4. Custom Agent with Validation
+
+For guaranteed output structure and type safety:
+
+```python
+from clientai.agent import Agent, think
+from pydantic import BaseModel, Field
+from typing import List
+
+class Analysis(BaseModel):
+    summary: str = Field(min_length=10)
+    key_points: List[str] = Field(min_items=1)
+    sentiment: str = Field(pattern="^(positive|negative|neutral)$")
+
+class DataAnalyzer(Agent):
+    @think(
+        name="analyze",
+        json_output=True,  # Enable JSON formatting
+    )
+
+    def analyze_data(self, data: str) -> Analysis: # Enable validation
+        """Analyze data with validated output structure."""
+        return """
+        Analyze this data and return a JSON with:
+        - summary: at least 10 characters
+        - key_points: non-empty list
+        - sentiment: positive, negative, or neutral
+
+        Data: {data}
+        """
+
+# Initialize and use
+
+analyzer = DataAnalyzer(client=client, default_model="gpt-4")
+result = analyzer.run("Sales increased by 25% this quarter")
+print(f"Sentiment: {result.sentiment}")
+print(f"Key Points: {result.key_points}")
 ```
 
 ## Requirements

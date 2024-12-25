@@ -33,7 +33,7 @@ def test_agent_creation_with_tools(mock_client):
 
     def mock_tool(x: int) -> int:
         """Test tool."""
-        return x * 2
+        return x * 2  # pragma: no cover
 
     # Test with basic tool
     agent = create_agent(

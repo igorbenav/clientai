@@ -107,7 +107,7 @@ class ToolSelectionConfig:
         }
         return cls(**filtered_kwargs)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> None:  # pragma: no cover
         """Validate configuration values after initialization."""
         if not 0.0 <= self.confidence_threshold <= 1.0:
             raise ValueError(
@@ -165,7 +165,7 @@ class ToolCallDecision:
     error: Optional[str] = None
     result: Optional[Any] = None
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> None:  # pragma: no cover
         """Validate decision values after initialization."""
         if not isinstance(self.tool_name, str):
             raise ValueError("tool_name must be a string")

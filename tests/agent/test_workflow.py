@@ -29,15 +29,15 @@ def test_workflow_step_registration():
     class TestAgent:
         @think("analyze")
         def analyze(self, input_data: str) -> str:
-            return f"Analyzing: {input_data}"
+            return f"Analyzing: {input_data}"  # pragma: no cover
 
         @act("process")
         def process(self, analysis: str) -> str:
-            return f"Processing: {analysis}"
+            return f"Processing: {analysis}"  # pragma: no cover
 
         @observe("gather")
         def gather(self, query: str) -> str:
-            return f"Gathering: {query}"
+            return f"Gathering: {query}"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -67,15 +67,15 @@ def test_workflow_execution_parameter_passing():
 
         @think
         def step1(self, input_data: str) -> str:
-            return "First step"
+            return "First step"  # pragma: no cover
 
         @act
         def step2(self, prev_result: str) -> str:
-            return "Second step"
+            return "Second step"  # pragma: no cover
 
         @synthesize
         def step3(self, latest: str) -> str:
-            return "Final step"
+            return "Final step"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -123,7 +123,7 @@ def test_custom_run_method():
 
         @think
         def analyze(self, data: str) -> str:
-            return "Analysis"
+            return "Analysis"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -149,11 +149,11 @@ def test_streaming_configuration():
 
         @think(stream=True)
         def analyze(self, data: str) -> str:
-            return "Analysis"
+            return "Analysis"  # pragma: no cover
 
         @act(stream=False)
         def process(self, analysis: str) -> str:
-            return "Result"
+            return "Result"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -182,15 +182,15 @@ def test_step_type_filtering():
     class TestAgent:
         @think
         def think1(self, data: str) -> str:
-            return "Think 1"
+            return "Think 1"  # pragma: no cover
 
         @think
         def think2(self, data: str) -> str:
-            return "Think 2"
+            return "Think 2"  # pragma: no cover
 
         @act
         def act1(self, data: str) -> str:
-            return "Act 1"
+            return "Act 1"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -218,15 +218,15 @@ def test_error_handling():
 
         @think("step1")
         def required_step1(self, data: str) -> str:
-            return "Required 1"
+            return "Required 1"  # pragma: no cover
 
         @act("optional")
         def optional_step(self, data: str) -> str:
-            return "Optional"
+            return "Optional"  # pragma: no cover
 
         @synthesize("final")  # Adding final step to ensure optional isn't last
         def final_step(self, data: str) -> str:
-            return "Final"
+            return "Final"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -283,11 +283,11 @@ def test_parameter_validation():
 
         @think
         def step1(self) -> str:
-            return "No params"
+            return "No params"  # pragma: no cover
 
         @act
         def step2(self, result: str, extra: str, more: str) -> str:
-            return "Three params"
+            return "Three params"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -312,11 +312,11 @@ def test_workflow_state_management():
 
         @think
         def step1(self, data: str) -> str:
-            return "First"
+            return "First"  # pragma: no cover
 
         @act
         def step2(self, prev: str) -> str:
-            return "Second"
+            return "Second"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()
@@ -335,7 +335,7 @@ def test_invalid_step_configurations():
     """Test handling of invalid step configurations."""
 
     def dummy_func(x: str) -> str:
-        return x
+        return x  # pragma: no cover
 
     # Test with empty name
     with pytest.raises(ValueError) as exc_info:
@@ -363,7 +363,7 @@ def test_workflow_reset_and_reuse():
 
         @think
         def step(self, data: str) -> str:
-            return "Result"
+            return "Result"  # pragma: no cover
 
     workflow = WorkflowManager()
     agent = TestAgent()

@@ -30,7 +30,7 @@ def test_tool_creation_defaults():
 
     def calculator(x: int, y: int) -> int:
         """Calculate sum."""
-        return x + y
+        return x + y  # pragma: no cover
 
     tool = Tool.create(calculator)
 
@@ -43,7 +43,7 @@ def test_tool_creation_no_docstring():
     """Test tool creation with no docstring."""
 
     def calculator(x: int, y: int) -> int:
-        return x + y
+        return x + y  # pragma: no cover
 
     tool = Tool.create(calculator)
 
@@ -84,7 +84,7 @@ def test_tool_signature():
         x: int, y: str = "default", z: Optional[float] = None
     ) -> Dict[str, Any]:
         """Complex function."""
-        return {"x": x, "y": y, "z": z}
+        return {"x": x, "y": y, "z": z}  # pragma: no cover
 
     tool = Tool.create(complex_func)
 
@@ -100,7 +100,7 @@ def test_tool_registry_basic():
 
     def calculator(x: int, y: int) -> int:
         """Calculate sum."""
-        return x + y
+        return x + y  # pragma: no cover
 
     tool = Tool.create(calculator)
     config = ToolConfig(tool=tool)
@@ -117,7 +117,7 @@ def test_tool_registry_duplicate():
     registry = ToolRegistry()
 
     def calculator(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     tool = Tool.create(calculator)
     config = ToolConfig(tool=tool)
@@ -134,7 +134,7 @@ def test_tool_scoping_single():
     registry = ToolRegistry()
 
     def calculator(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     tool = Tool.create(calculator)
     config = ToolConfig(tool=tool, scopes=frozenset([ToolScope.THINK]))
@@ -150,7 +150,7 @@ def test_tool_scoping_multiple():
     registry = ToolRegistry()
 
     def calculator(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     tool = Tool.create(calculator)
     config = ToolConfig(
@@ -168,7 +168,7 @@ def test_tool_scoping_all():
     registry = ToolRegistry()
 
     def calculator(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     tool = Tool.create(calculator)
     config = ToolConfig(tool=tool, scopes=frozenset([ToolScope.ALL]))
@@ -216,7 +216,7 @@ def test_tool_string_representation():
 
     def calculator(x: int, y: int) -> int:
         """Add two numbers."""
-        return x + y
+        return x + y  # pragma: no cover
 
     tool = Tool.create(calculator, name="Calculator")
 
@@ -230,7 +230,7 @@ def test_is_tool_function():
     """Test is_tool function with various inputs."""
 
     def calculator(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     tool = Tool.create(calculator)
 
@@ -246,15 +246,15 @@ def test_tool_type_hints_validation():
 
     # Missing return type hint
     def bad_func1(x: int):  # type: ignore
-        return x * 2
+        return x * 2  # pragma: no cover
 
     # Missing parameter type hint
     def bad_func2(x) -> int:  # type: ignore
-        return x * 2
+        return x * 2  # pragma: no cover
 
     # Correct type hints
     def good_func(x: int) -> int:
-        return x * 2
+        return x * 2  # pragma: no cover
 
     Tool.create(good_func)  # Should work
 
@@ -270,7 +270,7 @@ def test_tool_format_info():
         x: int, y: str = "default", z: Optional[float] = None
     ) -> Dict[str, Any]:
         """Complex function with multiple parameters."""
-        return {"x": x, "y": y, "z": z}
+        return {"x": x, "y": y, "z": z}  # pragma: no cover
 
     tool = Tool.create(
         complex_func,

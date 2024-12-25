@@ -20,6 +20,7 @@ Discover how to create and customize AI agents for autonomous workflows:
 - [Workflow Steps Guide](agent/workflow_steps.md)
 - [Tools and Tool Selection](agent/tools.md)
 - [Context Management](agent/context.md)
+- [Validation Guide](agent/validation.md)
 
 ## Getting Started
 
@@ -70,6 +71,41 @@ result = agent.run("What is 5 plus 3?")
 print(result)
 ```
 
+### Quick Start with Validation
+
+Here's how to create an agent with validated outputs:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List
+
+class Analysis(BaseModel):
+    summary: str = Field(min_length=10)
+    sentiment: str = Field(pattern="^(positive|negative|neutral)$")
+    key_points: List[str] = Field(min_items=1)
+
+class AnalysisAgent(Agent):
+    @think(
+        name="analyze",
+        json_output=True,
+        return_type=Analysis
+    )
+    def analyze_text(self, text: str) -> Analysis:
+        return """
+        Analyze this text and return:
+        - summary (10+ chars)
+        - sentiment (positive/negative/neutral)
+        - key_points (non-empty list)
+        
+        Text: {text}
+        """
+
+agent = AnalysisAgent(client=client, default_model="gpt-4")
+result = agent.run("Great product, highly recommend!")
+print(f"Sentiment: {result.sentiment}")
+print(f"Key points: {result.key_points}")
+```
+
 ## Advanced Usage
 
 ### Streaming with Client
@@ -114,6 +150,16 @@ agent = AnalysisAgent(
 2. **Error Handling**: Implement proper error handling for API failures
 3. **Model Selection**: Choose models based on task requirements and budget
 4. **Context Management**: Manage conversation context efficiently
+
+### Agent Best Practices
+
+1. **Validation**: Use appropriate validation levels:
+    - Plain text for simple responses
+    - JSON output for basic structure
+    - Pydantic models for strict validation
+2. **Error Handling**: Always wrap validated calls in try/except blocks
+3. **Tools**: Choose tool confidence thresholds based on task criticality
+4. **Context**: Use context to share state between steps effectively
 
 ## Contribution
 
