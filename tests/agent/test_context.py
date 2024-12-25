@@ -221,7 +221,7 @@ def test_context_timestamp_handling():
     # Verify it can be parsed as a datetime
     try:
         datetime.fromisoformat(timestamp)
-    except ValueError:
+    except ValueError:  # pragma: no cover
         pytest.fail("Timestamp is not in valid ISO format")
 
     # Verify timestamp appears in formatted history

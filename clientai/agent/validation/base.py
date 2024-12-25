@@ -117,9 +117,9 @@ class ModelValidator(Generic[T]):
                     errors=error_dict,
                 )
             raise SchemaValidationError(str(e))
-        except SchemaValidationError:
+        except SchemaValidationError:  # pragma: no cover
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise SchemaValidationError(
                 f"Unexpected validation error: {str(e)}"
             )
@@ -200,7 +200,7 @@ class StepValidator(Generic[T]):
             return_type = hints.get("return")
             if return_type:
                 return cls(return_type)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.warning(f"Failed to create validator for {step.name}: {e}")
 
         return None

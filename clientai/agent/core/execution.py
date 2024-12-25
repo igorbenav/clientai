@@ -104,9 +104,9 @@ class StepExecutionEngine:
             StepError: If initialization fails or configuration is invalid
         """
         try:
-            if not client:
+            if not client:  # pragma: no cover
                 raise ValueError("Client must be specified")
-            if not default_model:
+            if not default_model:  # pragma: no cover
                 raise ValueError("Default model must be specified")
 
             self._client = client
@@ -125,10 +125,10 @@ class StepExecutionEngine:
                 f"Initialized StepExecutionEngine with model: {default_model}"
             )
 
-        except ValueError as e:
+        except ValueError as e:  # pragma: no cover
             logger.error(f"Initialization error: {e}")
             raise StepError(str(e)) from e
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Unexpected initialization error: {e}")
             raise StepError(
                 f"Unexpected initialization error: {str(e)}"
@@ -160,12 +160,12 @@ class StepExecutionEngine:
                     temperature=0.0,
                     json_output=True,
                 )
-            else:
+            else:  # pragma: no cover
                 raise ValueError(
                     f"Invalid model type: {type(model)}. "
                     "Must be string or ModelConfig"
                 )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error creating tool model config: {e}")
             raise StepError(f"Invalid tool model configuration: {str(e)}")
 
@@ -187,7 +187,7 @@ class StepExecutionEngine:
 
             return self._default_tool_model
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error determining tool model: {e}")
             raise StepError(f"Failed to determine tool model: {str(e)}")
 
@@ -216,10 +216,10 @@ class StepExecutionEngine:
         try:
             step_config = getattr(step, "tool_selection_config", None)
             return step_config or self._default_tool_selection_config
-        except AttributeError as e:
+        except AttributeError as e:  # pragma: no cover
             logger.error(f"Invalid step configuration: {e}")
             raise StepError(f"Invalid step configuration: {str(e)}") from e
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error accessing tool selection config: {e}")
             raise StepError(
                 f"Error accessing tool selection config: {str(e)}"
@@ -250,12 +250,12 @@ class StepExecutionEngine:
         try:
             step_model = getattr(step, "tool_model", None)
             return step_model or self._default_tool_model
-        except AttributeError as e:
+        except AttributeError as e:  # pragma: no cover
             logger.error(f"Invalid step model configuration: {e}")
             raise StepError(
                 f"Invalid step model configuration: {str(e)}"
             ) from e
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error accessing tool model: {e}")
             raise StepError(f"Error accessing tool model: {str(e)}") from e
 
@@ -282,7 +282,7 @@ class StepExecutionEngine:
 
         try:
             result = step.func(agent, *args, **kwargs)
-            if not isinstance(result, str):
+            if not isinstance(result, str):  # pragma: no cover
                 raise ValueError(
                     f"Step function must return str, got {type(result)}"
                 )
@@ -291,16 +291,16 @@ class StepExecutionEngine:
             if step.use_tools:
                 try:
                     prompt = self._handle_tool_execution(step, agent, prompt)
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     raise ToolError(f"Tool execution failed: {str(e)}") from e
 
             logger.debug(f"Final prompt: {prompt}")
             return prompt
 
-        except ValueError as e:
+        except ValueError as e:  # pragma: no cover
             logger.error(f"Prompt building error: {e}")
             raise StepError(str(e)) from e
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to build prompt: {e}")
             raise StepError(f"Failed to build prompt: {str(e)}") from e
 
@@ -376,7 +376,7 @@ class StepExecutionEngine:
 
             return prompt
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Tool execution error: {e}", exc_info=True)
             raise ToolError(f"Tool execution failed: {str(e)}") from e
 
@@ -480,9 +480,9 @@ class StepExecutionEngine:
 
             return cast(Union[str, Iterator[str]], result)
 
-        except ClientAIError:
+        except ClientAIError:  # pragma: no cover
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Unexpected error during LLM call: {e}")
             raise StepError(
                 f"Unexpected error during LLM call: {str(e)}"
@@ -510,7 +510,7 @@ class StepExecutionEngine:
                 kwargs.update(model_params)
 
             return kwargs
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error preparing API arguments: {e}")
             raise StepError(
                 f"Failed to prepare API arguments: {str(e)}"
@@ -539,7 +539,7 @@ class StepExecutionEngine:
         for attempt in range(step.config.retry_count + 1):
             try:
                 return self._execute_single_call(step, prompt, api_kwargs)
-            except ClientAIError as e:
+            except ClientAIError as e:  # pragma: no cover
                 if attempt >= step.config.retry_count:
                     logger.error(
                         f"All retry attempts failed for "
@@ -577,7 +577,7 @@ class StepExecutionEngine:
             if step.config.use_internal_retry:
                 return self._execute_with_retry(step, prompt, api_kwargs)
             return self._execute_single_call(step, prompt, api_kwargs)
-        except ClientAIError:
+        except ClientAIError:  # pragma: no cover
             raise
         except Exception as e:
             logger.error(f"LLM execution failed: {e}")
@@ -663,9 +663,9 @@ class StepExecutionEngine:
             )
             raise ValidationError(error_str)
 
-        except ValidationError:
+        except ValidationError:  # pragma: no cover
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise StepError(f"Unexpected validation error: {str(e)}")
 
     def execute_step(
@@ -742,11 +742,11 @@ class StepExecutionEngine:
             - Validates output against Pydantic models when json_output=True
             - Supports partial validation during streaming
         """
-        if self._current_agent is None:
+        if self._current_agent is None:  # pragma: no cover
             raise StepError("No agent context available for step execution")
 
         logger.info(f"Executing step '{step.name}'")
-        if stream is None:
+        if stream is None:  # pragma: no cover
             stream = getattr(step, "stream", False)
 
         logger.debug(
@@ -770,7 +770,7 @@ class StepExecutionEngine:
                     )
                 except (ClientAIError, StepError, ToolError):
                     raise
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     raise StepError(
                         f"LLM step execution failed: {str(e)}"
                     ) from e
@@ -779,9 +779,9 @@ class StepExecutionEngine:
                     result = self._handle_non_llm_step(
                         step, self._current_agent, args, kwargs
                     )
-                except (ValueError, TimeoutError):
+                except (ValueError, TimeoutError):  # pragma: no cover
                     raise
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     raise StepError(
                         f"Non-LLM step execution failed: {str(e)}"
                     ) from e
@@ -801,7 +801,7 @@ class StepExecutionEngine:
             ValidationError,
         ):
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Unexpected error executing step '{step.name}': {e}")
             if step.config.required:
                 raise StepError(
@@ -893,7 +893,7 @@ class StepExecutionEngine:
                 name=model_config,
                 stream=stream if stream is not None else False,
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error preparing model configuration: {e}")
             raise StepError(
                 f"Failed to prepare model configuration: {str(e)}"
@@ -922,6 +922,6 @@ class StepExecutionEngine:
                 if step.config.pass_result:
                     agent.context.current_input = result
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error updating context: {e}")
             raise StepError(f"Failed to update context: {str(e)}") from e

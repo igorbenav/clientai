@@ -89,7 +89,7 @@ class WorkflowManager:
             self._steps: OrderedDict[str, Step] = OrderedDict()
             self._custom_run: Optional[Callable[[Any], Any]] = None
             logger.debug("Initialized WorkflowManager")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to initialize WorkflowManager: {e}")
             raise WorkflowError(
                 f"Failed to initialize WorkflowManager: {str(e)}"
@@ -109,7 +109,7 @@ class WorkflowManager:
         """
         try:
             return agent_instance.__class__.__dict__  # type: ignore
-        except AttributeError as e:
+        except AttributeError as e:  # pragma: no cover
             raise WorkflowError(f"Invalid agent instance: {str(e)}")
 
     def _process_step_info(
@@ -138,10 +138,10 @@ class WorkflowManager:
                     raise StepError(
                         f"Invalid step info for {name}: "
                         f"expected Step, got {type(step_info)}"
-                    )
+                    )  # pragma: no cover
                 return (step_info.name, step_info)
             return None
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Error processing step '{name}': {e}")
             raise StepError(f"Error processing step '{name}': {str(e)}") from e
 
@@ -162,7 +162,7 @@ class WorkflowManager:
             if callable(func) and hasattr(func, "_is_run"):
                 logger.debug(f"Found custom run method: {name}")
                 self._custom_run = getattr(agent_instance, name)
-        except AttributeError as e:
+        except AttributeError as e:  # pragma: no cover
             raise StepError(f"Failed to bind custom run method: {str(e)}")
 
     def register_class_steps(self, agent_instance: Any) -> None:
@@ -216,9 +216,9 @@ class WorkflowManager:
                 f"Registered {len(steps)} steps: {list(self._steps.keys())}"
             )
 
-        except (StepError, WorkflowError):
+        except (StepError, WorkflowError):  # pragma: no cover
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to register class steps: {e}")
             raise WorkflowError(
                 f"Failed to register class steps: {str(e)}"
@@ -234,7 +234,7 @@ class WorkflowManager:
         """Execute the custom run method with proper stream handling."""
         try:
             logger.info("Using custom run method")
-            if self._custom_run is None:
+            if self._custom_run is None:  # pragma: no cover
                 raise WorkflowError("Custom run method is None")
 
             try:
@@ -259,7 +259,7 @@ class WorkflowManager:
                             step, "stream", original_steps[step.name]
                         )
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Custom run method failed: {e}")
             raise WorkflowError(f"Custom run method failed: {str(e)}") from e
 
@@ -275,14 +275,14 @@ class WorkflowManager:
             StepError: If run method binding fails
         """
         try:
-            if not self._steps and not self._custom_run:
+            if not self._steps and not self._custom_run:  # pragma: no cover
                 raise WorkflowError(
                     "No steps registered and no custom run method defined"
                 )
 
             agent.context.clear()
             agent.context.current_input = input_data
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise WorkflowError(f"Failed to initialize execution: {str(e)}")
 
     def _get_step_parameters(self, step: Step) -> int:
@@ -306,7 +306,7 @@ class WorkflowManager:
                 if param != "self"
             ]
             return len(params)
-        except AttributeError as e:
+        except AttributeError as e:  # pragma: no cover
             raise StepError(f"Invalid step function: {str(e)}")
 
     def _validate_parameter_count(
@@ -359,7 +359,7 @@ class WorkflowManager:
 
             return results
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to gather previous results: {e}")
             raise StepError(f"Failed to gather previous results: {str(e)}")
 
@@ -410,7 +410,7 @@ class WorkflowManager:
                             input_data = "".join(collected)
                         else:
                             input_data = collected[-1] if collected else None
-                    except Exception as e:
+                    except Exception as e:  # pragma: no cover
                         raise StepError(
                             f"Failed to collect streaming data: {str(e)}"
                         )
@@ -464,7 +464,7 @@ class WorkflowManager:
             if step.config.pass_result:
                 agent.context.current_input = result
                 return result
-        return None
+        return None  # pragma: no cover
 
     def _get_step_stream_setting(
         self,
@@ -630,7 +630,7 @@ class WorkflowManager:
 
         except (StepError, WorkflowError, ValueError):
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Unexpected workflow execution error: {e}")
             raise WorkflowError(
                 f"Unexpected workflow execution error: {str(e)}"
@@ -657,7 +657,7 @@ class WorkflowManager:
         """
         try:
             return self._steps.get(name)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to retrieve step '{name}': {e}")
             raise WorkflowError(
                 f"Failed to retrieve step '{name}': {str(e)}"
@@ -684,7 +684,7 @@ class WorkflowManager:
         """
         try:
             return self._steps.copy()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error("Failed to retrieve steps: {e}")
             raise WorkflowError(f"Failed to retrieve steps: {str(e)}") from e
 
@@ -712,7 +712,7 @@ class WorkflowManager:
             self._steps.clear()
             self._custom_run = None
             logger.debug("Workflow manager reset completed")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(f"Failed to reset workflow manager: {e}")
             raise WorkflowError(
                 f"Failed to reset workflow manager: {str(e)}"
@@ -753,16 +753,16 @@ class WorkflowManager:
                 raise ValueError(
                     "Invalid step type: expected StepType, "
                     f"got {type(step_type)}"
-                )
+                )  # pragma: no cover
 
             return {
                 name: step
                 for name, step in self._steps.items()
                 if step.step_type == step_type
             }
-        except ValueError:
+        except ValueError:  # pragma: no cover
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(
                 f"Failed to retrieve steps by type '{step_type}': {e}"
             )

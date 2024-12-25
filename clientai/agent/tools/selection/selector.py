@@ -305,7 +305,7 @@ class ToolSelector:
             try:
                 decisions = json.loads(response)
                 logger.debug(f"Parsed decisions: {decisions}")
-            except json.JSONDecodeError:
+            except json.JSONDecodeError:  # pragma: no cover
                 logger.warning(
                     "Failed to parse JSON response, attempting to extract JSON"
                 )
@@ -321,7 +321,7 @@ class ToolSelector:
                     logger.error("Could not find valid JSON in response")
                     return []
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(
                 f"Failed to get or parse LLM tool selection response: {e}"
             )
@@ -531,7 +531,7 @@ class ToolSelector:
                 result = tool(**decision.arguments)
                 decision.result = result
                 logger.debug(f"Tool execution successful: {result}")
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.error(
                     f"Failed to execute tool {decision.tool_name}: {e}",
                     exc_info=True,

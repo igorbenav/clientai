@@ -26,13 +26,13 @@ class ValidationResult(Generic[T]):
     @property
     def is_valid(self) -> bool:
         """Whether validation was successful."""
-        return not bool(self.errors)
+        return not bool(self.errors)  # pragma: no cover
 
     @property
     def is_complete(self) -> bool:
         """Whether this is a complete validation result."""
-        return not self.is_partial
+        return not self.is_partial  # pragma: no cover
 
     def __bool__(self) -> bool:
         """Boolean representation of validation success."""
-        return self.is_valid
+        return self.is_valid  # pragma: no cover

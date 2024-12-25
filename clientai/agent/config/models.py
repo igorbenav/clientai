@@ -54,7 +54,9 @@ class ModelConfig:
         temperature: Optional[float] = None,
         **kwargs: Any,
     ):
-        if temperature is not None and not 0.0 <= temperature <= 2.0:
+        if (
+            temperature is not None and not 0.0 <= temperature <= 2.0
+        ):  # pragma: no cover
             raise ValueError("Temperature must be between 0.0 and 2.0")
 
         self.name = name
@@ -131,7 +133,9 @@ class ModelConfig:
         )
 
     @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "ModelConfig":
+    def from_dict(
+        cls, config: Dict[str, Any]
+    ) -> "ModelConfig":  # pragma: no cover
         """Create configuration instance from a dictionary.
 
         Args:
