@@ -20,60 +20,51 @@ Different AI providers offer unique parameters and features. Understanding these
 
 ## Custom Run Workflows
 
-5. **Creating Custom Run Methods**: Learn how to implement custom run methods for complete workflow control.
-      - `🚧 Coming Soon`
-
-6. **Managing State in Custom Runs**: Master state management techniques in custom run implementations.
-      - `🚧 Coming Soon`
-
-7. **Tool Usage in Custom Runs**: Effectively leverage tools within custom run methods.
-      - `🚧 Coming Soon`
-
-8. **Error Handling in Custom Runs**: Implement robust error handling in custom workflows.
-      - `🚧 Coming Soon`
+5. **Custom Run Methods**: Learn how to replace default execution with custom workflows through a detailed code review assistant example.
+      - [Creating Custom Run Guide](agent/creating_run.md#understanding-custom-run-methods)
 
 ## Complex Workflows
 
-9. **Multi-Step Decision Making**: Advanced patterns for complex decision workflows.
+6. **Multi-Step Decision Making**: Advanced patterns for complex decision workflows.
       - `🚧 Coming Soon`
 
-10. **Parallel Step Execution**: Implementing concurrent step execution patterns.
+7. **Parallel Step Execution**: Implementing concurrent step execution patterns.
       - `🚧 Coming Soon`
 
-11. **Conditional Workflows**: Creating dynamic, condition-based workflows.
+8. **Conditional Workflows**: Creating dynamic, condition-based workflows.
       - `🚧 Coming Soon`
 
 ## Advanced Tool Patterns
 
-12. **Tool Chaining**: Techniques for combining multiple tools effectively.
+9. **Tool Chaining**: Techniques for combining multiple tools effectively.
       - `🚧 Coming Soon`
 
-13. **Tool Result Caching**: Optimizing tool execution with intelligent caching.
+10. **Tool Result Caching**: Optimizing tool execution with intelligent caching.
       - `🚧 Coming Soon`
 
-14. **Tool Fallback Strategies**: Implementing robust tool execution patterns.
+11. **Tool Fallback Strategies**: Implementing robust tool execution patterns.
       - `🚧 Coming Soon`
 
 ## Advanced Integration Topics
 
-15. **External Service Integration**: Patterns for integrating with external services.
+12. **External Service Integration**: Patterns for integrating with external services.
       - `🚧 Coming Soon`
 
-16. **Database Integration**: Implementing persistent storage in agent workflows.
+13. **Database Integration**: Implementing persistent storage in agent workflows.
       - `🚧 Coming Soon`
 
-17. **Event Systems**: Building event-driven agent architectures.
+14. **Event Systems**: Building event-driven agent architectures.
       - `🚧 Coming Soon`
 
 ## Testing and Monitoring
 
-18. **Testing Strategies**: Comprehensive testing approaches for agent systems.
+15. **Testing Strategies**: Comprehensive testing approaches for agent systems.
       - `🚧 Coming Soon`
 
-19. **Performance Monitoring**: Monitoring and optimizing agent performance.
+16. **Performance Monitoring**: Monitoring and optimizing agent performance.
       - `🚧 Coming Soon`
 
-20. **Error Handling and Retry Strategies**: Best practices for error handling.
+17. **Error Handling and Retry Strategies**: Best practices for error handling.
       - [Error Handling and Retry Strategies](error_handling.md)
 
 Each guide in this section is designed to provide you with a deeper understanding of ClientAI's capabilities and how to leverage them effectively in your projects.

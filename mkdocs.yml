@@ -57,6 +57,7 @@ nav:
       - Workflow Steps: usage/agent/workflow_steps.md
       - Tools and Tool Selection: usage/agent/tools.md
       - Context Management: usage/agent/context.md
+      - Validation: usage/agent/validation.md
     - Ollama Manager: usage/ollama_manager.md
   - Examples:
     - Overview: examples/overview.md

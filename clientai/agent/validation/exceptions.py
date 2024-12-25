@@ -7,12 +7,6 @@ class ValidationError(AgentError):
     pass
 
 
-class PartialValidationError(ValidationError):
-    """Exception raised when partial validation fails during streaming."""
-
-    pass
-
-
 class SchemaValidationError(ValidationError):
     """Exception raised when schema validation fails."""
 

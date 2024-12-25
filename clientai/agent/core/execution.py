@@ -10,7 +10,6 @@ from ..tools import ToolSelectionConfig, ToolSelector
 from ..utils.exceptions import StepError, ToolError
 from ..validation import (
     OutputFormat,
-    PartialValidationError,
     StepValidator,
     ValidationError,
     ValidatorContext,
@@ -701,7 +700,6 @@ class StepExecutionEngine:
             ToolError: If tool execution fails
             ClientAIError: If LLM interaction fails
             ValidationError: If output validation fails for json_output steps
-            PartialValidationError: If streaming validation fails
 
         Example:
             Basic step execution:
@@ -801,7 +799,6 @@ class StepExecutionEngine:
             ValueError,
             TimeoutError,
             ValidationError,
-            PartialValidationError,
         ):
             raise
         except Exception as e:

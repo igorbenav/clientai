@@ -1,6 +1,5 @@
 from .base import ModelValidator, StepValidator
 from .exceptions import (
-    PartialValidationError,
     SchemaValidationError,
     ValidationError,
 )
@@ -14,6 +13,5 @@ __all__ = [
     "ValidatorContext",
     "ValidationResult",
     "ValidationError",
-    "PartialValidationError",
     "SchemaValidationError",
 ]
